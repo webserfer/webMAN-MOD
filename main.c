@@ -4049,26 +4049,26 @@ again3:
 
 					webman_config->lang=0;
 
-					// Asia
-					if(strstr(param, "l=11"))  webman_config->lang=11; else // Indonesian
-					if(strstr(param, "l=12"))  webman_config->lang=12; else // Turkish
-					if(strstr(param, "l=13"))  webman_config->lang=13; else // Arabian
-					if(strstr(param, "l=14"))  webman_config->lang=14; else // Chinese
-					if(strstr(param, "l=15"))  webman_config->lang=15; else // Korean
-					if(strstr(param, "l=16"))  webman_config->lang=16; else // Japanese
-
 					// Europe
-					if(strstr(param, "l=0"))   webman_config->lang=0;  else // English
-					if(strstr(param, "l=1"))   webman_config->lang=1;  else // French
-					if(strstr(param, "l=2"))   webman_config->lang=2;  else // Italian
-					if(strstr(param, "l=3"))   webman_config->lang=3;  else // Spanish
-					if(strstr(param, "l=4"))   webman_config->lang=4;  else // German
-					if(strstr(param, "l=5"))   webman_config->lang=5;  else // Dutch
-					if(strstr(param, "l=6"))   webman_config->lang=6;  else // Portuguese
-					if(strstr(param, "l=7"))   webman_config->lang=7;  else // Russian
-					if(strstr(param, "l=8"))   webman_config->lang=8;  else // Hungarian
-					if(strstr(param, "l=9"))   webman_config->lang=9;  else // Polish
-					if(strstr(param, "l=10"))  webman_config->lang=10; else // Greek
+					if(strstr(param, "l=0"))   webman_config->lang=0;  // English
+					if(strstr(param, "l=1"))   webman_config->lang=1;  // French
+					if(strstr(param, "l=2"))   webman_config->lang=2;  // Italian
+					if(strstr(param, "l=3"))   webman_config->lang=3;  // Spanish
+					if(strstr(param, "l=4"))   webman_config->lang=4;  // German
+					if(strstr(param, "l=5"))   webman_config->lang=5;  // Dutch
+					if(strstr(param, "l=6"))   webman_config->lang=6;  // Portuguese
+					if(strstr(param, "l=7"))   webman_config->lang=7;  // Russian
+					if(strstr(param, "l=8"))   webman_config->lang=8;  // Hungarian
+					if(strstr(param, "l=9"))   webman_config->lang=9;  // Polish
+					if(strstr(param, "l=10"))  webman_config->lang=10; // Greek
+
+					// Asia
+					if(strstr(param, "l=11"))  webman_config->lang=11; // Indonesian
+					if(strstr(param, "l=12"))  webman_config->lang=12; // Turkish
+					if(strstr(param, "l=13"))  webman_config->lang=13; // Arabian
+					if(strstr(param, "l=14"))  webman_config->lang=14; // Chinese
+					if(strstr(param, "l=15"))  webman_config->lang=15; // Korean
+					if(strstr(param, "l=16"))  webman_config->lang=16; // Japanese
 
 					// Other
 					if(strstr(param, "l=99"))  webman_config->lang=99;	// Unknown LANG_XX.TXT
