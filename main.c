@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.3U MOD"						// webMAN version
+#define WM_VERSION			"1.30.4 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -367,8 +367,8 @@ char STR_UNLOADWM[100]		= "UNLOAD WM";
 char STR_FANCTRL2[100]		= "CTRL FAN";
 char STR_FANCTRL4[100]		= "CTRL DYN FAN";
 char STR_FANCTRL5[100]		= "CTRL MIN FAN";
-char STR_UPDN[10]			= "↑/↓";
-char STR_LFRG[10]			= "←/→";
+char STR_UPDN[20]			= "&#8593;/&#8595;"; //↑/↓
+char STR_LFRG[20]			= "&#8592;/&#8594;"; //←/→
 char STR_SAVE[30]			= "Save";
 char STR_SETTINGSUPD[250]	= "Settings updated.<br><br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATIONR3 system.";
 char STR_ERROR[30]			= "Error!";
@@ -1741,16 +1741,18 @@ bool language(const char *file_str, char *default_str)
 	} else if(webman_config->lang==9) {
 		lang_path = "/dev_hdd0/tmp/LANG_PL.TXT";
 	} else if(webman_config->lang==10) {
-		lang_path = "/dev_hdd0/tmp/LANG_IN.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_GR.TXT";
 	} else if(webman_config->lang==11) {
-		lang_path = "/dev_hdd0/tmp/LANG_TR.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_IN.TXT";
 	} else if(webman_config->lang==12) {
-		lang_path = "/dev_hdd0/tmp/LANG_AR.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_TR.TXT";
 	} else if(webman_config->lang==13) {
-		lang_path = "/dev_hdd0/tmp/LANG_CN.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_AR.TXT";
 	} else if(webman_config->lang==14) {
-		lang_path = "/dev_hdd0/tmp/LANG_KR.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_CN.TXT";
 	} else if(webman_config->lang==15) {
+		lang_path = "/dev_hdd0/tmp/LANG_KR.TXT";
+	} else if(webman_config->lang==16) {
 		lang_path = "/dev_hdd0/tmp/LANG_JP.TXT";
 	} else if(webman_config->lang==99) {
 		lang_path = "/dev_hdd0/tmp/LANG_XX.TXT";
@@ -4044,26 +4046,29 @@ again3:
 							else break;
 						}
 					}
-					// Europe
+
 					webman_config->lang=0;
-					if(strstr(param, "l=0"))   webman_config->lang=0; else // English
-					if(strstr(param, "l=1"))   webman_config->lang=1; else // French
-					if(strstr(param, "l=2"))   webman_config->lang=2; else // Italian
-					if(strstr(param, "l=3"))   webman_config->lang=3; else // Spanish
-					if(strstr(param, "l=4"))   webman_config->lang=4; else // German
-					if(strstr(param, "l=5"))   webman_config->lang=5; else // Dutch
-					if(strstr(param, "l=6"))   webman_config->lang=6; else // Portuguese
-					if(strstr(param, "l=7"))   webman_config->lang=7; else // Russian
-					if(strstr(param, "l=8"))   webman_config->lang=8; else // Hungarian
-					if(strstr(param, "l=9"))   webman_config->lang=9; else // Polish
 
 					// Asia
-					if(strstr(param, "l=10"))   webman_config->lang=10; else // Indonesian
-					if(strstr(param, "l=11"))   webman_config->lang=11; else // Turkish
-					if(strstr(param, "l=12"))   webman_config->lang=12; else // Arabian
-					if(strstr(param, "l=13"))   webman_config->lang=13; else // Chinese
-					if(strstr(param, "l=14"))   webman_config->lang=14; else // Korean
-					if(strstr(param, "l=15"))   webman_config->lang=15; else // Japanese
+					if(strstr(param, "l=11"))  webman_config->lang=11; else // Indonesian
+					if(strstr(param, "l=12"))  webman_config->lang=12; else // Turkish
+					if(strstr(param, "l=13"))  webman_config->lang=13; else // Arabian
+					if(strstr(param, "l=14"))  webman_config->lang=14; else // Chinese
+					if(strstr(param, "l=15"))  webman_config->lang=15; else // Korean
+					if(strstr(param, "l=16"))  webman_config->lang=16; else // Japanese
+
+					// Europe
+					if(strstr(param, "l=0"))   webman_config->lang=0;  else // English
+					if(strstr(param, "l=1"))   webman_config->lang=1;  else // French
+					if(strstr(param, "l=2"))   webman_config->lang=2;  else // Italian
+					if(strstr(param, "l=3"))   webman_config->lang=3;  else // Spanish
+					if(strstr(param, "l=4"))   webman_config->lang=4;  else // German
+					if(strstr(param, "l=5"))   webman_config->lang=5;  else // Dutch
+					if(strstr(param, "l=6"))   webman_config->lang=6;  else // Portuguese
+					if(strstr(param, "l=7"))   webman_config->lang=7;  else // Russian
+					if(strstr(param, "l=8"))   webman_config->lang=8;  else // Hungarian
+					if(strstr(param, "l=9"))   webman_config->lang=9;  else // Polish
+					if(strstr(param, "l=10"))  webman_config->lang=10; else // Greek
 
 					// Other
 					if(strstr(param, "l=99"))  webman_config->lang=99;	// Unknown LANG_XX.TXT
@@ -4566,7 +4571,7 @@ just_leave:
 						addcheckbox("p1", "ps2", "PLAYSTATION\xC2\xAE\x32"    , NULL     , !(webman_config->cmask & PS2), buffer);
 						addcheckbox("p2", "ps1", "PLAYSTATION\xC2\xAE"        , NULL     , !(webman_config->cmask & PS1), buffer);
                         addcheckbox("p3", "psp", "PLAYSTATION\xC2\xAEPORTABLE", " ("     , !(webman_config->cmask & PSP), buffer);
-                        addcheckbox("p6", "psl", "PLAYSTATION\xC2\xAEPORTABLE", ")<br>"  ,  (webman_config->pspl)       , buffer);
+                        addcheckbox("p6", "psl", STR_PSPL                     , ")<br>"  ,  (webman_config->pspl)       , buffer);
 						addcheckbox("p4", "blu", "Blu-ray\xE2\x84\xA2"        , NULL     , !(webman_config->cmask & BLU), buffer);
 						addcheckbox("p5", "dvd", "DVD "                       , STR_VIDLG, !(webman_config->cmask & DVD), buffer);
 #endif
@@ -4621,7 +4626,7 @@ just_leave:
 						addradiobutton("b", "5", "b_1", "5 sec" , NULL, (webman_config->bootd==5), buffer);
 						addradiobutton("b", "9", "b_2", "10 sec", NULL, (webman_config->bootd==9), buffer);
 
-						sprintf(templn, "<br><hr color=\"#0099FF\"/><u> %s:</u><br>", STR_ADDUSB); strcat(buffer, templn);
+						sprintf(templn, "<hr color=\"#0099FF\"/><u> %s:</u><br>", STR_ADDUSB); strcat(buffer, templn);
 
 						addradiobutton("s", "0",  "s_0", "0 sec" , NULL, (webman_config->boots==0), buffer);
 						addradiobutton("s", "3",  "s_1", "3 sec" , NULL, (webman_config->boots==3), buffer);
@@ -4658,13 +4663,15 @@ just_leave:
 						addoptionitem("7" , "\xD0\xA0\xD1\x83\xD1\x81\xD1\x81\xD0\xBA\xD0\xB8\xD0\xB9", (webman_config->lang==7) , buffer);
 						addoptionitem("8" , "Magyar"                                                  , (webman_config->lang==8) , buffer);
 						addoptionitem("9" , "Polski"                                                  , (webman_config->lang==9) , buffer);
-						addoptionitem("10", "Indonesian"                                              , (webman_config->lang==10), buffer);
-						addoptionitem("11", "T\xC3\xBCrk\xC3\xA7\x65"                                 , (webman_config->lang==11), buffer);
-						addoptionitem("12", "\xD8\xA7\xD9\x84\xD8\xB9\xD8\xB1\xD8\xA8\xD9\x8A\xD8\xA9", (webman_config->lang==12), buffer);
-						addoptionitem("13", "\xE4\xB8\xAD\xE6\x96\x87"                                , (webman_config->lang==13), buffer);
-						addoptionitem("14", "\xED\x95\x9C\xEA\xB5\xAD\xEC\x96\xB4"                    , (webman_config->lang==14), buffer);
-						addoptionitem("15", "\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E"                    , (webman_config->lang==15), buffer);
-						addoptionitem("99", "Unknown"                                                 , (webman_config->lang==99), buffer);
+
+						addoptionitem("10", "\xCE\x95\xCE\xBB\xCE\xBB\xCE\xB7\xCE\xBD\xCE\xB9\xCE\xBA\xCF\x8E\xCE\xBD", (webman_config->lang==10), buffer);
+						addoptionitem("11", "Indonesian"															  , (webman_config->lang==11), buffer);
+						addoptionitem("12", "T\xC3\xBCrk\xC3\xA7\x65"												  , (webman_config->lang==12), buffer);
+						addoptionitem("13", "\xD8\xA7\xD9\x84\xD8\xB9\xD8\xB1\xD8\xA8\xD9\x8A\xD8\xA9"				  , (webman_config->lang==13), buffer);
+						addoptionitem("14", "\xE4\xB8\xAD\xE6\x96\x87"												  , (webman_config->lang==14), buffer);
+						addoptionitem("15", "\xED\x95\x9C\xEA\xB5\xAD\xEC\x96\xB4"									  , (webman_config->lang==15), buffer);
+						addoptionitem("16", "\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E"									  , (webman_config->lang==16), buffer);
+						addoptionitem("99", "Unknown"																  , (webman_config->lang==99), buffer);
 
 						sprintf(templn, "</select><hr color=\"#0099FF\"/><b><u> %s :</u></b><br><table width=\"760\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap>", STR_COMBOS2); strcat(buffer, templn);
 
@@ -4679,7 +4686,7 @@ just_leave:
 						addcheckbox("c8" , "unloadw", STR_UNLOADWM,   " : <b>L3+R2+R3</b><br>"          , !(webman_config->combo & UNLOAD_WM), buffer);
 						addcheckbox("c9" , "manualf", STR_FANCTRL2,   " : <b>SELECT+"                   , !(webman_config->combo & MANUALFAN), buffer); sprintf(templn, "%s</b><br>", STR_UPDN); strcat(buffer, templn);
 						addcheckbox("c10", "mincfan", STR_FANCTRL5,   " : <b>SELECT+"                   , !(webman_config->combo & MINDYNFAN), buffer); sprintf(templn, "%s</b><br>", STR_LFRG); strcat(buffer, templn);
-						addcheckbox("c11", "dsbcfws", STR_DELCFWSYS2, " : <b>R2+∆</b></td></tr></table>", !(webman_config->combo & DISABLESH), buffer);
+						addcheckbox("c11", "dsbcfws", STR_DELCFWSYS2, " : <b>R2+&#8710;</b></td></tr></table>", !(webman_config->combo & DISABLESH), buffer);
 
 						sprintf(templn, "<hr color=\"#FF0000\"/><input name=\"save\" type=\"submit\" value=\" %s \"/></form>", STR_SAVE); strcat(buffer, templn);
 						strcat(buffer, "<hr color=\"#FF0000\"/><a href=\"http://www.deanbg.com/prepNTFS.pkg\">prepNTFS - Prepare NTFS drives for webMAN access</a><br>");

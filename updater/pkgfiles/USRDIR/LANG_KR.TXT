@@ -1,7 +1,3 @@
-                                                                     
-                                                                     
-                                                                     
-                                             
 ﻿STR_TRADBY			[- 언어 번역 by 다크아이리스 www.darkiris.net</a><br/>]
 
 STR_FILES			[파일]
