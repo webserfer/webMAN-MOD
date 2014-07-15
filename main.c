@@ -35,8 +35,8 @@
 #include <unistd.h>
 
 //#define USE_DEBUG 1
-//#define CCAPI 1		// uncomment for ccapi release
-#define COBRA_ONLY 1	// comment out for ccapi/non-cobra release
+#define CCAPI 1		// uncomment for ccapi release
+//#define COBRA_ONLY 1	// comment out for ccapi/non-cobra release
 
 #include "types.h"
 #include "common.h"
@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.5 MOD"						// webMAN version
+#define WM_VERSION			"1.30.6 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -407,12 +407,12 @@ char STR_EJECTED[50]		= "Disc ejected.";
 char STR_LOADED[50]			= "Disc inserted.";
 
 char STR_GAMETOM[50]		= "Game to mount";
-char STR_GAMELOADED[200]	= "Game loaded successfully. Start the game from the disc icon<br>or from <b>/app_home</b>&nbsp;XMB entry.<hr/>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game.";
-char STR_PSPLOADED[200]		= "Game loaded successfully. Start the game using <b>PSP Launcher</b>.<hr/>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game.";
+char STR_GAMELOADED[250]	= "Game loaded successfully. Start the game from the disc icon<br>or from <b>/app_home</b>&nbsp;XMB entry.<hr/>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game.";
+char STR_PSPLOADED[230]		= "Game loaded successfully. Start the game using <b>PSP Launcher</b>.<hr/>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game.";
 char STR_LOADED2[50]		= "loaded   ";
 
 char STR_MOVIETOM[50]		= "Movie to mount";
-char STR_MOVIELOADED[200]	= "Movie loaded successfully. Start the movie from the disc icon<br>under the Video column.<hr/>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the movie.";
+char STR_MOVIELOADED[250]	= "Movie loaded successfully. Start the movie from the disc icon<br>under the Video column.<hr/>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the movie.";
 
 char STR_XMLRF[200]			= "Game list refreshed (<a href=\"/dev_hdd0/xmlhost/game_plugin/mygames.xml\">mygames.xml</a>).<br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system now.";
 
@@ -4834,19 +4834,7 @@ just_leave:
 										tempstr[strlen(tempstr)-3]='j';
 										tempstr[strlen(tempstr)-2]='p';
 									}
-									if(cellFsStat(tempstr, &buf)!=CELL_FS_SUCCEEDED)
-									{
-										if(strstr(param, "/PS2ISO"))
-											strcpy(tempstr, "/dev_flash/vsh/resource/explore/user/025.png");
-										else if(strstr(param, "/PSXISO") || strstr(param, "/PSXGAMES") || strstr(param, ".ntfs[PSXISO]") || strstr(param, ".ntfs[PSXGAMES]"))
-											strcpy(tempstr, "/dev_flash/vsh/resource/explore/user/026.png");
-										else if(strstr(param, "/PSPISO") || strstr(param, "/ISO"))
-											strcpy(tempstr, "/dev_flash/vsh/resource/explore/user/022.png");
-										else if(strstr(param, "/BDISO") || strstr(param, "/DVDISO") || strstr(param, ".ntfs[BDISO]") || strstr(param, ".ntfs[DVDISO]"))
-											strcpy(tempstr, "/dev_flash/vsh/resource/explore/user/023.png");
-										else
-											strcpy(tempstr, "/dev_flash/vsh/resource/explore/user/024.png");
-									}
+									get_default_icon(tempstr, param, param);
 								}
 
 								if(strstr(param, "/PSPISO") || strstr(param, "/ISO"))
@@ -5379,18 +5367,7 @@ c_load:
 													if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
 														{icon[strlen(icon)-3]='j'; icon[strlen(icon)-2]='p'; icon[strlen(icon)-1]='g';}
 
-													if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED) {
-														if(strstr(param, "/PS2ISO"))
-															sprintf(icon, "/dev_flash/vsh/resource/explore/user/025.png");
-														else if(strstr(param, "/PSXISO") || strstr(param, "/PSXGAMES") || strstr(entry.d_name, ".ntfs[PSXISO]") || strstr(entry.d_name, ".ntfs[PSXGAMES]"))
-															sprintf(icon, "/dev_flash/vsh/resource/explore/user/026.png");
-														else if(strstr(param, "/PSPISO") || strstr(param, "/ISO"))
-															sprintf(icon, "/dev_flash/vsh/resource/explore/user/022.png");
-														else if(strstr(param, "/BDISO") || strstr(param, "/DVDISO") || strstr(entry.d_name, ".ntfs[BDISO]") || strstr(entry.d_name, ".ntfs[DVDISO]"))
-															sprintf(icon, "/dev_flash/vsh/resource/explore/user/023.png");
-														else
-															sprintf(icon, "/dev_flash/vsh/resource/explore/user/024.png");
-													}
+													get_default_icon(icon, param, entry.d_name);
 												}
 
 												snprintf(ename, 6, "%s    ", templn);

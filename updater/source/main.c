@@ -76,7 +76,7 @@ int is_cobra(void)
 
 int add_mygame()
 {
-// -2 failed and cannot rename the backup 
+// -2 failed and cannot rename the backup
 // -1 failed
 //  0 already
 //  1 done
@@ -90,7 +90,7 @@ int add_mygame()
 	size_t result;
 	int i, j, pos=0;
 	sysFSStat stat;
-	
+
 	//read original cat
 	f=fopen("/dev_flash/vsh/resource/explore/xmb/category_game.xml", "r");
 	if(f==NULL) return -1;
@@ -106,14 +106,14 @@ int add_mygame()
 	fclose (f);
 
 	// is fb.xml entry in cat file ?
-	
+
 	for(i=0; i < size - sizeof(fb); i++) {
 		for(j=0; j<sizeof(fb); j++) {
 			if( cat[i+j] != fb[j]) break;
 			if(j==(sizeof(fb)-1)) {free(cat); return 0;}
 		}
 	}
-	
+
 	// search position
 	for(i=0; i < size - sizeof(gameexit); i++) {
 		pos=i;
@@ -123,7 +123,7 @@ int add_mygame()
 		}
 	}
 	out_s:
-	
+
 	//write patched cat
 	f=fopen("/dev_hdd0/game/UPDWEBMOD/USRDIR/category_game.xml", "w");
 	if(f==NULL) {free(cat); return -1;}
@@ -139,7 +139,7 @@ int add_mygame()
         strcpy(cat_path, "/dev_habib/vsh/resource/explore/xmb/category_game.xml");
 		if(sysLv2FsStat(cat_path, &stat) != 0) {
 			strcpy(cat_path, "/dev_rewrite/vsh/resource/explore/xmb/category_game.xml");
-		
+
 			// mount /dev_blind if category_game.xml is not found
 			if(sysLv2FsStat(cat_path, &stat) != 0) {
 				if(sys_fs_mount("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0) == 0) {
@@ -149,7 +149,7 @@ int add_mygame()
 			}
 		}
 	}
-	
+
 	// rename category_game.xml as category_game.xml.bak
     char cat_path_bak[255];
 	strcpy(cat_path_bak, cat_path);
@@ -162,7 +162,7 @@ int add_mygame()
 		sysLv2FsUnlink(cat_path);
 		if(sysLv2FsRename(cat_path_bak, cat_path)) { //restore category_game.xml from category_game.xml.bak
 			{lv2syscall3(392, 0x1004, 0xa, 0x1b6);} ///TRIPLE BIP
-			free(cat);  
+			free(cat);
 			return -2;
 		}
     }
@@ -253,13 +253,13 @@ int main()
             CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/webftp_server_noncobra.sprx","/dev_hdd0/game/PRXLOADER/USRDIR/webftp_server_noncobra.sprx");
         }
     }
-		
+
 exit:
-	
+/*
 	if(add_mygame() != -2)  {
 		sysLv2FsUnlink("/dev_hdd0/tmp/turnoff");
 		{lv2syscall4(379,0x200,0,0,0);}
 	}
-
+*/
     return 0;
 }
