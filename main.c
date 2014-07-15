@@ -35,8 +35,8 @@
 #include <unistd.h>
 
 //#define USE_DEBUG 1
-#define CCAPI 1		// uncomment for ccapi release
-//#define COBRA_ONLY 1	// comment out for ccapi/non-cobra release
+//#define CCAPI 1		// uncomment for ccapi release
+#define COBRA_ONLY 1	// comment out for ccapi/non-cobra release
 
 #include "types.h"
 #include "common.h"
@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.6 MOD"						// webMAN version
+#define WM_VERSION			"1.30.7 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -177,7 +177,7 @@ static int is_cd2352;
 static uint8_t *cd_cache;
 static uint32_t cached_cd_sector=0x80000000;
 
-#define MIN_FANSPEED	(30)
+#define MIN_FANSPEED	(25)
 #define MAX_FANSPEED	(0xE6)
 #define MY_TEMP 		(80)
 static u8 fan_speed=0x33;
@@ -292,6 +292,8 @@ static char smonth[12][4]={"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug
 
 static char drives[10][16]={"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_usb002", "/dev_usb003", "/dev_usb006", "/dev_usb007", "/net0", "/net1", "/ext"};
 static char paths [11][16]={"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video"};
+
+static bool covers_exist[5];
 
 uint64_t convertH(char *val);
 uint64_t find_syscall();
@@ -2413,35 +2415,38 @@ static void get_icon(char *icon, char *titleid)
 {
 	struct CellFsStat s;
 
-	sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_STD, titleid);
-	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-	sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_STD, titleid);
-	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	if(covers_exist[0])
+	{
+        sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_STD, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+        sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_STD, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	}
 
-	sprintf(icon, "%s/%s.JPG", WMTMP, titleid);
-	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-	sprintf(icon, "%s/%s.PNG", WMTMP, titleid);
-	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	if(covers_exist[1])
+	{
+		sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_STL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_STL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	}
 
-	sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_STL, titleid);
-	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-	sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_STL, titleid);
-	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	if(covers_exist[2])
+	{
+		sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_SSTL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_SSTL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	}
 
-	sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_SSTL, titleid);
-	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-	sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_SSTL, titleid);
-	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	if(covers_exist[3])
+	{
+		sprintf(icon, "/dev_hdd0/GAMES/covers/%s.JPG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, "/dev_hdd0/GAMES/covers/%s.PNG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	}
 
-	sprintf(icon, "/dev_hdd0/GAMES/covers/%s.JPG", titleid);
-	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-	sprintf(icon, "/dev_hdd0/GAMES/covers/%s.PNG", titleid);
-	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	if(covers_exist[4])
+	{
+		sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.JPG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.PNG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	}
 
-	sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.JPG", titleid);
-	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-	sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.PNG", titleid);
-	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	sprintf(icon, "%s/%s.JPG", WMTMP, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	sprintf(icon, "%s/%s.PNG", WMTMP, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 
 	icon[0]=0;
 }
@@ -2601,6 +2606,23 @@ static void handleclient(u64 conn_s_p)
 
 	if(conn_s_p==0xC0FEBABE && webman_config->refr==1)
 	{
+		//show webMAN startup message
+		if(do_startup_msg)
+		{
+			do_startup_msg = 0;
+			if(strlen(STR_WMSTART)>0)
+			{
+				sys_timer_sleep(10);
+				show_msg((char*)STR_WMSTART);
+            }
+		}
+
+		//identify covers folders to be scanned
+		sprintf(templn, "%s/covers", MM_ROOT_STD) ; covers_exist[0]=(cellFsStat(templn, &buf) ==CELL_FS_SUCCEEDED);
+		sprintf(templn, "%s/covers", MM_ROOT_STL) ; covers_exist[1]=(cellFsStat(templn, &buf) ==CELL_FS_SUCCEEDED);
+		sprintf(templn, "%s/covers", MM_ROOT_SSTL); covers_exist[2]=(cellFsStat(templn, &buf) ==CELL_FS_SUCCEEDED);
+												    covers_exist[3]=(cellFsStat("/dev_hdd0/GAMES/covers", &buf)==CELL_FS_SUCCEEDED);
+												    covers_exist[4]=(cellFsStat("/dev_hdd0/GAMEZ/covers", &buf)==CELL_FS_SUCCEEDED);
 
 #ifdef COBRA_ONLY
 
@@ -2645,16 +2667,6 @@ again1:
 			}
 		}
 
-		if(do_startup_msg)
-		{
-			do_startup_msg = 0;
-			if(strlen(STR_WMSTART)>0)
-			{
-				sys_timer_sleep(10);
-				show_msg((char*)STR_WMSTART);
-            }
-		}
-
 		if(do_delay)
 		{
 			if(webman_config->delay)
@@ -2676,7 +2688,6 @@ again1:
 		init_running=0;
 		sys_ppu_thread_exit(0);
 	}
-
 
 		_meminfo meminfo;
 		{system_call_1(352, (uint64_t) &meminfo);}
