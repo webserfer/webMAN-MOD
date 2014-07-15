@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.4 MOD"						// webMAN version
+#define WM_VERSION			"1.30.5 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -265,6 +265,7 @@ typedef struct
 	char vIDPS2[17];
 	char vPSID1[17];
 	char vPSID2[17];
+	uint8_t tid;
 } __attribute__((packed)) WebmanCfg;
 
 #define FAIL_SAFE (1<<0)
@@ -291,9 +292,6 @@ static char smonth[12][4]={"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug
 
 static char drives[10][16]={"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_usb002", "/dev_usb003", "/dev_usb006", "/dev_usb007", "/net0", "/net1", "/ext"};
 static char paths [11][16]={"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video"};
-
-static char cover_paths[32][6] = {MM_ROOT_STD "/covers", WMTMP, MM_ROOT_STL "/covers", MM_ROOT_SSTL "/covers", "/dev_hdd0/GAMES/covers", "/dev_hdd0/GAMEZ/covers"};
-static bool cpath_exist[6];
 
 uint64_t convertH(char *val);
 uint64_t find_syscall();
@@ -340,6 +338,7 @@ char STR_ACCESS[100]		= "Disable remote access to FTP/WWW services";
 char STR_NOSETUP[150]		= "Disable webMAN Setup entry in \"My Games\"";
 char STR_NOSPOOF[100]		= "Disable firmware version spoofing";
 char STR_NOGRP[100]			= "Disable grouping of content in \"My Games\"";
+char STR_TITLEID[100]		= "Include the ID as part of the title of the game";
 char STR_FANCTRL[100]		= "Enable dynamic fan control";
 char STR_NOWARN[100]		= "Disable temperature warnings";
 char STR_AUTOAT[100]		= "Auto at";
@@ -1839,6 +1838,7 @@ void update_language()
 		language("STR_NOSETUP", STR_NOSETUP);
 		language("STR_NOSPOOF", STR_NOSPOOF);
 		language("STR_NOGRP", STR_NOGRP);
+		language("STR_TITLEID", STR_TITLEID);
 		language("STR_FANCTRL", STR_FANCTRL);
 		language("STR_NOWARN", STR_NOWARN);
 		language("STR_AUTOAT", STR_AUTOAT);
@@ -2400,31 +2400,57 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title)
 		pos+=(mem[0x1c+indx]+(mem[0x1d+indx]<<8));
 		indx+=16;
 	}
+
+	if(webman_config->tid)
+	{
+		strcat(title, " [");
+		strcat(title, titleID);
+		strcat(title, "]");
+	}
 }
 
 static void get_icon(char *icon, char *titleid)
 {
-	struct CellFsStat buf;
+	struct CellFsStat s;
 
-	for(u8 i=0; i<6; i++)
-	{
-		if(cpath_exist[i])
-		{
-			sprintf(icon, "%s/%s.JPG", cover_paths[i], titleid);
-			if(cellFsStat(icon, &buf)==CELL_FS_SUCCEEDED) return;
-			sprintf(icon, "%s/%s.PNG", cover_paths[i], titleid);
-			if(cellFsStat(icon, &buf)==CELL_FS_SUCCEEDED) return;
-		}
-	}
+	sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_STD, titleid);
+	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_STD, titleid);
+	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+	sprintf(icon, "%s/%s.JPG", WMTMP, titleid);
+	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	sprintf(icon, "%s/%s.PNG", WMTMP, titleid);
+	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+	sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_STL, titleid);
+	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_STL, titleid);
+	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+	sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_SSTL, titleid);
+	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_SSTL, titleid);
+	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+	sprintf(icon, "/dev_hdd0/GAMES/covers/%s.JPG", titleid);
+	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	sprintf(icon, "/dev_hdd0/GAMES/covers/%s.PNG", titleid);
+	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+	sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.JPG", titleid);
+	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.PNG", titleid);
+	if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 
 	icon[0]=0;
 }
 
 static void get_default_icon(char *icon, char *param, char *param2)
 {
-	struct CellFsStat buf;
+	struct CellFsStat s;
 
-    if(icon[0]==0 || cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED) {
+    if(icon[0]==0 || cellFsStat(icon, &s)!=CELL_FS_SUCCEEDED) {
 		if(strstr(param, "/PS2ISO"))
 			strcpy(icon, "/dev_flash/vsh/resource/explore/user/025.png");
 		else if(strstr(param, "/PSXISO") || strstr(param, "/PSXGAMES") || strstr(param2, ".ntfs[PSXISO]") || strstr(param2, ".ntfs[PSXGAMES]"))
@@ -2628,9 +2654,6 @@ again1:
 				show_msg((char*)STR_WMSTART);
             }
 		}
-
-		for(u8 i=0; i<6; i++)
-			cpath_exist[i]=cellFsStat(MM_ROOT_STD, &buf)==CELL_FS_SUCCEEDED;
 
 		if(do_delay)
 		{
@@ -3908,6 +3931,7 @@ again3:
 					if(!strstr(param, "mincfan")) webman_config->combo|=MINDYNFAN;
 
 
+					if(strstr(param, "tid")) webman_config->tid=1;
 					if(strstr(param, "poll")) webman_config->poll=1;
 					if(strstr(param, "ftpd")) webman_config->ftpd=1;
 					if(strstr(param, "nopad")) webman_config->nopad=1;
@@ -4597,6 +4621,7 @@ just_leave:
        						addcheckbox("sp", "nospf", STR_NOSPOOF, NULL, (webman_config->nospoof), buffer);
 #endif
 						addcheckbox("gr", "nogrp", STR_NOGRP, NULL, (webman_config->nogrp), buffer);
+						addcheckbox("ti", "tid", STR_TITLEID, NULL, (webman_config->tid), buffer);
 
 						strcat(buffer, "<hr color=\"#0099FF\"/><table width=\"760\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr class=\"propfont\"><td width=\"320\">");
 

@@ -32,6 +32,7 @@ STR_ACCESS			[Távoli hozzáférés kikapcsolása az FTP/WWW szolgáltatásokhoz
 STR_NOSETUP			[A webMAN Setup bejegyzés kikapcsolása a "Játékaim" menüben]
 STR_NOSPOOF			[Firmware spoofing kikapcsolása]
 STR_NOGRP			[Tartalmak csoportosításának kikapcsolása a "Játékaim" menüben]
+STR_TITLEID		[Tartalmazza a ID részeként a cím a játék]
 STR_FANCTRL			[Dinamikus ventilátor szabályzó bekapcsolása]
 STR_NOWARN			[Hőmérséklet figyelmeztetés kikapcsolása]
 STR_AUTOAT			[Automatikus]
