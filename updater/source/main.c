@@ -106,13 +106,7 @@ int add_mygame()
 	fclose (f);
 
 	// is fb.xml entry in cat file ?
-
-	for(i=0; i < size - sizeof(fb); i++) {
-		for(j=0; j<sizeof(fb); j++) {
-			if( cat[i+j] != fb[j]) break;
-			if(j==(sizeof(fb)-1)) {free(cat); return 0;}
-		}
-	}
+	if(strstr(cat, "fb.xml")!=NULL) {free(cat); return 0;}
 
 	// search position
 	for(i=0; i < size - sizeof(gameexit); i++) {

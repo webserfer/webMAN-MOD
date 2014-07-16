@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.7 MOD"						// webMAN version
+#define WM_VERSION			"1.30.8 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -122,6 +122,8 @@ static sys_ppu_thread_t thread_id		=-1;
 #define DEVICE_TYPE_DVD		0x10 /* DVD-ROM, DVD+-R, DVD+-RW etc, they are differenced by booktype field in some scsi command */
 #define DEVICE_TYPE_CD		0x08 /* CD-ROM, CD-DA, CD-R, CD-RW, etc, they are differenced somehow with scsi commands */
 
+#define IS_COPY				9
+#define COPY_WHOLE_FILE		0
 
 enum STORAGE_COMMAND
 {
@@ -179,7 +181,7 @@ static uint32_t cached_cd_sector=0x80000000;
 
 #define MIN_FANSPEED	(25)
 #define MAX_FANSPEED	(0xE6)
-#define MY_TEMP 		(80)
+#define MY_TEMP 		(65)
 static u8 fan_speed=0x33;
 static u8 old_fan=0x33;
 static u32 max_temp=MY_TEMP;
@@ -282,7 +284,7 @@ typedef struct
 #define MINDYNFAN (1<<11)
 
 void reset_settings(void);
-void save_settings(void);
+int save_settings(void);
 static u64 backup[6];
 
 static u8 wmconfig[sizeof(WebmanCfg)];
@@ -314,6 +316,7 @@ char STR_SETUP[30]			= "Setup";
 char STR_EJECT[50]			= "Eject";
 char STR_INSERT[50]			= "Insert";
 char STR_UNMOUNT[50]		= "Unmount";
+char STR_COPY[50]			= "Copy Folder";
 char STR_REFRESH[50]		= "Refresh";
 char STR_SHUTDOWN[50]		= "Shutdown";
 char STR_RESTART[50]		= "Restart";
@@ -322,6 +325,11 @@ char STR_BYTE[10]			= "b";
 char STR_KILOBYTE[10]		= "KB";
 char STR_MEGABYTE[10]		= "MB";
 char STR_GIGABYTE[10]		= "GB";
+
+char STR_COPYING[30]		= "Copying";
+char STR_CPYDEST[30]		= "Destination";
+char STR_CPYFINISH[30]		= "Copy Finished!";
+char STR_CPYABORT[50]		= "Copy aborted!";
 
 char STR_SCAN1[100]			= "Scan these devices";
 char STR_SCAN2[100]			= "Scan for content";
@@ -445,6 +453,10 @@ static inline void led(u64 color, u64 mode);
 void restore_fan(u8 settemp);
 int do_umount_iso(void);
 
+int savefile(char *file, char *mem, u64 size);
+int filecopy(char *file1, char *file2, uint64_t maxbytes);
+int folder_copy(char *path1, char *path2);
+
 void absPath(char* absPath_s, const char* path, const char* cwd);
 int isDir(const char* path);
 int ssplit(const char* str, char* left, int lmaxlen, char* right, int rmaxlen);
@@ -456,7 +468,9 @@ int my_atoi(const char *c);
 static void mount_with_mm(const char *_path, u8 do_eject);
 void eject_insert(u8 eject, u8 insert);
 
-int do_startup_msg = 1;
+bool copy_in_progress = false;
+bool copy_aborted = false;
+
 void show_msg(char* msg);
 
 //int (*_cellGcmIoOffsetToAddress)(uint32_t, void**) = NULL;
@@ -595,6 +609,124 @@ static u32 in_cobra(u32 *mode)
 	return_to_user_prog(uint32_t);
 }
 */
+int isDir(const char* path)
+{
+	struct CellFsStat s;
+	if(cellFsStat(path, &s)==CELL_FS_SUCCEEDED)
+		return ((s.st_mode & CELL_FS_S_IFDIR) != 0);
+	else
+		return 0;
+}
+
+int savefile(char *file, char *mem, u64 size)
+{
+	u64 written;
+	int fd=0;
+	if(cellFsOpen(file, CELL_FS_O_CREAT| CELL_FS_O_TRUNC |CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+	{
+		cellFsWrite(fd, (void *)mem, size, &written);
+		cellFsClose(fd);
+		cellFsChmod(file, 0666);
+        return CELL_FS_SUCCEEDED;
+	}
+    else
+        return -1;
+}
+
+int filecopy(char *file1, char *file2, uint64_t maxbytes)
+{
+    struct CellFsStat buf;
+    int fd1, fd2;
+    int ret=-1;
+
+    uint64_t chunk_size=64*1024;
+
+	if(cellFsStat(file1, &buf)!=CELL_FS_SUCCEEDED) return ret;
+
+	if(cellFsOpen((char*)file1, CELL_FS_O_RDONLY, &fd1, 0, 0)==CELL_FS_SUCCEEDED)
+	{
+		uint64_t size = buf.st_size;
+		if(maxbytes>0 && size>maxbytes) size=maxbytes;
+
+		sys_addr_t buf1=0;
+		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &buf1)==0)
+		{	// copy_file
+
+			if(cellFsOpen(file2, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd2, 0,0)==CELL_FS_SUCCEEDED)
+			{
+				char *chunk=(char*)buf1;
+				uint64_t msiz1 = 0, msiz2 = 0, pos=0;
+				copy_aborted = false;
+
+				while(size>0ULL)
+        	    {
+					if(copy_aborted) break;
+
+					cellFsLseek(fd1, pos, CELL_FS_SEEK_SET, &msiz1);
+					cellFsRead(fd1, chunk, chunk_size, &msiz1);
+
+					cellFsWrite(fd2, chunk, msiz1, &msiz2);
+					if(!msiz2) {break;}
+
+					pos+=msiz2;
+					size-=msiz2;
+					if(chunk_size>size) chunk_size=(int) size;
+
+					sys_timer_usleep(1);
+				}
+				cellFsClose(fd2);
+
+				if(copy_aborted)
+					cellFsUnlink(file2);
+				else
+					cellFsChmod(file2, 0666);
+
+				ret=size;
+			}
+			sys_memory_free(buf1);
+		}
+		cellFsClose(fd1);
+	}
+
+	return ret;
+}
+
+int folder_copy(char *path1, char *path2)
+{
+	int fd;
+	u64 read;
+	CellFsDirent dir;
+	char source[512];
+	char target[512];
+
+	cellFsMkdir((char*)path2, 0777);
+    copy_aborted=false;
+
+	if(cellFsOpendir(path1, &fd) == CELL_FS_SUCCEEDED)
+	{
+		read = sizeof(CellFsDirent);
+		while(!cellFsReaddir(fd, &dir, &read))
+		{
+			if(!read || copy_aborted) break;
+			if(dir.d_name[0]=='.' && (dir.d_name[1]=='.' || dir.d_name[1]==0)) continue;
+
+			strcpy(source, path1); strcat(source, "/"); strcat(source, dir.d_name);
+			strcpy(target, path2); strcat(target, "/"); strcat(target, dir.d_name);
+
+			if(isDir(source))
+				folder_copy(source, target);
+			else
+				filecopy(source, target, COPY_WHOLE_FILE);
+		}
+		cellFsClosedir(fd);
+
+        if(copy_aborted) return -1;
+	}
+	else
+		return -1;
+
+	return CELL_FS_SUCCEEDED;
+}
 
 int my_atoi(const char *c)
 {
@@ -1685,16 +1817,6 @@ void absPath(char* absPath_s, const char* path, const char* cwd)
 	}
 }
 
-int isDir(const char* path)
-{
-	struct CellFsStat s;
-	if(cellFsStat(path, &s)==CELL_FS_SUCCEEDED)
-		return ((s.st_mode & CELL_FS_S_IFDIR) != 0);
-	else
-		return 0;
-}
-
-
 void pokeq( uint64_t addr, uint64_t val)
 {
 	system_call_2(7, addr, val);
@@ -1744,16 +1866,18 @@ bool language(const char *file_str, char *default_str)
 	} else if(webman_config->lang==10) {
 		lang_path = "/dev_hdd0/tmp/LANG_GR.TXT";
 	} else if(webman_config->lang==11) {
-		lang_path = "/dev_hdd0/tmp/LANG_IN.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_HR.TXT";
 	} else if(webman_config->lang==12) {
-		lang_path = "/dev_hdd0/tmp/LANG_TR.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_IN.TXT";
 	} else if(webman_config->lang==13) {
-		lang_path = "/dev_hdd0/tmp/LANG_AR.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_TR.TXT";
 	} else if(webman_config->lang==14) {
-		lang_path = "/dev_hdd0/tmp/LANG_CN.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_AR.TXT";
 	} else if(webman_config->lang==15) {
-		lang_path = "/dev_hdd0/tmp/LANG_KR.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_CN.TXT";
 	} else if(webman_config->lang==16) {
+		lang_path = "/dev_hdd0/tmp/LANG_KR.TXT";
+	} else if(webman_config->lang==17) {
 		lang_path = "/dev_hdd0/tmp/LANG_JP.TXT";
 	} else if(webman_config->lang==99) {
 		lang_path = "/dev_hdd0/tmp/LANG_XX.TXT";
@@ -1814,6 +1938,7 @@ void update_language()
 		language("STR_EJECT", STR_EJECT);
 		language("STR_INSERT", STR_INSERT);
 		language("STR_UNMOUNT", STR_UNMOUNT);
+		language("STR_COPY", STR_COPY);
 		language("STR_REFRESH", STR_REFRESH);
 		language("STR_SHUTDOWN", STR_SHUTDOWN);
 		language("STR_RESTART", STR_RESTART);
@@ -1822,6 +1947,10 @@ void update_language()
 		language("STR_KILOBYTE", STR_KILOBYTE);
 		language("STR_MEGABYTE", STR_MEGABYTE);
 		language("STR_GIGABYTE", STR_GIGABYTE);
+
+		language("STR_COPYING", STR_COPYING);
+		language("STR_CPYDEST", STR_CPYDEST);
+		language("STR_CPYABORT", STR_CPYABORT);
 
 		language("STR_SCAN1", STR_SCAN1);
 		language("STR_SCAN2", STR_SCAN2);
@@ -2349,21 +2478,21 @@ static int read_remote_dir(int s, sys_addr_t *data /*netiso_read_dir_result_data
 }
 #endif
 
-static void addradiobutton(const char *name, const char *value, const char *id, const char *label, const char *sufix, bool checked, char *buffer)
+static void add_radio_button(const char *name, const char *value, const char *id, const char *label, const char *sufix, bool checked, char *buffer)
 {
 	char templn[256];
     sprintf(templn, "<label><input type=\"radio\" name=\"%s\" value=\"%s\" id=\"%s\" %s/> %s%s</label>", name, value, id, checked?(char*)"checked=\"checked\"" : (char*)"", label, (!sufix)?"<br>":sufix);
     strcat(buffer, templn);
 }
 
-static void addcheckbox(const char *name, const char *value, const char *label, const char *sufix, bool checked, char *buffer)
+static void add_check_box(const char *name, const char *value, const char *label, const char *sufix, bool checked, char *buffer)
 {
 	char templn[256];
     sprintf(templn, "<label><input type=\"checkbox\" name=\"%s\" value=\"%s\" %s/> %s%s</label>", name, value, checked?(char*)"checked=\"checked\"" : (char*)"", label, (!sufix)?"<br>":sufix);
     strcat(buffer, templn);
 }
 
-static void addoptionitem(const char *value, const char *label, bool selected, char *buffer)
+static void add_option_item(const char *value, const char *label, bool selected, char *buffer)
 {
 	char templn[256];
     sprintf(templn, "<option value=\"%s\" %s/>%s</option>", value, selected?(char*)"selected=\"selected\"" : (char*)"", label);
@@ -2403,7 +2532,7 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title)
 		indx+=16;
 	}
 
-	if(webman_config->tid)
+	if(webman_config->tid && strlen(titleID)==9)
 	{
 		strcat(title, " [");
 		strcat(title, titleID);
@@ -2411,7 +2540,7 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title)
 	}
 }
 
-static void get_icon(char *icon, char *titleid)
+static void get_cover(char *icon, char *titleid)
 {
 	struct CellFsStat s;
 
@@ -2445,28 +2574,171 @@ static void get_icon(char *icon, char *titleid)
 		sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.PNG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 	}
 
-	sprintf(icon, "%s/%s.JPG", WMTMP, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-	sprintf(icon, "%s/%s.PNG", WMTMP, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-
 	icon[0]=0;
 }
 
-static void get_default_icon(char *icon, char *param, char *param2)
+static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns, int abort_connection)
+{
+	//this function is called only from get_default_icon
+
+	struct CellFsStat s;
+    int flen;
+
+	sprintf(icon, "%s/%s", WMTMP, file);
+	flen=strlen(icon);
+
+	if(isdir)
+    {
+		strcat(icon, ".PNG");
+		flen+=4;
+    }
+	else
+    {
+		icon[flen-4]=0; // remove file extension
+		strcat(icon, ".PNG");
+
+		//file name + .PNG
+		if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+		icon[flen-4]=0; // remove file extension
+		strcat(icon, ".JPG");
+
+		//file name + .JPG
+		if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+		icon[flen-4]=0; // remove file extension
+		strcat(icon, ".jpg");
+
+		//file name + .jpg
+		if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+		icon[flen-4]=0; // remove file extension
+		strcat(icon, ".png");
+	}
+
+	//file name + .png
+	if(cellFsStat(icon, &s)!=CELL_FS_SUCCEEDED)
+	{
+#ifdef COBRA_ONLY
+		char tempstr[1024];
+		icon[flen-4]=0; // remove file extension
+
+		if(isdir)
+		{
+			strcat(icon, ".PNG");
+
+			sprintf(tempstr, "%s/%s/PS3_GAME/ICON0.PNG", param, file);
+		}
+        else
+		{
+			strcat(icon, ".jpg");
+
+            sprintf(tempstr, "%s/%s", param, file);
+			tempstr[strlen(tempstr)-4]=0;
+			strcat(tempstr, ".jpg");
+		}
+
+		if(!ns || strstr(param, "/net")==NULL)
+		{
+			if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+			icon[0]=0;
+			return;
+		}
+
+		int64_t file_size;
+		int is_directory=0;
+		u64 mtime, ctime, atime;
+
+		abort_connection=0;
+		if(remote_stat(ns, tempstr, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection)!=0)
+		{
+			tempstr[strlen(tempstr)-4]=0;
+			strcat(tempstr, ".png");
+
+			icon[strlen(icon)-4]=0;
+			strcat(icon, ".PNG");
+
+			if(remote_stat(ns, tempstr, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection)!=0)
+			{
+				icon[0]=0;
+				return;
+			}
+		}
+
+		//Copy remote icon locally
+		if(file_size &&	open_remote_file_2(ns, tempstr,	&abort_connection)>0 &&	!abort_connection)
+		{
+			int fdw;
+			if(cellFsOpen(icon,	CELL_FS_O_CREAT|CELL_FS_O_RDWR|CELL_FS_O_TRUNC,	&fdw, NULL,	0)==CELL_FS_SUCCEEDED)
+			{
+				int	boff=0;
+                int bytes_read=0;
+
+				while(boff<file_size)
+				{
+					bytes_read = read_remote_file(ns, (char*)tempstr, boff,	3072, &abort_connection);
+					if(bytes_read)
+						cellFsWrite(fdw, (char*)tempstr, bytes_read, NULL);
+					boff+=bytes_read;
+					if(bytes_read<3072 || abort_connection || boff>=file_size) break;
+				}
+				cellFsClose(fdw);
+				if(boff<1 || abort_connection) cellFsUnlink(icon);
+				open_remote_file_2(ns, (char*)"/CLOSEFILE",	&bytes_read);
+			}
+		}
+#else
+		icon[0]=0;
+#endif
+	}
+}
+
+static void get_default_icon(char *icon, char *param, char *file, int isdir, int ns, int abort_connection)
 {
 	struct CellFsStat s;
 
-    if(icon[0]==0 || cellFsStat(icon, &s)!=CELL_FS_SUCCEEDED) {
-		if(strstr(param, "/PS2ISO"))
-			strcpy(icon, "/dev_flash/vsh/resource/explore/user/025.png");
-		else if(strstr(param, "/PSXISO") || strstr(param, "/PSXGAMES") || strstr(param2, ".ntfs[PSXISO]") || strstr(param2, ".ntfs[PSXGAMES]"))
-			strcpy(icon, "/dev_flash/vsh/resource/explore/user/026.png");
-		else if(strstr(param, "/PSPISO") || strstr(param, "/ISO"))
-			strcpy(icon, "/dev_flash/vsh/resource/explore/user/022.png");
-		else if(strstr(param, "/BDISO") || strstr(param, "/DVDISO") || strstr(param2, ".ntfs[BDISO]") || strstr(param2, ".ntfs[DVDISO]"))
-			strcpy(icon, "/dev_flash/vsh/resource/explore/user/023.png");
+	// continue using cover or default icon0.png
+	if(icon[0] && cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+	// get icon from folder && copy remote icon
+	get_iso_icon(icon, param, file, isdir, ns, abort_connection);
+
+	if(icon[0] && cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+	// get cover if the filename contains a title id
+	if(!webman_config->nocov && (strstr(file, " [B") || strstr(file, " [N")))
+	{
+		//use title in filename
+		char titleid[10];
+		if(strstr(file, " [B"))
+		    snprintf(titleid, 9, "%s", strstr(file,  " [B") + 2);
 		else
-			strcpy(icon, "/dev_flash/vsh/resource/explore/user/024.png");
+		    snprintf(titleid, 9, "%s", strstr(file,  " [N") + 2);
+
+		get_cover(icon, titleid);
+
+		if(icon[0]) return;
 	}
+
+	//use the cached PNG from wmtmp if available
+	sprintf(icon, "%s/%s", WMTMP, file);
+	icon[strlen(icon)-4]=0; // remove file extension
+	strcat(icon, ".PNG");
+
+	if(icon[0] && cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+    //show the default icon by type
+	if(strstr(param, "/PS2ISO"))
+		strcpy(icon, "/dev_flash/vsh/resource/explore/user/025.png");
+	else if(strstr(param, "/PSX") || strstr(file, ".ntfs[PSX"))
+		strcpy(icon, "/dev_flash/vsh/resource/explore/user/026.png");
+	else if(strstr(param, "/PSPISO") || strstr(param, "/ISO"))
+		strcpy(icon, "/dev_flash/vsh/resource/explore/user/022.png");
+	else if(strstr(param, "/BDISO") || strstr(param, "/DVDISO") || strstr(file, ".ntfs[BDISO]") || strstr(file, ".ntfs[DVDISO]"))
+		strcpy(icon, "/dev_flash/vsh/resource/explore/user/023.png");
+	else
+		strcpy(icon, "/dev_flash/vsh/resource/explore/user/024.png");
 }
 
 static void handleclient(u64 conn_s_p)
@@ -2496,8 +2768,21 @@ static void handleclient(u64 conn_s_p)
 
 	if(conn_s_p==0xC0FEBABE || conn_s_p==0xC0FEBAB0)
 	{
+		if(conn_s_p==0xC0FEBABE && strlen(STR_WMSTART)>0)
+		{
+			sys_timer_sleep(10);
+			show_msg((char*)STR_WMSTART);
+		}
+
 		init_running=1;
 		//reset_settings(webman_config);
+
+		//identify covers folders to be scanned
+		sprintf(templn, "%s/covers", MM_ROOT_STD) ; covers_exist[0]=(cellFsStat(templn, &buf) ==CELL_FS_SUCCEEDED);
+		sprintf(templn, "%s/covers", MM_ROOT_STL) ; covers_exist[1]=(cellFsStat(templn, &buf) ==CELL_FS_SUCCEEDED);
+		sprintf(templn, "%s/covers", MM_ROOT_SSTL); covers_exist[2]=(cellFsStat(templn, &buf) ==CELL_FS_SUCCEEDED);
+												    covers_exist[3]=(cellFsStat("/dev_hdd0/GAMES/covers", &buf)==CELL_FS_SUCCEEDED);
+												    covers_exist[4]=(cellFsStat("/dev_hdd0/GAMEZ/covers", &buf)==CELL_FS_SUCCEEDED);
 
 #ifdef COBRA_ONLY
 		//if(cobra_mode)
@@ -2606,24 +2891,6 @@ static void handleclient(u64 conn_s_p)
 
 	if(conn_s_p==0xC0FEBABE && webman_config->refr==1)
 	{
-		//show webMAN startup message
-		if(do_startup_msg)
-		{
-			do_startup_msg = 0;
-			if(strlen(STR_WMSTART)>0)
-			{
-				sys_timer_sleep(10);
-				show_msg((char*)STR_WMSTART);
-            }
-		}
-
-		//identify covers folders to be scanned
-		sprintf(templn, "%s/covers", MM_ROOT_STD) ; covers_exist[0]=(cellFsStat(templn, &buf) ==CELL_FS_SUCCEEDED);
-		sprintf(templn, "%s/covers", MM_ROOT_STL) ; covers_exist[1]=(cellFsStat(templn, &buf) ==CELL_FS_SUCCEEDED);
-		sprintf(templn, "%s/covers", MM_ROOT_SSTL); covers_exist[2]=(cellFsStat(templn, &buf) ==CELL_FS_SUCCEEDED);
-												    covers_exist[3]=(cellFsStat("/dev_hdd0/GAMES/covers", &buf)==CELL_FS_SUCCEEDED);
-												    covers_exist[4]=(cellFsStat("/dev_hdd0/GAMEZ/covers", &buf)==CELL_FS_SUCCEEDED);
-
 #ifdef COBRA_ONLY
 
 		u8 do_delay=0;
@@ -2685,6 +2952,7 @@ again1:
 			mount_with_mm(tempstr, 0);
 		}
 #endif
+
 		init_running=0;
 		sys_ppu_thread_exit(0);
 	}
@@ -2755,11 +3023,9 @@ again1:
 
 		sprintf(xml, "/dev_hdd0/xmlhost/game_plugin/fb.xml");
 		cellFsUnlink(xml);
-		cellFsOpen(xml, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdxml, NULL, 0);
 		sprintf(myxml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMBML version=\"1.0\"><View id=\"seg_fb\"><Attributes><Table key=\"mgames\"><Pair key=\"icon_rsc\"><String>item_tex_ps3util</String></Pair><Pair key=\"icon_notation\"><String>WNT_XmbItemSavePS3</String></Pair><Pair key=\"title\"><String>%s</String></Pair><Pair key=\"info\"><String>%s</String></Pair></Table></Attributes><Items><Query class=\"type:x-xmb/folder-pixmap\" key=\"mgames\" attr=\"mgames\" src=\"xmb://localhost/dev_hdd0/xmlhost/game_plugin/mygames.xml#seg_mygames\"/></Items></View></XMBML>", STR_MYGAMES, STR_LOADGAMES);
-		cellFsWrite(fdxml, (char*)myxml, strlen(myxml), NULL);
-		cellFsClose(fdxml);
-		cellFsChmod(xml, 0666);
+		savefile(xml, (char*)myxml, strlen(myxml));
+
 		myxml[0]=0;
 
 		sprintf(xml, "/dev_hdd0/xmlhost/game_plugin/mygames.xml");
@@ -2991,7 +3257,6 @@ reconnect:
 
 								if(cellFsOpen(templn, CELL_FS_O_RDONLY, &fdw, 0, 0)==CELL_FS_SUCCEEDED)
 								{
-									//cellFsOpen(templn, CELL_FS_O_RDONLY, &fdw, 0, 0);
 									cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
 									cellFsRead(fdw, (void *)&tempstr, 4096, &msiz);
 									cellFsClose(fdw);
@@ -3001,7 +3266,7 @@ reconnect:
 										parse_param_sfo(mem, tempID, templn);
 
 										icon[0]=0;
-										if(tempID[0] && !webman_config->nocov) get_icon(icon, tempID);
+										if(tempID[0] && !webman_config->nocov) get_cover(icon, tempID);
 									}
 								}
 								else
@@ -3012,95 +3277,7 @@ reconnect:
 
 							if(templn[strlen(templn)-4]=='.') templn[strlen(templn)-4]=0;
 
-							if(icon[0]==0)
-							{
-								sprintf(icon, WMTMP "/%s.PNG", data[v3_entry].name);
-								if(!data[v3_entry].is_directory)
-								{
-									icon[strlen(icon)-7]='P';
-									icon[strlen(icon)-6]='N';
-									icon[strlen(icon)-5]='G';
-									icon[strlen(icon)-4]=0;
-								} else goto go3;
-
-								if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
-								{
-									icon[strlen(icon)-3]='J';
-									icon[strlen(icon)-2]='P';
-								} else goto c_load2;
-
-								if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
-								{
-									icon[strlen(icon)-3]='j';
-									icon[strlen(icon)-2]='p';
-									icon[strlen(icon)-1]='g';
-								} else goto c_load2;
-
-								if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
-								{
-									icon[strlen(icon)-3]='p';
-									icon[strlen(icon)-2]='n';
-								} else goto c_load2;
-go3:
-								if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
-								{
-									if(data[v3_entry].is_directory)
-									{
-										sprintf(tempstr, "%s/%s/PS3_GAME/ICON0.PNG", param, data[v3_entry].name);
-										icon[strlen(icon)-3]='P';
-										icon[strlen(icon)-2]='N';
-										icon[strlen(icon)-1]='G';
-									}
-									else
-									{
-										sprintf(tempstr, "%s/%s", param, data[v3_entry].name);
-										icon[strlen(icon)-3]='j';
-										icon[strlen(icon)-2]='p';
-										icon[strlen(icon)-1]='g';
-
-										tempstr[strlen(tempstr)-3]='j';
-										tempstr[strlen(tempstr)-2]='p';
-										tempstr[strlen(tempstr)-1]='g';
-									}
-
-									abort_connection=0;
-									if(remote_stat(ns, tempstr, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection)!=0)
-									{
-										tempstr[strlen(tempstr)-3]='p';
-										tempstr[strlen(tempstr)-2]='n';
-										tempstr[strlen(tempstr)-1]='g';
-										icon[strlen(icon)-3]='P';
-										icon[strlen(icon)-2]='N';
-										icon[strlen(icon)-1]='G';
-										if(remote_stat(ns, tempstr, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection)!=0)
-										{
-											icon[0]=0;
-											goto c_load2;
-										}
-									}
-
-									if(file_size && open_remote_file_2(ns, tempstr, &abort_connection)>0 && !abort_connection)
-									{
-										if(cellFsOpen(icon, CELL_FS_O_CREAT|CELL_FS_O_RDWR|CELL_FS_O_TRUNC, &fdw, NULL, 0)==CELL_FS_SUCCEEDED)
-										{
-											int boff=0;
-											while(boff<file_size)
-											{
-												bytes_read = read_remote_file(ns, (char*)tempstr, boff, 3072, &abort_connection);
-												if(bytes_read)
-													cellFsWrite(fdw, (char*)tempstr, bytes_read, NULL);
-												boff+=bytes_read;
-												if(bytes_read<3072 || abort_connection || boff>=file_size) break;
-											}
-											cellFsClose(fdw);
-											if(boff<1 || abort_connection) cellFsUnlink(icon);
-											open_remote_file_2(ns, (char*)"/CLOSEFILE", &bytes_read);
-										}
-									}
-								}
-							}
-c_load2:
-							get_default_icon(icon, param, data[v3_entry].name);
+							get_default_icon(icon, param, data[v3_entry].name, data[v3_entry].is_directory, ns, abort_connection);
 
 							sprintf(tempstr, "<Table key=\"%04i\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>%s</String></Pair><Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair><Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/net%i%s/%s?random=%i</String></Pair><Pair key=\"info\"><String>/net%i%s</String></Pair></Table>",
 								key, icon, templn, (f0-7), param, data[v3_entry].name, (int)pTick.tick, (f0-7), param);
@@ -3135,16 +3312,14 @@ c_load2:
 						{
 							sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.d_name);
 							is_iso=((strstr(param, "/PS3ISO") || strstr(param, "/PS2ISO") ||
-									strstr(param, "/PSPISO") || strstr(param, "/ISO")||
-									strstr(param, "/PSX") || strstr(param, "/DVDISO") || strstr(param, "/BDISO") ||
-									strstr(param, WMTMP))
+									 strstr(param, "/PSPISO") || strstr(param, "/ISO")||
+									 strstr(param, "/PSX") || strstr(param, "/DVDISO") || strstr(param, "/BDISO") ||
+									 strstr(param, WMTMP))
 								&&
 								(
 								  (strstr(entry.d_name, ".ISO") || strstr(entry.d_name, ".iso") ||
-									(strstr(param, "/PSX") &&
-										(strstr(entry.d_name, ".CUE") || strstr(entry.d_name, ".cue"))
-									)
-								   )
+									(strstr(param, "/PSX") && (strstr(entry.d_name, ".CUE") || strstr(entry.d_name, ".cue")))
+								  )
 								&&
 								  ((entry.d_name[strlen(entry.d_name)-1]=='0' && entry.d_name[strlen(entry.d_name)-2]=='.') || entry.d_name[strlen(entry.d_name)-1]=='o' || entry.d_name[strlen(entry.d_name)-1]=='O' || entry.d_name[strlen(entry.d_name)-1]=='e' || entry.d_name[strlen(entry.d_name)-1]=='E')
 								)) || strstr(entry.d_name, ".ntfs[");
@@ -3241,7 +3416,7 @@ c_load2:
 								}
 		//title_foundx:
 								icon[0]=0;
-								if(tempID[0] && !webman_config->nocov) get_icon(icon, tempID);
+								if(tempID[0] && !webman_config->nocov) get_cover(icon, tempID);
 
 								if(is_iso)
 								{
@@ -3265,11 +3440,11 @@ c_load2:
 										if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
 											{icon[strlen(icon)-3]='j'; icon[strlen(icon)-2]='p'; icon[strlen(icon)-1]='g';}
 									}
-
-									get_default_icon(icon, param, entry.d_name);
 								}
 								else if(icon[0]==0 || cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
 									sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry.d_name);
+
+								get_default_icon(icon, param, entry.d_name, 0, ns, abort_connection);
 
 								sprintf(tempstr, "<Table key=\"%04i\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>%s</String></Pair><Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair><Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3%s/%s?random=%i</String></Pair><Pair key=\"info\"><String>%s</String></Pair></Table>",
 									key, icon, templn, param, entry.d_name, (int)pTick.tick, (f0==9?(char*)" ":param));
@@ -3671,7 +3846,7 @@ again3:
 				{
 					sprintf(buffer1, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: %i\r\n\r\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><meta http-equiv=\"Content-type\" content=\"text/html;charset=UTF-8\"><META HTTP-EQUIV=\"CACHE-CONTROL\" CONTENT=\"NO-CACHE\"><html><body>Message sent: %s</body></html>", strlen(param)+312, param+11);
 					ssend(conn_s, buffer1);
-					show_msg(param+11);
+					show_msg((char*)param+11);
 				}
 				sclose(&conn_s);
 				loading_html--;
@@ -3710,15 +3885,15 @@ again3:
 				sys_ppu_thread_exit(0);
 			}
 
-			if(strstr(param, "index.ps3")
-				|| strstr(param, "mount.ps3/")
-				|| strstr(param, "mount_ps3/")
-				|| strstr(param, "eject.ps3")
-				|| strstr(param, "insert.ps3")
-				|| strstr(param, "refresh.ps3")
-				|| strstr(param, "setup.ps3")
-				|| strstr(param, "cpursx.ps3")
-				)
+			if( strstr(param, "cpursx.ps3")  ||
+				strstr(param, "index.ps3")   ||
+				strstr(param, "mount.ps3/")  ||
+				strstr(param, "mount_ps3/")  ||
+				strstr(param, "setup.ps3")   ||
+				strstr(param, "refresh.ps3") ||
+				strstr(param, "copy.ps3/")    ||
+				strstr(param, "eject.ps3")   ||
+				strstr(param, "insert.ps3"))
 				is_binary=0;
 			else
 			{
@@ -4096,14 +4271,15 @@ again3:
 					if(strstr(param, "l=8"))   webman_config->lang=8;  // Hungarian
 					if(strstr(param, "l=9"))   webman_config->lang=9;  // Polish
 					if(strstr(param, "l=10"))  webman_config->lang=10; // Greek
+					if(strstr(param, "l=11"))  webman_config->lang=11; // Croatian
 
 					// Asia
-					if(strstr(param, "l=11"))  webman_config->lang=11; // Indonesian
-					if(strstr(param, "l=12"))  webman_config->lang=12; // Turkish
-					if(strstr(param, "l=13"))  webman_config->lang=13; // Arabian
-					if(strstr(param, "l=14"))  webman_config->lang=14; // Chinese
-					if(strstr(param, "l=15"))  webman_config->lang=15; // Korean
-					if(strstr(param, "l=16"))  webman_config->lang=16; // Japanese
+					if(strstr(param, "l=12"))  webman_config->lang=12; // Indonesian
+					if(strstr(param, "l=13"))  webman_config->lang=13; // Turkish
+					if(strstr(param, "l=14"))  webman_config->lang=14; // Arabian
+					if(strstr(param, "l=15"))  webman_config->lang=15; // Chinese
+					if(strstr(param, "l=16"))  webman_config->lang=16; // Korean
+					if(strstr(param, "l=17"))  webman_config->lang=17; // Japanese
 
 					// Other
 					if(strstr(param, "l=99"))  webman_config->lang=99;	// Unknown LANG_XX.TXT
@@ -4256,10 +4432,12 @@ again3:
 				else
 				{
 					sprintf(templn, " [<a href=\"/cpursx.ps3\">CPU: %i°C | RSX: %i°C</a>]<hr/>", t1, t2);
-//					sprintf(templn, " <a href=\"/cpursx.ps3\">CPU: %i°C | RSX: %i°C (CPU: %i°F | RSX: %i°F)</a><hr/>", t1, t2, t1f, t2f );
-					//[<a href=\"/eject.ps3\">Eject</a>] [<a href=\"/insert.ps3\">Insert</a>] [<a href=\"/refresh.ps3\">Refresh</a>]
 					strcat(buffer, templn);
-					sprintf(templn, "<form action=\"\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/eject.ps3';\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/insert.ps3';\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/mount.ps3/unmount';\"> <input type=\"button\" value=\"%s XML\" onclick=\"window.location.href='/refresh.ps3';\">  <input type=\"button\" value=\"%s HTML\" onclick=\"window.location.href='/index.ps3?html';\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/shutdown.ps3';\">  <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/restart.ps3';\"> </form><hr/>", STR_EJECT, STR_INSERT, STR_UNMOUNT, STR_REFRESH, STR_REFRESH, STR_SHUTDOWN, STR_RESTART); strcat(buffer, templn);
+
+					sprintf(templn, "<form action=\"\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/eject.ps3';\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/insert.ps3';\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/mount.ps3/unmount';\">", STR_EJECT, STR_INSERT, STR_UNMOUNT); strcat(buffer, templn);
+					if(((strstr(param, "/dev_") && strlen(param)>12) || strstr(param, "/dev_bdvd")) && !strstr(param,".ps3/"))
+					{sprintf(templn, " <input type=\"button\" value=\"%s\" onclick=window.location.href=\"/copy.ps3%s\";\">", STR_COPY, param); strcat(buffer, templn);}
+					sprintf(templn, " <input type=\"button\" value=\"%s XML\" onclick=\"window.location.href='/refresh.ps3';\">  <input type=\"button\" value=\"%s HTML\" onclick=\"window.location.href='/index.ps3?html';\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/shutdown.ps3';\">  <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/restart.ps3';\"> </form><hr/>", STR_REFRESH, STR_REFRESH, STR_SHUTDOWN, STR_RESTART); strcat(buffer, templn);
 				}
 
 				if(is_binary==2) // folder listing
@@ -4361,13 +4539,15 @@ again3:
 											if(idx>=(max_entries-3)) break;
 
 											cellRtcSetTime_t(&rDate, data[n].mtime);
-											sz=(unsigned long long)data[n].file_size;
+
+                                            sz=(unsigned long long)data[n].file_size;
 											if(sz<10240) sprintf(sf, "%s", STR_BYTE);
-											else if(sz>=10240 && sz<2097152) {sprintf(sf, "%s", STR_KILOBYTE); sz>>=10;}
-											else if(sz>=2097152 && sz<2147483648U) {sprintf(sf, "%s", STR_MEGABYTE); sz>>=20;}
-											else if(sz>=2147483648U) {sprintf(sf, "%s", STR_GIGABYTE); sz>>=30;}
+											else if(sz<2097152) {sprintf(sf, "%s", STR_KILOBYTE); sz>>=10;}
+											else if(sz<2147483648U) {sprintf(sf, "%s", STR_MEGABYTE); sz>>=20;}
+											else {sprintf(sf, "%s", STR_GIGABYTE); sz>>=30;}
+
 											if(data[n].is_directory)
-												sprintf(fsize, "<a href=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
+												sprintf(fsize, "    f=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
 											else
 												sprintf(fsize, "%llu %s", sz, sf);
 											snprintf(ename, 6, "%s    ", data[n].name);
@@ -4464,11 +4644,13 @@ again3:
 
 									cellFsStat(templn, &buf);
 									cellRtcSetTime_t(&rDate, buf.st_mtime);
+
 									sz=(unsigned long long)buf.st_size;
 									if(sz<10240) sprintf(sf, "%s", STR_BYTE);
-									else if(sz>=10240 && sz<2097152) {sprintf(sf, "%s", STR_KILOBYTE); sz>>=10;}
-									else if(sz>=2097152 && sz<2147483648U) {sprintf(sf, "%s", STR_MEGABYTE); sz>>=20;}
-									else if(sz>=2147483648U) {sprintf(sf, "%s", STR_GIGABYTE); sz>>=30;}
+									else if(sz<2097152) {sprintf(sf, "%s", STR_KILOBYTE); sz>>=10;}
+									else if(sz<2147483648U) {sprintf(sf, "%s", STR_MEGABYTE); sz>>=20;}
+									else {sprintf(sf, "%s", STR_GIGABYTE); sz>>=30;}
+
 									if((buf.st_mode & S_IFDIR) != 0)
 										sprintf(fsize, "<a href=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
 									else
@@ -4484,6 +4666,7 @@ again3:
 									rDate.day, smonth[rDate.month-1], rDate.year,
 									rDate.hour, rDate.minute);
 									strncpy(line_entry[idx].path, tempstr, 512);
+
 									idx++;
 									tlen+=strlen(tempstr);
 
@@ -4577,12 +4760,8 @@ just_leave:
 					else
 					if(strstr(param, "setup.ps3?"))
 					{
-						int fdwm;
-						u64 written;
-						if(cellFsOpen(WMCONFIG, CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fdwm, NULL, 0) == CELL_FS_SUCCEEDED)
+                        if(save_settings() == CELL_FS_SUCCEEDED)
 						{
-							cellFsWrite(fdwm, (void *)wmconfig, sizeof(WebmanCfg), &written);
-							cellFsClose(fdwm);
 							sprintf(templn, "<br> %s", STR_SETTINGSUPD); strcat(buffer, templn);
 						}
 						else
@@ -4592,137 +4771,138 @@ just_leave:
 					if(strstr(param, "setup.ps3"))
 					{
 						sprintf(templn, "<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\"><font face=\"Courier New\"><table width=\"760\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td width=\"220\"><u>%s:</u><br>", STR_SCAN1); strcat(buffer, templn);
-						addcheckbox("u0", "usb0", drives[1], NULL, (webman_config->usb0), buffer);
-						addcheckbox("u1", "usb1", drives[2], NULL, (webman_config->usb1), buffer);
-						addcheckbox("u2", "usb2", drives[3], NULL, (webman_config->usb2), buffer);
-						addcheckbox("u3", "usb3", drives[4], NULL, (webman_config->usb3), buffer);
-						addcheckbox("u6", "usb6", drives[5], NULL, (webman_config->usb6), buffer);
-						addcheckbox("u7", "usb7", drives[6], NULL, (webman_config->usb7), buffer);
+						add_check_box("u0", "usb0", drives[1], NULL, (webman_config->usb0), buffer);
+						add_check_box("u1", "usb1", drives[2], NULL, (webman_config->usb1), buffer);
+						add_check_box("u2", "usb2", drives[3], NULL, (webman_config->usb2), buffer);
+						add_check_box("u3", "usb3", drives[4], NULL, (webman_config->usb3), buffer);
+						add_check_box("u6", "usb6", drives[5], NULL, (webman_config->usb6), buffer);
+						add_check_box("u7", "usb7", drives[6], NULL, (webman_config->usb7), buffer);
 
 						sprintf(templn, "<td width=\"520\"><u>%s:</u><br>", STR_SCAN2); strcat(buffer, templn);
 
 						sprintf(templn, "<input name=\"p0\" type=\"checkbox\" value=\"pst\" %s/> PLAYSTATION\xC2\xAE\x33<br>", (!(webman_config->cmask & PS3))?(char*)"checked=\"checked\"" : (char*)" "); strcat(buffer, templn);
 #ifdef COBRA_ONLY
-						addcheckbox("p1", "ps2", "PLAYSTATION\xC2\xAE\x32"    , NULL     , !(webman_config->cmask & PS2), buffer);
-						addcheckbox("p2", "ps1", "PLAYSTATION\xC2\xAE"        , NULL     , !(webman_config->cmask & PS1), buffer);
-                        addcheckbox("p3", "psp", "PLAYSTATION\xC2\xAEPORTABLE", " ("     , !(webman_config->cmask & PSP), buffer);
-                        addcheckbox("p6", "psl", STR_PSPL                     , ")<br>"  ,  (webman_config->pspl)       , buffer);
-						addcheckbox("p4", "blu", "Blu-ray\xE2\x84\xA2"        , NULL     , !(webman_config->cmask & BLU), buffer);
-						addcheckbox("p5", "dvd", "DVD "                       , STR_VIDLG, !(webman_config->cmask & DVD), buffer);
+						add_check_box("p1", "ps2", "PLAYSTATION\xC2\xAE\x32"    , NULL     , !(webman_config->cmask & PS2), buffer);
+						add_check_box("p2", "ps1", "PLAYSTATION\xC2\xAE"        , NULL     , !(webman_config->cmask & PS1), buffer);
+                        add_check_box("p3", "psp", "PLAYSTATION\xC2\xAEPORTABLE", " ("     , !(webman_config->cmask & PSP), buffer);
+                        add_check_box("p6", "psl", STR_PSPL                     , ")<br>"  ,  (webman_config->pspl)       , buffer);
+						add_check_box("p4", "blu", "Blu-ray\xE2\x84\xA2"        , NULL     , !(webman_config->cmask & BLU), buffer);
+						add_check_box("p5", "dvd", "DVD "                       , STR_VIDLG, !(webman_config->cmask & DVD), buffer);
 #endif
 
 						strcat(buffer, "</td></tr></table><hr color=\"#0099FF\"/>");
 
 #ifdef COBRA_ONLY
-						addcheckbox("l", "lastp", STR_LPG    , NULL, (webman_config->lastp), buffer);
-						addcheckbox("a", "autob", STR_AUTOB  , NULL, (webman_config->autob), buffer);
-						addcheckbox("d", "delay", STR_DELAYAB, NULL, (webman_config->delay), buffer);
+						add_check_box("l", "lastp", STR_LPG    , NULL, (webman_config->lastp), buffer);
+						add_check_box("a", "autob", STR_AUTOB  , NULL, (webman_config->autob), buffer);
+						add_check_box("d", "delay", STR_DELAYAB, NULL, (webman_config->delay), buffer);
 #endif
-						addcheckbox("bl", "blind", STR_DEVBL   , NULL, (webman_config->blind), buffer);
-						addcheckbox("rf", "refr",  STR_CONTSCAN, NULL, (webman_config->refr) , buffer);
-						addcheckbox("pl", "poll",  STR_USBPOLL,  NULL, (webman_config->poll) , buffer);
-						addcheckbox("ft", "ftpd",  STR_FTPSVC,   NULL, (webman_config->ftpd) , buffer);
-						addcheckbox("np", "nopad", STR_COMBOS,   NULL, (webman_config->nopad), buffer);
-						addcheckbox("nc", "nocov", STR_MMCOVERS, NULL, (webman_config->nocov), buffer);
-						addcheckbox("ip", "bind",  STR_ACCESS,   NULL, (webman_config->bind) , buffer);
-						addcheckbox("ws", "noset", STR_NOSETUP,  NULL, (webman_config->noset), buffer);
+						add_check_box("bl", "blind", STR_DEVBL   , NULL, (webman_config->blind), buffer);
+						add_check_box("rf", "refr",  STR_CONTSCAN, NULL, (webman_config->refr) , buffer);
+						add_check_box("pl", "poll",  STR_USBPOLL,  NULL, (webman_config->poll) , buffer);
+						add_check_box("ft", "ftpd",  STR_FTPSVC,   NULL, (webman_config->ftpd) , buffer);
+						add_check_box("np", "nopad", STR_COMBOS,   NULL, (webman_config->nopad), buffer);
+						add_check_box("nc", "nocov", STR_MMCOVERS, NULL, (webman_config->nocov), buffer);
+						add_check_box("ip", "bind",  STR_ACCESS,   NULL, (webman_config->bind) , buffer);
+						add_check_box("ws", "noset", STR_NOSETUP,  NULL, (webman_config->noset), buffer);
 
 #ifdef COBRA_ONLY
 						if(!(c_firmware==4.53f || c_firmware==4.60f))
-       						addcheckbox("sp", "nospf", STR_NOSPOOF, NULL, (webman_config->nospoof), buffer);
+       						add_check_box("sp", "nospf", STR_NOSPOOF, NULL, (webman_config->nospoof), buffer);
 #endif
-						addcheckbox("gr", "nogrp", STR_NOGRP, NULL, (webman_config->nogrp), buffer);
-						addcheckbox("ti", "tid", STR_TITLEID, NULL, (webman_config->tid), buffer);
+						add_check_box("gr", "nogrp", STR_NOGRP, NULL, (webman_config->nogrp), buffer);
+						add_check_box("ti", "tid", STR_TITLEID, NULL, (webman_config->tid), buffer);
 
 						strcat(buffer, "<hr color=\"#0099FF\"/><table width=\"760\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr class=\"propfont\"><td width=\"320\">");
 
-						addcheckbox("fc", "fanc", STR_FANCTRL, " </td><td>", (webman_config->fanc), buffer);
-						addcheckbox("warn", "1" , STR_NOWARN, " </td></tr>", (webman_config->warn), buffer);
+						add_check_box("fc", "fanc", STR_FANCTRL, " </td><td>", (webman_config->fanc), buffer);
+						add_check_box("warn", "1" , STR_NOWARN, " </td></tr>", (webman_config->warn), buffer);
 
 						strcat(buffer, "<tr class=\"propfont\"><td>");
-						addradiobutton("temp", "0", "t_0", STR_AUTOAT , " : ", (webman_config->temp0==0), buffer);
+						add_radio_button("temp", "0", "t_0", STR_AUTOAT , " : ", (webman_config->temp0==0), buffer);
                         sprintf(templn, "<input name=\"step\" type=\"text\" value=\"%i\" size=\"3\" maxlength=\"2\" /> °C</td><td><input type=\"checkbox\" %s/> %s : <input name=\"mfan\" type=\"text\" value=\"%i\" size=\"3\" maxlength=\"2\" /> %% %s </td></tr>", webman_config->temp1, (webman_config->fanc && webman_config->temp0==0)?(char*)"checked=\"checked\"" : (char*)" ", STR_LOWEST, webman_config->minfan, STR_FANSPEED); strcat(buffer, templn);
 
 						strcat(buffer, "<tr class=\"propfont\"><td>");
-						addradiobutton("temp", "1", "t_1", STR_MANUAL , " : ", (webman_config->temp0!=0), buffer);
+						add_radio_button("temp", "1", "t_1", STR_MANUAL , " : ", (webman_config->temp0!=0), buffer);
 						sprintf(templn, "<input name=\"manu\" type=\"text\" value=\"%i\" size=\"3\" maxlength=\"2\" /> %% %s </td><td> %s : <input name=\"fsp0\" type=\"text\" value=\"%i\" size=\"3\" maxlength=\"2\" /> %% %s </td></tr></table>", (webman_config->manu), STR_FANSPEED, STR_PS2EMU, webman_config->ps2temp, STR_FANSPEED); strcat(buffer, templn);
 
 
 #ifdef COBRA_ONLY
 						strcat(buffer, "<hr color=\"#0099FF\"/>");
-						addcheckbox("nd0", "netd0", STR_LANGAMES,  " &nbsp;&nbsp; PS3NETSRV#1 IP:", (webman_config->netd0), buffer);
+						add_check_box("nd0", "netd0", STR_LANGAMES,  " &nbsp;&nbsp; PS3NETSRV#1 IP:", (webman_config->netd0), buffer);
 						sprintf(templn, "<input name=\"neth0\" type=\"text\" value=\"%s\" size=\"20\" maxlength=\"15\" />:<input name=\"netp0\" type=\"text\" value=\"%i\" size=\"8\" maxlength=\"5\" /><br>", webman_config->neth0, webman_config->netp0); strcat(buffer, templn);
-						addcheckbox("nd1", "netd1", STR_LANGAMES,  " &nbsp;&nbsp; PS3NETSRV#2 IP:", (webman_config->netd1), buffer);
+						add_check_box("nd1", "netd1", STR_LANGAMES,  " &nbsp;&nbsp; PS3NETSRV#2 IP:", (webman_config->netd1), buffer);
 						sprintf(templn, "<input name=\"neth1\" type=\"text\" value=\"%s\" size=\"20\" maxlength=\"15\" />:<input name=\"netp1\" type=\"text\" value=\"%i\" size=\"8\" maxlength=\"5\" />", webman_config->neth1, webman_config->netp1); strcat(buffer, templn);
 #endif
 
 						sprintf(templn, "<hr color=\"#0099FF\"/><u> %s:</u><br>", STR_ANYUSB); strcat(buffer, templn);
 
-						addradiobutton("b", "0", "b_0", "0 sec" , NULL, (webman_config->bootd==0), buffer);
-						addradiobutton("b", "5", "b_1", "5 sec" , NULL, (webman_config->bootd==5), buffer);
-						addradiobutton("b", "9", "b_2", "10 sec", NULL, (webman_config->bootd==9), buffer);
+						add_radio_button("b", "0", "b_0", "0 sec" , NULL, (webman_config->bootd==0), buffer);
+						add_radio_button("b", "5", "b_1", "5 sec" , NULL, (webman_config->bootd==5), buffer);
+						add_radio_button("b", "9", "b_2", "10 sec", NULL, (webman_config->bootd==9), buffer);
 
 						sprintf(templn, "<hr color=\"#0099FF\"/><u> %s:</u><br>", STR_ADDUSB); strcat(buffer, templn);
 
-						addradiobutton("s", "0",  "s_0", "0 sec" , NULL, (webman_config->boots==0), buffer);
-						addradiobutton("s", "3",  "s_1", "3 sec" , NULL, (webman_config->boots==3), buffer);
-						addradiobutton("s", "5",  "s_2", "5 sec",  NULL, (webman_config->boots==5), buffer);
-						addradiobutton("s", "10", "s_3", "10 sec", NULL, (webman_config->boots==10), buffer);
+						add_radio_button("s", "0",  "s_0", "0 sec" , NULL, (webman_config->boots==0), buffer);
+						add_radio_button("s", "3",  "s_1", "3 sec" , NULL, (webman_config->boots==3), buffer);
+						add_radio_button("s", "5",  "s_2", "5 sec",  NULL, (webman_config->boots==5), buffer);
+						add_radio_button("s", "10", "s_3", "10 sec", NULL, (webman_config->boots==10), buffer);
 
 						sprintf(templn, "<hr color=\"#0099FF\"/><u> %s:</u><br>", STR_SPOOFID); strcat(buffer, templn);
 
-						addcheckbox("id1", "sidps", "IDPS", ":", (webman_config->sidps), buffer);
+						add_check_box("id1", "sidps", "IDPS", ":", (webman_config->sidps), buffer);
 						sprintf(templn, "<input name=\"vIDPS1\" type=\"text\" value=\"%s\" size=\"22\" maxlength=\"16\" />", webman_config->vIDPS1); strcat(buffer, templn);
 						sprintf(templn, "<input name=\"vIDPS2\" type=\"text\" value=\"%s\" size=\"22\" maxlength=\"16\" /> <br>", webman_config->vIDPS2); strcat(buffer, templn);
 
-						addcheckbox("id2", "spsid", "PSID", ":", (webman_config->spsid), buffer);
+						add_check_box("id2", "spsid", "PSID", ":", (webman_config->spsid), buffer);
 						sprintf(templn, "<input name=\"vPSID1\" type=\"text\" value=\"%s\" size=\"22\" maxlength=\"16\" />", webman_config->vPSID1); strcat(buffer, templn);
 						sprintf(templn, "<input name=\"vPSID2\" type=\"text\" value=\"%s\" size=\"22\" maxlength=\"16\" /><br><br>", webman_config->vPSID2); strcat(buffer, templn);
 
-						addcheckbox("pp", "spp", STR_DELCFWSYS, NULL, (webman_config->spp), buffer);
+						add_check_box("pp", "spp", STR_DELCFWSYS, NULL, (webman_config->spp), buffer);
 
 						sprintf(templn, "<hr color=\"#0099FF\"/> %s: ", STR_MEMUSAGE); strcat(buffer, templn);
 
-						addradiobutton("fp", "0", "fo_0", "Standard (896KB)", ",  ", (webman_config->foot==0), buffer);
-						addradiobutton("fp", "1", "fo_1", "Min (320KB)"     , ",  ", (webman_config->foot==1), buffer);
-						addradiobutton("fp", "2", "fo_2", "Max (1280KB)"    , NULL , (webman_config->foot==2), buffer);
+						add_radio_button("fp", "0", "fo_0", "Standard (896KB)", ",  ", (webman_config->foot==0), buffer);
+						add_radio_button("fp", "1", "fo_1", "Min (320KB)"     , ",  ", (webman_config->foot==1), buffer);
+						add_radio_button("fp", "2", "fo_2", "Max (1280KB)"    , NULL , (webman_config->foot==2), buffer);
 
 						sprintf(templn, "<br> %s: <select name=\"l\">", STR_PLANG); strcat(buffer, templn);
 
-						addoptionitem("0" , "English"                                                 , (webman_config->lang==0) , buffer);
-						addoptionitem("1" , "Fran\xC3\xA7\x61is"                                      , (webman_config->lang==1) , buffer);
-						addoptionitem("2" , "Italiano"                                                , (webman_config->lang==2) , buffer);
-						addoptionitem("3" , "Espa\xC3\xB1ol"                                          , (webman_config->lang==3) , buffer);
-						addoptionitem("4" , "Deutsch"                                                 , (webman_config->lang==4) , buffer);
-						addoptionitem("5" , "Nederlands"                                              , (webman_config->lang==5) , buffer);
-						addoptionitem("6" , "Portugu\xC3\xAAs"                                        , (webman_config->lang==6) , buffer);
-						addoptionitem("7" , "\xD0\xA0\xD1\x83\xD1\x81\xD1\x81\xD0\xBA\xD0\xB8\xD0\xB9", (webman_config->lang==7) , buffer);
-						addoptionitem("8" , "Magyar"                                                  , (webman_config->lang==8) , buffer);
-						addoptionitem("9" , "Polski"                                                  , (webman_config->lang==9) , buffer);
+						add_option_item("0" , "English"                                                 , (webman_config->lang==0) , buffer);
+						add_option_item("1" , "Fran\xC3\xA7\x61is"                                      , (webman_config->lang==1) , buffer);
+						add_option_item("2" , "Italiano"                                                , (webman_config->lang==2) , buffer);
+						add_option_item("3" , "Espa\xC3\xB1ol"                                          , (webman_config->lang==3) , buffer);
+						add_option_item("4" , "Deutsch"                                                 , (webman_config->lang==4) , buffer);
+						add_option_item("5" , "Nederlands"                                              , (webman_config->lang==5) , buffer);
+						add_option_item("6" , "Portugu\xC3\xAAs"                                        , (webman_config->lang==6) , buffer);
+						add_option_item("7" , "\xD0\xA0\xD1\x83\xD1\x81\xD1\x81\xD0\xBA\xD0\xB8\xD0\xB9", (webman_config->lang==7) , buffer);
+						add_option_item("8" , "Magyar"                                                  , (webman_config->lang==8) , buffer);
+						add_option_item("9" , "Polski"                                                  , (webman_config->lang==9) , buffer);
+						add_option_item("10", "\xCE\x95\xCE\xBB\xCE\xBB\xCE\xB7\xCE\xBD\xCE\xB9\xCE\xBA\xCF\x8E\xCE\xBD", (webman_config->lang==10), buffer);
+						add_option_item("11", "Hrvat"                                                   , (webman_config->lang==11), buffer);
 
-						addoptionitem("10", "\xCE\x95\xCE\xBB\xCE\xBB\xCE\xB7\xCE\xBD\xCE\xB9\xCE\xBA\xCF\x8E\xCE\xBD", (webman_config->lang==10), buffer);
-						addoptionitem("11", "Indonesian"															  , (webman_config->lang==11), buffer);
-						addoptionitem("12", "T\xC3\xBCrk\xC3\xA7\x65"												  , (webman_config->lang==12), buffer);
-						addoptionitem("13", "\xD8\xA7\xD9\x84\xD8\xB9\xD8\xB1\xD8\xA8\xD9\x8A\xD8\xA9"				  , (webman_config->lang==13), buffer);
-						addoptionitem("14", "\xE4\xB8\xAD\xE6\x96\x87"												  , (webman_config->lang==14), buffer);
-						addoptionitem("15", "\xED\x95\x9C\xEA\xB5\xAD\xEC\x96\xB4"									  , (webman_config->lang==15), buffer);
-						addoptionitem("16", "\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E"									  , (webman_config->lang==16), buffer);
-						addoptionitem("99", "Unknown"																  , (webman_config->lang==99), buffer);
+						add_option_item("12", "Indonesian"															  , (webman_config->lang==12), buffer);
+						add_option_item("13", "T\xC3\xBCrk\xC3\xA7\x65"												  , (webman_config->lang==13), buffer);
+						add_option_item("14", "\xD8\xA7\xD9\x84\xD8\xB9\xD8\xB1\xD8\xA8\xD9\x8A\xD8\xA9"				  , (webman_config->lang==14), buffer);
+						add_option_item("15", "\xE4\xB8\xAD\xE6\x96\x87"												  , (webman_config->lang==15), buffer);
+						add_option_item("16", "\xED\x95\x9C\xEA\xB5\xAD\xEC\x96\xB4"									  , (webman_config->lang==16), buffer);
+						add_option_item("17", "\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E"									  , (webman_config->lang==17), buffer);
+						add_option_item("99", "Unknown"																  , (webman_config->lang==99), buffer);
 
 						sprintf(templn, "</select><hr color=\"#0099FF\"/><b><u> %s :</u></b><br><table width=\"760\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap>", STR_COMBOS2); strcat(buffer, templn);
 
-						addcheckbox("c0" , "failsaf", STR_FAILSAFE,   " : <b>SELECT+L3+L2+R2</b><br>"   , !(webman_config->combo & FAIL_SAFE), buffer);
-						addcheckbox("c1" , "showtem", STR_SHOWTEMP,   " : <b>SELECT+R3</b><br>"         , !(webman_config->combo & SHOW_TEMP), buffer);
-						addcheckbox("c2" , "prevgam", STR_PREVGAME,   " : <b>SELECT+L1</b><br>"         , !(webman_config->combo & PREV_GAME), buffer);
-						addcheckbox("c3" , "nextgam", STR_NEXTGAME,   " : <b>SELECT+R1</b><br>"         , !(webman_config->combo & NEXT_GAME), buffer);
-						addcheckbox("c4" , "dsbcfan", STR_FANCTRL4,   " : <b>L3+R2+START</b><br>"       , !(webman_config->combo & DISABLEFC), buffer);
-						addcheckbox("c5" , "showidp", STR_SHOWIDPS,   " : <b>R2+O</b></td><td>"         , !(webman_config->combo & SHOW_IDPS), buffer);
-						addcheckbox("c6" , "shutdow", STR_SHUTDOWN2,  " : <b>L3+R2+X</b><br>"           , !(webman_config->combo & SHUT_DOWN), buffer);
-						addcheckbox("c7" , "restart", STR_RESTART2,   " : <b>L3+R2+O</b><br>"           , !(webman_config->combo & RESTARTPS), buffer);
-						addcheckbox("c8" , "unloadw", STR_UNLOADWM,   " : <b>L3+R2+R3</b><br>"          , !(webman_config->combo & UNLOAD_WM), buffer);
-						addcheckbox("c9" , "manualf", STR_FANCTRL2,   " : <b>SELECT+"                   , !(webman_config->combo & MANUALFAN), buffer); sprintf(templn, "%s</b><br>", STR_UPDN); strcat(buffer, templn);
-						addcheckbox("c10", "mincfan", STR_FANCTRL5,   " : <b>SELECT+"                   , !(webman_config->combo & MINDYNFAN), buffer); sprintf(templn, "%s</b><br>", STR_LFRG); strcat(buffer, templn);
-						addcheckbox("c11", "dsbcfws", STR_DELCFWSYS2, " : <b>R2+&#8710;</b></td></tr></table>", !(webman_config->combo & DISABLESH), buffer);
+						add_check_box("c0" , "failsaf", STR_FAILSAFE,   " : <b>SELECT+L3+L2+R2</b><br>"   , !(webman_config->combo & FAIL_SAFE), buffer);
+						add_check_box("c1" , "showtem", STR_SHOWTEMP,   " : <b>SELECT+R3</b><br>"         , !(webman_config->combo & SHOW_TEMP), buffer);
+						add_check_box("c2" , "prevgam", STR_PREVGAME,   " : <b>SELECT+L1</b><br>"         , !(webman_config->combo & PREV_GAME), buffer);
+						add_check_box("c3" , "nextgam", STR_NEXTGAME,   " : <b>SELECT+R1</b><br>"         , !(webman_config->combo & NEXT_GAME), buffer);
+						add_check_box("c4" , "dsbcfan", STR_FANCTRL4,   " : <b>L3+R2+START</b><br>"       , !(webman_config->combo & DISABLEFC), buffer);
+						add_check_box("c5" , "showidp", STR_SHOWIDPS,   " : <b>R2+O</b></td><td>"         , !(webman_config->combo & SHOW_IDPS), buffer);
+						add_check_box("c6" , "shutdow", STR_SHUTDOWN2,  " : <b>L3+R2+X</b><br>"           , !(webman_config->combo & SHUT_DOWN), buffer);
+						add_check_box("c7" , "restart", STR_RESTART2,   " : <b>L3+R2+O</b><br>"           , !(webman_config->combo & RESTARTPS), buffer);
+						add_check_box("c8" , "unloadw", STR_UNLOADWM,   " : <b>L3+R2+R3</b><br>"          , !(webman_config->combo & UNLOAD_WM), buffer);
+						add_check_box("c9" , "manualf", STR_FANCTRL2,   " : <b>SELECT+"                   , !(webman_config->combo & MANUALFAN), buffer); sprintf(templn, "%s</b><br>", STR_UPDN); strcat(buffer, templn);
+						add_check_box("c10", "mincfan", STR_FANCTRL5,   " : <b>SELECT+"                   , !(webman_config->combo & MINDYNFAN), buffer); sprintf(templn, "%s</b><br>", STR_LFRG); strcat(buffer, templn);
+						add_check_box("c11", "dsbcfws", STR_DELCFWSYS2, " : <b>R2+&#8710;</b></td></tr></table>", !(webman_config->combo & DISABLESH), buffer);
 
 						sprintf(templn, "<hr color=\"#FF0000\"/><input name=\"save\" type=\"submit\" value=\" %s \"/></form>", STR_SAVE); strcat(buffer, templn);
 						strcat(buffer, "<hr color=\"#FF0000\"/><a href=\"http://www.deanbg.com/prepNTFS.pkg\">prepNTFS - Prepare NTFS drives for webMAN access</a><br>");
@@ -4774,9 +4954,9 @@ just_leave:
 */
 					}
 					else
-					if(strstr(param, "mount.ps3") || strstr(param, "mount_ps3"))
+					if(strstr(param, "mount.ps3") || strstr(param, "mount_ps3") || strstr(param, "copy.ps3"))
 					{
-						//mount game
+						//unmount game
 						if(strstr(param, "ps3/unmount"))
 						{
 							cellFsUnlink((char*)WMTMP "/last_game.txt");
@@ -4823,9 +5003,16 @@ just_leave:
 							if(strstr(param, "?random="))
 								param[strchr(param, '?')-param]=0;
 
-							if(strstr(param, "mount.ps3"))
+							int plen=0;
+							if(strstr(param, "copy.ps3")) plen=9;
+							if(strstr(param, "mount.ps3")) plen=10;
+
+							char target[1024];
+
+							if(plen)
 							{
-								sprintf(tempstr, "%s/PS3_GAME/ICON0.PNG", param+10);
+								sprintf(tempstr, "%s/PS3_GAME/ICON0.PNG", param+plen);
+
 								if(cellFsStat(tempstr, &buf)!=CELL_FS_SUCCEEDED)
 								{
 									sprintf(tempstr, WMTMP "/%s", (strrchr(param, '/')+1));
@@ -4836,7 +5023,7 @@ just_leave:
 
 								if(cellFsStat(tempstr, &buf)!=CELL_FS_SUCCEEDED)
 								{
-									sprintf(tempstr, "%s", param+10);
+									sprintf(tempstr, "%s", param+plen);
 									if(tempstr[strlen(tempstr)-2]=='.') tempstr[strlen(tempstr)-2]=0;
 									if(tempstr[strlen(tempstr)-4]=='.') tempstr[strlen(tempstr)-4]=0;
 									strcat(tempstr, ".png");
@@ -4845,18 +5032,56 @@ just_leave:
 										tempstr[strlen(tempstr)-3]='j';
 										tempstr[strlen(tempstr)-2]='p';
 									}
-									get_default_icon(tempstr, param, param);
 								}
 
-								if(strstr(param, "/PSPISO") || strstr(param, "/ISO"))
-									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+10, tempstr, STR_PSPLOADED);
+								get_default_icon(tempstr, param, param, 0, 0, 0);
+
+								if(plen==IS_COPY)
+								{
+									if(strstr(param+plen, "/dev_usb"))
+										sprintf(target, "/dev_hdd0%s", param+plen+11);
+									else
+									if(strstr(param+plen, "/dev_hdd0"))
+										sprintf(target, "/dev_usb000%s", param+plen+9);
+									else
+									{
+										sprintf(target, "/dev_hdd0/GAMES/My Disc Backup");
+										if(strstr(param+plen, "/dev_bdvd"))
+										{
+											char title[60];
+											char titleid[10];
+											unsigned char mem[4096];
+
+											if(cellFsStat((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", &buf)==CELL_FS_SUCCEEDED)
+											{
+												int fdw;
+												uint64_t msiz = 0;
+												uint64_t msiz2 = 0;
+												if(cellFsOpen((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", CELL_FS_O_RDONLY, &fdw, 0,0)==CELL_FS_SUCCEEDED)
+												{
+													cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
+													cellFsRead(fdw, (void *)&mem, 4096, &msiz);
+													cellFsClose(fdw);
+
+													parse_param_sfo(mem, titleid, title);
+													if(!titleid) sprintf(target, "/dev_hdd0/GAMES/%s [%s]", title, titleid);
+												}
+											}
+										}
+									}
+
+									sprintf(templn, "%s <a href=\"%s\">%s</a><hr/><img src=\"%s\"><hr/>%s: <a href=\"%s\"%s>%s</a>", STR_COPYING, param+plen, param+plen, tempstr, STR_CPYDEST, target, target);
+								}
+								else if(strstr(param, "/PSPISO") || strstr(param, "/ISO"))
+									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, tempstr, STR_PSPLOADED);
 								else if(strstr(param, "/BDISO") || strstr(param, "/DVDISO") || strstr(param, ".ntfs[BDISO]") || strstr(param, ".ntfs[DVDISO]"))
-									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s" , STR_MOVIETOM,param+10, tempstr, STR_MOVIELOADED);
+									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_MOVIETOM,param+plen, tempstr, STR_MOVIELOADED);
 								else
-									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+10, tempstr, STR_GAMELOADED);
+									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, tempstr, STR_GAMELOADED);
+
 								strcat(buffer, templn);
 							}
-
+							else
 							if(strstr(param, "mount_ps3"))
 							{
 								strcat(buffer, "<script type=\"text/javascript\">window.close(this);</script>");
@@ -4866,11 +5091,32 @@ just_leave:
 								ssend(conn_s, header);
 								ssend(conn_s, buffer);
 								buffer[0]=0;
+								plen=10;
 							}
 
 							max_mapped=0;
-							mount_with_mm(param+10, 1);
 							is_binary=1;
+
+							if(plen==IS_COPY && !copy_in_progress)
+							{
+								sprintf(templn, "%s %s\n%s %s", STR_COPYING, param+plen, STR_CPYDEST, target);
+								show_msg((char*)templn);
+								copy_in_progress=true;
+
+								if(isDir(param+plen))
+									folder_copy(param+plen, target);
+								else
+									filecopy(param+plen, target, COPY_WHOLE_FILE);
+
+								copy_in_progress=false;
+
+								if(copy_aborted)
+									show_msg((char*)STR_CPYABORT);
+								else
+									show_msg((char*)STR_CPYFINISH);
+							}
+							else
+								mount_with_mm(param+plen, 1);
 
 							if(strstr(param, "mount_ps3")) continue;
 						}
@@ -4900,6 +5146,7 @@ just_leave:
 						u32 buf_len=strlen(buffer);
 
 						if(strstr(param, "/index.ps3?html") || ((pTick.tick-pTick2.tick)/1000000)>43200) cellFsUnlink((char*)WMTMP "/games.html");
+
 						if(cellFsStat((char*)WMTMP "/games.html", &buf)==CELL_FS_SUCCEEDED)
 						{
 							upd_time=1;
@@ -4910,7 +5157,8 @@ just_leave:
 								cellFsClose(fdu);
 							}
 						}
-						else upd_time=0;
+						else
+                            upd_time=0;
 
 						if(upd_time==0)
 						{
@@ -4919,8 +5167,8 @@ just_leave:
 							int ns=-2;
 #ifdef COBRA_ONLY
 							u8 retries=0;
-							int abort_connection=0;
 #endif
+							int abort_connection=0;
 							u8 is_net=0;
 
 							char ename[8];
@@ -5116,7 +5364,7 @@ just_leave:
 														parse_param_sfo(mem, tempID, templn);
 
 														icon[0]=0;
-														if(tempID[0] && !webman_config->nocov) get_icon(icon, tempID);
+														if(tempID[0] && !webman_config->nocov) get_cover(icon, tempID);
 													}
 												}
 												else
@@ -5127,95 +5375,7 @@ just_leave:
 
 											if(templn[strlen(templn)-4]=='.') templn[strlen(templn)-4]=0;
 
-											if(icon[0]==0)
-											{
-												sprintf(icon, WMTMP "/%s.PNG", data[v3_entry].name);
-												if(!data[v3_entry].is_directory)
-												{
-													icon[strlen(icon)-7]='P';
-													icon[strlen(icon)-6]='N';
-													icon[strlen(icon)-5]='G';
-													icon[strlen(icon)-4]=0;
-												} else goto go2;
-
-												if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
-												{
-													icon[strlen(icon)-3]='J';
-													icon[strlen(icon)-2]='P';
-												} else goto c_load;
-
-												if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
-												{
-													icon[strlen(icon)-3]='j';
-													icon[strlen(icon)-2]='p';
-													icon[strlen(icon)-1]='g';
-												} else goto c_load;
-
-												if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
-												{
-													icon[strlen(icon)-3]='p';
-													icon[strlen(icon)-2]='n';
-												} else goto c_load;
-go2:
-												if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
-												{
-													if(data[v3_entry].is_directory)
-													{
-														sprintf(tempstr, "%s/%s/PS3_GAME/ICON0.PNG", param, data[v3_entry].name);
-														icon[strlen(icon)-3]='P';
-														icon[strlen(icon)-2]='N';
-														icon[strlen(icon)-1]='G';
-													}
-													else
-													{
-														sprintf(tempstr, "%s/%s", param, data[v3_entry].name);
-														icon[strlen(icon)-3]='j';
-														icon[strlen(icon)-2]='p';
-														icon[strlen(icon)-1]='g';
-
-														tempstr[strlen(tempstr)-3]='j';
-														tempstr[strlen(tempstr)-2]='p';
-														tempstr[strlen(tempstr)-1]='g';
-													}
-
-													abort_connection=0;
-													if(remote_stat(ns, tempstr, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection)!=0)
-													{
-														tempstr[strlen(tempstr)-3]='p';
-														tempstr[strlen(tempstr)-2]='n';
-														tempstr[strlen(tempstr)-1]='g';
-														icon[strlen(icon)-3]='P';
-														icon[strlen(icon)-2]='N';
-														icon[strlen(icon)-1]='G';
-														if(remote_stat(ns, tempstr, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection)!=0)
-														{
-															icon[0]=0;
-															goto c_load;
-														}
-													}
-
-													if(file_size && open_remote_file_2(ns, tempstr, &abort_connection)>0 && !abort_connection)
-													{
-														if(cellFsOpen(icon, CELL_FS_O_CREAT|CELL_FS_O_RDWR|CELL_FS_O_TRUNC, &fdw, NULL, 0)==CELL_FS_SUCCEEDED)
-														{
-															int boff=0;
-															while(boff<file_size)
-															{
-																bytes_read = read_remote_file(ns, (char*)tempstr, boff, 3072, &abort_connection);
-																if(bytes_read)
-																	cellFsWrite(fdw, (char*)tempstr, bytes_read, NULL);
-																boff+=bytes_read;
-																if(bytes_read<3072 || abort_connection || boff>=file_size) break;
-															}
-															cellFsClose(fdw);
-															if(boff<1 || abort_connection) cellFsUnlink(icon);
-															open_remote_file_2(ns, (char*)"/CLOSEFILE", &bytes_read);
-														}
-													}
-												}
-											}
-c_load:
-											get_default_icon(icon, param, data[v3_entry].name);
+											get_default_icon(icon, param, data[v3_entry].name, data[v3_entry].is_directory, ns, abort_connection);
 
 											snprintf(ename, 6, "%s    ", templn);
 											sprintf(tempstr, "%c%c%c%c<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3/net%i%s/%s?random=%i\"><img src=\"%s\" class=\"gi\"></a></div><div class=\"gn\">%s</div></div>",
@@ -5240,18 +5400,15 @@ c_load:
 													strstr(param, WMTMP))
 												&&
 												(
-												  (strstr(entry.d_name, ".ISO") || strstr(entry.d_name, ".iso") ||
-													(strstr(param, "/PSX") &&
-														(strstr(entry.d_name, ".CUE") || strstr(entry.d_name, ".cue"))
-													)
-												   )
+				  								  (strstr(entry.d_name, ".ISO") || strstr(entry.d_name, ".iso") ||
+				  								    (strstr(param, "/PSX") && (strstr(entry.d_name, ".CUE") || strstr(entry.d_name, ".cue")))
+												  )
 												&&
 												  ((entry.d_name[strlen(entry.d_name)-1]=='0' && entry.d_name[strlen(entry.d_name)-2]=='.') || entry.d_name[strlen(entry.d_name)-1]=='o' || entry.d_name[strlen(entry.d_name)-1]=='O' || entry.d_name[strlen(entry.d_name)-1]=='e' || entry.d_name[strlen(entry.d_name)-1]=='E')
 												)) || strstr(entry.d_name, ".ntfs[");
 
 											if(is_iso || cellFsStat(templn, &buf)==CELL_FS_SUCCEEDED)
 											{
-
 												icon[0]=0;
 												tempID[0]=0;
 
@@ -5351,7 +5508,7 @@ c_load:
 												if(tempID[0])
 												{
 													icon[0]=0;
-													if(!webman_config->nocov) get_icon(icon, tempID);
+													if(!webman_config->nocov) get_cover(icon, tempID);
 
 													if(!is_iso && icon[0]==0) sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry.d_name);
 												}
@@ -5377,9 +5534,9 @@ c_load:
 
 													if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
 														{icon[strlen(icon)-3]='j'; icon[strlen(icon)-2]='p'; icon[strlen(icon)-1]='g';}
-
-													get_default_icon(icon, param, entry.d_name);
 												}
+
+												get_default_icon(icon, param, entry.d_name, 0, ns, abort_connection);
 
 												snprintf(ename, 6, "%s    ", templn);
 												if(is_iso)
@@ -5436,12 +5593,7 @@ c_load:
 							}
 							if(sysmem_html) sys_memory_free(sysmem_html);
 							loading_games=0;
-							int fdu=0;
-							if(cellFsOpen((char*)WMTMP "/games.html", CELL_FS_O_CREAT|CELL_FS_O_RDWR|CELL_FS_O_TRUNC, &fdu, NULL, 0)==CELL_FS_SUCCEEDED)
-							{
-								cellFsWrite(fdu, (char*)(buffer+buf_len), (strlen(buffer)-buf_len), NULL);
-								cellFsClose(fdu);
-							}
+							savefile((char*)WMTMP "/games.html", (char*)(buffer+buf_len), (strlen(buffer)-buf_len));
 						}
 					}
 				}
@@ -6533,9 +6685,9 @@ SHOW IDPS : R2+O
 						{
 							cellFsUnlink(WMCONFIG);
 							system_call_3(392, 0x1004, 0x4, 0x6);
-							show_msg(STR_RMVWMCFG);
+							show_msg((char*)STR_RMVWMCFG);
 							sys_timer_sleep(2);
-							show_msg(STR_RMVWMCFGOK);
+							show_msg((char*)STR_RMVWMCFGOK);
 							sys_timer_sleep(3);
 							cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
 							working=0;
@@ -6775,28 +6927,34 @@ SHOW IDPS : R2+O
 					else
 					if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2)
 					{
+						if(copy_in_progress && data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_CIRCLE) // R2+O Abort copy process
+						{
+							copy_aborted=true;
+						}
+						else
 						if(!(webman_config->combo & DISABLESH) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_TRIANGLE) ) // R2+∆ Disable CFW Sycalls
                         {
 							if(peekq(0x8000000000003000ULL)==0xFFFFFFFF80010003ULL) {
                                 system_call_3(392, 0x1004, 0x7, 0x36);
-								show_msg(STR_CFWSYSALRD);
+								show_msg((char*)STR_CFWSYSALRD);
                                 sys_timer_sleep(2);
 								} else {
-                                show_msg(STR_CFWSYSRIP);
+                                show_msg((char*)STR_CFWSYSRIP);
 								remove_cfw_syscalls();
                                 delete_history();
                                 if(peekq(0x8000000000003000ULL)==0xFFFFFFFF80010003ULL) {
 									system_call_3(392, 0x1004, 0x4, 0x6);
-									show_msg(STR_RMVCFWSYS);
+									show_msg((char*)STR_RMVCFWSYS);
                                     sys_timer_sleep(2);
                                 } else {
                                     system_call_3(392, 0x1004, 0x7, 0x36);
-									show_msg(STR_RMVCFWSYSF);
+									show_msg((char*)STR_RMVCFWSYSF);
                                     sys_timer_sleep(2);
 								}
 							}
 						}
-						else if(!(webman_config->combo & SHOW_IDPS) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_CIRCLE) ) // R2+O Show IDPS EID0+LV2
+						else
+						if(!(webman_config->combo & SHOW_IDPS) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_CIRCLE) ) // R2+O Show IDPS EID0+LV2
 						{
 							uint64_t eid0_idps[2], buffer[0x40], start_sector;
 							uint32_t read;
@@ -6822,7 +6980,7 @@ SHOW IDPS : R2+O
 							}
 
 							sprintf(tmp, "EID0 : %llX%llX\r\nLV2  : %llX%llX", eid0_idps[0], eid0_idps[1], IDPS[0], IDPS[1]);
-							show_msg(tmp);
+							show_msg((char*)tmp);
 							sys_timer_sleep(2);
 						}
 					}
@@ -6869,7 +7027,7 @@ SHOW IDPS : R2+O
 				{
 					sys_storage_read(usb_handle, 0, to, 1, tmp, &r, 0);
 					sys_storage_close(usb_handle);
-					//sprintf(tmp, "/dev_usb00%i: Read %i sectors @ %i offset", f0, r, to); show_msg(tmp);
+					//sprintf(tmp, "/dev_usb00%i: Read %i sectors @ %i offset", f0, r, to); show_msg((char*)tmp);
 				}
 			}
 			sec=0;
@@ -6958,7 +7116,7 @@ void fan_control(u8 temp0, u8 initial)
 	}
 }
 
-void save_settings()
+int save_settings()
 {
 	u64 written;
 	int fdwm=0;
@@ -6966,7 +7124,10 @@ void save_settings()
 	{
 		cellFsWrite(fdwm, (void *)wmconfig, sizeof(WebmanCfg), &written);
 		cellFsClose(fdwm);
+        return CELL_FS_SUCCEEDED;
 	}
+    else
+        return -1;
 }
 
 void reset_settings()
@@ -6974,11 +7135,13 @@ void reset_settings()
 	memset(webman_config, 0, sizeof(WebmanCfg));
 
 	webman_config->usb0=1;
-	webman_config->usb1=0;
+	webman_config->usb1=1;
 	webman_config->usb2=0;
 	webman_config->usb3=0;
 	webman_config->usb6=0;
 	webman_config->usb7=0;
+
+	webman_config->ftpd=0;
 
 	webman_config->netd0=0;
 	webman_config->lastp=1;
@@ -6995,7 +7158,8 @@ void reset_settings()
 	webman_config->nocov=0;
 	webman_config->nospoof=1;
 
-	webman_config->fanc=0;
+	webman_config->fanc=1;          //fan control enabled
+	webman_config->temp0=0;         //auto
 	webman_config->temp1=MY_TEMP;
 //	webman_config->fanm=3;			//unused
 	webman_config->ps2temp=37;
@@ -7005,7 +7169,6 @@ void reset_settings()
 	webman_config->bind=0;
 	webman_config->refr=0;
 	webman_config->manu=35;
-	webman_config->temp0=0;
 
 	webman_config->neth0[0]=0;
 	webman_config->netp0=38008;
@@ -7016,7 +7179,7 @@ void reset_settings()
 
 	webman_config->foot=1;
 	webman_config->nospoof=1;
-	webman_config->pspl=0;
+	webman_config->pspl=1;
 
 	webman_config->sidps=0;
 	webman_config->spsid=0;
@@ -7025,7 +7188,8 @@ void reset_settings()
 	webman_config->vIDPS2[0]=0;
 	webman_config->vPSID1[0]=0;
 	webman_config->vPSID2[0]=0;
-	webman_config->lang=0;
+
+	webman_config->lang=0; //english
 
 	int fdwm=0;
 	if(cellFsOpen(WMCONFIG, CELL_FS_O_RDONLY, &fdwm, NULL, 0) == CELL_FS_SUCCEEDED)
@@ -7034,14 +7198,7 @@ void reset_settings()
 		cellFsClose(fdwm);
 	}
 	else
-	{
-		u64 written;
-		if(cellFsOpen(WMCONFIG, CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fdwm, NULL, 0) == CELL_FS_SUCCEEDED)
-		{
-			cellFsWrite(fdwm, (void *)wmconfig, sizeof(WebmanCfg), &written);
-			cellFsClose(fdwm);
-		}
-	}
+		save_settings();
 
 	if(webman_config->warn>1) webman_config->warn=0;
 	if(webman_config->minfan<MIN_FANSPEED) webman_config->minfan=MIN_FANSPEED;
@@ -7189,6 +7346,7 @@ relisten:
 #ifdef USE_DEBUG
 		ssend(debug_s, " OK!\r\n");
 #endif
+
 		while(working)
 		{
 			sys_timer_usleep(10000);
@@ -7572,50 +7730,12 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 							{
 								for(u8 n=0;n<10;n++)
 								{
-									if(cellFsStat((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", &s)==CELL_FS_SUCCEEDED)
-									{
-										int fdw;
-										uint64_t msiz = 0;
-										uint64_t msiz2 = 0;
-										if(cellFsOpen((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", CELL_FS_O_RDONLY, &fdw, 0,0)==CELL_FS_SUCCEEDED)
-										{
-											cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
-											cellFsRead(fdw, (void *)&tmp_iso, 4096, &msiz);
-											cellFsClose(fdw);
-
-											if(msiz>256 && cellFsOpen(iso_list[15], CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdw, 0,0)==CELL_FS_SUCCEEDED)
-											{
-												cellFsWrite(fdw, (void *)&tmp_iso, msiz, &msiz2);
-												cellFsClose(fdw);
-												cellFsChmod(iso_list[15], 0666);
-
-												iso_list[15][strlen(iso_list[15])-4]=0; strcat(iso_list[15], ".PNG");
-												if(cellFsStat(iso_list[15], &s)!=CELL_FS_SUCCEEDED)
-												{
-													if(cellFsOpen((char*)"/dev_bdvd/PS3_GAME/ICON0.PNG", CELL_FS_O_RDONLY, &fdw, 0,0)==CELL_FS_SUCCEEDED)
-													{	// copy file
-														sys_addr_t buf1=0;
-														if(sys_memory_allocate((256*1024), SYS_MEMORY_PAGE_SIZE_64K, &buf1)==0)
-														{
-															char *tmp_png=(char*)buf1;
-															cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
-															cellFsRead(fdw, tmp_png, (256*1024), &msiz);
-															cellFsClose(fdw);
-
-															if(msiz>256 && cellFsOpen(iso_list[15], CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdw, 0,0)==CELL_FS_SUCCEEDED)
-															{
-																cellFsWrite(fdw, tmp_png, msiz, &msiz2);
-																cellFsClose(fdw);
-																cellFsChmod(iso_list[15], 0666);
-															}
-															sys_memory_free(buf1);
-														}
-													}
-												}
-											}
-										}
+									if(filecopy((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", iso_list[15], 4096)==CELL_FS_SUCCEEDED)
+                                    {
+										iso_list[15][strlen(iso_list[15])-4]=0; strcat(iso_list[15], ".PNG");
+										filecopy((char*)"/dev_bdvd/PS3_GAME/ICON0.PNG", iso_list[15], COPY_WHOLE_FILE);
 										break;
-									}
+                                    }
 									sys_timer_usleep(500000);
 								}
 							}
@@ -7692,48 +7812,10 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 							//iso_list[15][strlen(iso_list[15])-4]=0; strcat(iso_list[15], ".SFO");
 							for(u8 n=0;n<30;n++)
 							{
-								if(cellFsStat((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", &s)==CELL_FS_SUCCEEDED)
+								if(filecopy((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", iso_list[15], 4096)==CELL_FS_SUCCEEDED)
 								{
-									int fdw;
-									uint64_t msiz = 0;
-									uint64_t msiz2 = 0;
-									if(cellFsOpen((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", CELL_FS_O_RDONLY, &fdw, 0,0)==CELL_FS_SUCCEEDED)
-									{
-										cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
-										cellFsRead(fdw, (void *)&tmp_iso, 4096, &msiz);
-										cellFsClose(fdw);
-
-										if(msiz>256 && cellFsOpen(iso_list[15], CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdw, 0,0)==CELL_FS_SUCCEEDED)
-										{
-											cellFsWrite(fdw, (void *)&tmp_iso, msiz, &msiz2);
-											cellFsClose(fdw);
-											cellFsChmod(iso_list[15], 0666);
-
-											iso_list[15][strlen(iso_list[15])-4]=0; strcat(iso_list[15], ".PNG");
-											if(cellFsStat(iso_list[15], &s)!=CELL_FS_SUCCEEDED)
-											{
-												if(cellFsOpen((char*)"/dev_bdvd/PS3_GAME/ICON0.PNG", CELL_FS_O_RDONLY, &fdw, 0,0)==CELL_FS_SUCCEEDED)
-												{
-													sys_addr_t buf1=0;
-													if(sys_memory_allocate((256*1024), SYS_MEMORY_PAGE_SIZE_64K, &buf1)==0)
-													{	// copy_file
-														char *tmp_png=(char*)buf1;
-														cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
-														cellFsRead(fdw, tmp_png, (256*1024), &msiz);
-														cellFsClose(fdw);
-
-														if(msiz>256 && cellFsOpen(iso_list[15], CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdw, 0,0)==CELL_FS_SUCCEEDED)
-														{
-															cellFsWrite(fdw, tmp_png, msiz, &msiz2);
-															cellFsClose(fdw);
-															cellFsChmod(iso_list[15], 0666);
-														}
-														sys_memory_free(buf1);
-													}
-												}
-											}
-										}
-									}
+									iso_list[15][strlen(iso_list[15])-4]=0; strcat(iso_list[15], ".PNG");
+									filecopy((char*)"/dev_bdvd/PS3_GAME/ICON0.PNG", iso_list[15], COPY_WHOLE_FILE);
 									break;
 								}
 								sys_timer_usleep(500000);
@@ -7762,48 +7844,10 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 							//iso_list[15][strlen(iso_list[15])-4]=0; strcat(iso_list[15], ".SFO");
 							for(u8 n=0;n<5;n++)
 							{
-								if(cellFsStat((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", &s)==CELL_FS_SUCCEEDED)
+								if(filecopy((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", iso_list[15], 4096)==CELL_FS_SUCCEEDED)
 								{
-									int fdw;
-									uint64_t msiz = 0;
-									uint64_t msiz2 = 0;
-									if(cellFsOpen((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", CELL_FS_O_RDONLY, &fdw, 0,0)==CELL_FS_SUCCEEDED)
-									{
-										cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
-										cellFsRead(fdw, (void *)&tmp_iso, 4096, &msiz);
-										cellFsClose(fdw);
-
-										if(msiz>256 && cellFsOpen(iso_list[15], CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdw, 0,0)==CELL_FS_SUCCEEDED)
-										{
-											cellFsWrite(fdw, (void *)&tmp_iso, msiz, &msiz2);
-											cellFsClose(fdw);
-											cellFsChmod(iso_list[15], 0666);
-
-											iso_list[15][strlen(iso_list[15])-4]=0; strcat(iso_list[15], ".PNG");
-											if(cellFsStat(iso_list[15], &s)!=CELL_FS_SUCCEEDED)
-											{
-												if(cellFsOpen((char*)"/dev_bdvd/PS3_GAME/ICON0.PNG", CELL_FS_O_RDONLY, &fdw, 0,0)==CELL_FS_SUCCEEDED)
-												{	// copy_file
-													sys_addr_t buf1=0;
-													if(sys_memory_allocate((256*1024), SYS_MEMORY_PAGE_SIZE_64K, &buf1)==0)
-													{
-														char *tmp_png=(char*)buf1;
-														cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
-														cellFsRead(fdw, tmp_png, (256*1024), &msiz);
-														cellFsClose(fdw);
-
-														if(msiz>256 && cellFsOpen(iso_list[15], CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdw, 0,0)==CELL_FS_SUCCEEDED)
-														{
-															cellFsWrite(fdw, tmp_png, msiz, &msiz2);
-															cellFsClose(fdw);
-															cellFsChmod(iso_list[15], 0666);
-														}
-														sys_memory_free(buf1);
-													}
-												}
-											}
-										}
-									}
+									iso_list[15][strlen(iso_list[15])-4]=0; strcat(iso_list[15], ".PNG");
+									filecopy((char*)"/dev_bdvd/PS3_GAME/ICON0.PNG", iso_list[15], COPY_WHOLE_FILE);
 									break;
 								}
 								sys_timer_usleep(500000);
