@@ -249,11 +249,11 @@ int main()
     }
 
 exit:
-/*
+
 	if(add_mygame() != -2)  {
 		sysLv2FsUnlink("/dev_hdd0/tmp/turnoff");
 		{lv2syscall4(379,0x200,0,0,0);}
 	}
-*/
+
     return 0;
 }
