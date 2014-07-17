@@ -16,10 +16,10 @@ STR_KILOBYTE	[KB]
 STR_MEGABYTE	[MB]
 STR_GIGABYTE	[GB]
 
-STR_COPYING			[Copiando]
+STR_COPYING			[Copia]
 STR_CPYDEST			[Destinazione]
-STR_CPYFINISH		[Copy Finito!]
-STR_CPYABORT		[Copia Abortito!]
+STR_CPYFINISH		[Copia Completata!]
+STR_CPYABORT		[Copia Annullata!]
 
 STR_SCAN1		[Scansiona unità]
 STR_SCAN2		[Cerca contenuti]

@@ -2768,7 +2768,9 @@ static void handleclient(u64 conn_s_p)
 
 	if(conn_s_p==0xC0FEBABE || conn_s_p==0xC0FEBAB0)
 	{
-		if(conn_s_p==0xC0FEBABE && strlen(STR_WMSTART)>0)
+		update_language();
+
+        if(conn_s_p==0xC0FEBABE && strlen(STR_WMSTART)>0)
 		{
 			sys_timer_sleep(10);
 			show_msg((char*)STR_WMSTART);
@@ -2815,7 +2817,6 @@ static void handleclient(u64 conn_s_p)
 		}
 
 #endif
-		update_language();
 
 		if(webman_config->spsid)
 		{
