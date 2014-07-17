@@ -194,7 +194,7 @@ int main()
     CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_FR.TXT","/dev_hdd0/tmp/LANG_FR.TXT");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_GR.TXT","/dev_hdd0/tmp/LANG_GR.TXT");
     CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_HU.TXT","/dev_hdd0/tmp/LANG_HU.TXT");
-    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_HU.TXT","/dev_hdd0/tmp/LANG_HR.TXT");
+    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_HR.TXT","/dev_hdd0/tmp/LANG_HR.TXT");
     CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_IN.TXT","/dev_hdd0/tmp/LANG_IN.TXT");
     CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_IT.TXT","/dev_hdd0/tmp/LANG_IT.TXT");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_JP.TXT","/dev_hdd0/tmp/LANG_JP.TXT");
