@@ -4436,7 +4436,7 @@ again3:
 
 					sprintf(templn, "<form action=\"\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/eject.ps3';\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/insert.ps3';\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/mount.ps3/unmount';\">", STR_EJECT, STR_INSERT, STR_UNMOUNT); strcat(buffer, templn);
 					if(((strstr(param, "/dev_") && strlen(param)>12) || strstr(param, "/dev_bdvd")) && !strstr(param,".ps3/"))
-					{sprintf(templn, " <input type=\"button\" value=\"%s\" onclick=window.location.href=\"/copy.ps3%s\";\">", STR_COPY, param); strcat(buffer, templn);}
+					{sprintf(templn, " <input type=\"button\" value=\"%s\" onclick='window.location.href=\"/copy.ps3%s\";'\">", STR_COPY, param); strcat(buffer, templn);}
 					sprintf(templn, " <input type=\"button\" value=\"%s XML\" onclick=\"window.location.href='/refresh.ps3';\">  <input type=\"button\" value=\"%s HTML\" onclick=\"window.location.href='/index.ps3?html';\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/shutdown.ps3';\">  <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/restart.ps3';\"> </form><hr/>", STR_REFRESH, STR_REFRESH, STR_SHUTDOWN, STR_RESTART); strcat(buffer, templn);
 				}
 
@@ -5070,7 +5070,7 @@ just_leave:
 										}
 									}
 
-									sprintf(templn, "%s <a href=\"%s\">%s</a><hr/><img src=\"%s\"><hr/>%s: <a href=\"%s\"%s>%s</a>", STR_COPYING, param+plen, param+plen, tempstr, STR_CPYDEST, target, target);
+									sprintf(templn, "%s <a href=\"%s\">%s</a><hr/><img src=\"%s\"><hr/>%s: <a href=\"%s\">%s</a>", STR_COPYING, param+plen, param+plen, tempstr, STR_CPYDEST, target, target);
 								}
 								else if(strstr(param, "/PSPISO") || strstr(param, "/ISO"))
 									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, tempstr, STR_PSPLOADED);
