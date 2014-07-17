@@ -4548,7 +4548,7 @@ again3:
 											else {sprintf(sf, "%s", STR_GIGABYTE); sz>>=30;}
 
 											if(data[n].is_directory)
-												sprintf(fsize, "    f=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
+												sprintf(fsize, "<a href=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
 											else
 												sprintf(fsize, "%llu %s", sz, sf);
 											snprintf(ename, 6, "%s    ", data[n].name);
