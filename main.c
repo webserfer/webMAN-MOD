@@ -2513,17 +2513,18 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title)
 	{
 		if(mem[str]==0) break;
 
-		if(!strcmp((char *) &mem[str], "TITLE"))
-		{
-			memset(title, 0, 63);
-			strncpy(title, (char *) &mem[pos], 63);
-            fcount++;
-		}
 		if(!strcmp((char *) &mem[str], "TITLE_ID"))
 		{
 			memset(titleID, 0, 16);
 			strncpy(titleID, (char *) &mem[pos], 9);
             fcount++;
+		}
+		else
+		if(!strcmp((char *) &mem[str], "TITLE"))
+		{
+			memset(title, 0, 64);
+			strncpy(title, (char *) &mem[pos], 63);
+			fcount++;
 		}
 		if(fcount>=2) break;
 
@@ -2573,6 +2574,9 @@ static void get_cover(char *icon, char *titleid)
 		sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.JPG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 		sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.PNG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 	}
+
+	sprintf(icon, "%/%s.JPG", WMTMP, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	sprintf(icon, "%/%s.PNG", WMTMP, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 
 	icon[0]=0;
 }
@@ -3324,6 +3328,7 @@ reconnect:
 								&&
 								  ((entry.d_name[strlen(entry.d_name)-1]=='0' && entry.d_name[strlen(entry.d_name)-2]=='.') || entry.d_name[strlen(entry.d_name)-1]=='o' || entry.d_name[strlen(entry.d_name)-1]=='O' || entry.d_name[strlen(entry.d_name)-1]=='e' || entry.d_name[strlen(entry.d_name)-1]=='E')
 								)) || strstr(entry.d_name, ".ntfs[");
+
 							if(is_iso || cellFsStat(templn, &buf)==CELL_FS_SUCCEEDED)
 							{
 								msiz=0;
@@ -4880,7 +4885,7 @@ just_leave:
 						add_option_item("8" , "Magyar"                                                  , (webman_config->lang==8) , buffer);
 						add_option_item("9" , "Polski"                                                  , (webman_config->lang==9) , buffer);
 						add_option_item("10", "\xCE\x95\xCE\xBB\xCE\xBB\xCE\xB7\xCE\xBD\xCE\xB9\xCE\xBA\xCF\x8E\xCE\xBD", (webman_config->lang==10), buffer);
-						add_option_item("11", "Hrvat"                                                   , (webman_config->lang==11), buffer);
+						add_option_item("11", "Hrvatski"                                                , (webman_config->lang==11), buffer);
 
 						add_option_item("12", "Indonesian"															  , (webman_config->lang==12), buffer);
 						add_option_item("13", "T\xC3\xBCrk\xC3\xA7\x65"												  , (webman_config->lang==13), buffer);
