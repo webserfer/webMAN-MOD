@@ -3064,7 +3064,7 @@ again1:
 		{
 			for(u8 f1=0; f1<11; f1++)
 			{
-				if(!cobra_mode && (f1>1 && f1<10)) break;
+				if(!cobra_mode && (f1>1 && f1<10)) continue;
 
 				if(key>1020) break;
 
