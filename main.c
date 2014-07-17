@@ -2889,12 +2889,15 @@ static void handleclient(u64 conn_s_p)
 		PSID[1] = peekq(0x8000000000474F34ULL+8);
     }
 
-	if(webman_config->spp) {
+#ifdef COBRA_ONLY
+	if(webman_config->spp)
+    {
 		sys_timer_sleep(5);
 
 		remove_cfw_syscalls();
 		delete_history();
 	}
+#endif
 
 	if(conn_s_p==0xC0FEBABE && webman_config->refr==1)
 	{
@@ -4234,7 +4237,11 @@ again3:
 
 					if(strstr(param, "sidps"))  webman_config->sidps=1;
 					if(strstr(param, "spsid"))  webman_config->spsid=1;
+
+					webman_config->spp=0;
+#ifdef COBRA_ONLY
 					if(strstr(param, "spp"))  webman_config->spp=1;
+#endif
 					if(strstr(param, "vIDPS1=")) {
 						char *pos=strstr(param, "vIDPS1=") + 7;
 						for(u8 n=0;n<17;n++) {
@@ -4867,7 +4874,9 @@ just_leave:
 						sprintf(templn, "<input name=\"vPSID1\" type=\"text\" value=\"%s\" size=\"22\" maxlength=\"16\" />", webman_config->vPSID1); strcat(buffer, templn);
 						sprintf(templn, "<input name=\"vPSID2\" type=\"text\" value=\"%s\" size=\"22\" maxlength=\"16\" /><br><br>", webman_config->vPSID2); strcat(buffer, templn);
 
+#ifdef COBRA_ONLY
 						add_check_box("pp", "spp", STR_DELCFWSYS, NULL, (webman_config->spp), buffer);
+#endif
 
 						sprintf(templn, "<hr color=\"#0099FF\"/> %s: ", STR_MEMUSAGE); strcat(buffer, templn);
 
@@ -4889,7 +4898,7 @@ just_leave:
 						add_option_item("9" , "Polski"                                                  , (webman_config->lang==9) , buffer);
 						add_option_item("10", "\xCE\x95\xCE\xBB\xCE\xBB\xCE\xB7\xCE\xBD\xCE\xB9\xCE\xBA\xCF\x8E\xCE\xBD", (webman_config->lang==10), buffer);
 						add_option_item("11", "Hrvatski"                                                , (webman_config->lang==11), buffer);
-						add_option_item("12", "българин"												, (webman_config->lang==12), buffer);
+						add_option_item("12", "\xD0\xB1\xD1\x8A\xD0\xBB\xD0\xB3\xD0\xB0\xD1\x80\xD1\x81\xD0\xBA\xD0\xB8", (webman_config->lang==12), buffer);
 
 						add_option_item("13", "Indonesian"															  , (webman_config->lang==13), buffer);
 						add_option_item("14", "T\xC3\xBCrk\xC3\xA7\x65"												  , (webman_config->lang==14), buffer);
@@ -7206,6 +7215,10 @@ void reset_settings()
 	{
 		cellFsRead(fdwm, (void *)wmconfig, sizeof(WebmanCfg), NULL);
 		cellFsClose(fdwm);
+
+#ifndef COBRA_ONLY
+		webman_config->spp=0; //disable removal of syscall on nonCobra
+#endif
 	}
 	else
 		save_settings();
