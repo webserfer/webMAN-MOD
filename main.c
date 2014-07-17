@@ -1952,6 +1952,7 @@ void update_language()
 
 		language("STR_COPYING", STR_COPYING);
 		language("STR_CPYDEST", STR_CPYDEST);
+		language("STR_CPYFINISH", STR_CPYFINISH);
 		language("STR_CPYABORT", STR_CPYABORT);
 
 		language("STR_SCAN1", STR_SCAN1);
