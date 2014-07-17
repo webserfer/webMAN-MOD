@@ -1868,16 +1868,18 @@ bool language(const char *file_str, char *default_str)
 	} else if(webman_config->lang==11) {
 		lang_path = "/dev_hdd0/tmp/LANG_HR.TXT";
 	} else if(webman_config->lang==12) {
-		lang_path = "/dev_hdd0/tmp/LANG_IN.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_BG.TXT";
 	} else if(webman_config->lang==13) {
-		lang_path = "/dev_hdd0/tmp/LANG_TR.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_IN.TXT";
 	} else if(webman_config->lang==14) {
-		lang_path = "/dev_hdd0/tmp/LANG_AR.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_TR.TXT";
 	} else if(webman_config->lang==15) {
-		lang_path = "/dev_hdd0/tmp/LANG_CN.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_AR.TXT";
 	} else if(webman_config->lang==16) {
-		lang_path = "/dev_hdd0/tmp/LANG_KR.TXT";
+		lang_path = "/dev_hdd0/tmp/LANG_CN.TXT";
 	} else if(webman_config->lang==17) {
+		lang_path = "/dev_hdd0/tmp/LANG_KR.TXT";
+	} else if(webman_config->lang==18) {
 		lang_path = "/dev_hdd0/tmp/LANG_JP.TXT";
 	} else if(webman_config->lang==99) {
 		lang_path = "/dev_hdd0/tmp/LANG_XX.TXT";
@@ -4278,14 +4280,15 @@ again3:
 					if(strstr(param, "l=9"))   webman_config->lang=9;  // Polish
 					if(strstr(param, "l=10"))  webman_config->lang=10; // Greek
 					if(strstr(param, "l=11"))  webman_config->lang=11; // Croatian
+					if(strstr(param, "l=12"))  webman_config->lang=12; // Bulgarian
 
 					// Asia
-					if(strstr(param, "l=12"))  webman_config->lang=12; // Indonesian
-					if(strstr(param, "l=13"))  webman_config->lang=13; // Turkish
-					if(strstr(param, "l=14"))  webman_config->lang=14; // Arabian
-					if(strstr(param, "l=15"))  webman_config->lang=15; // Chinese
-					if(strstr(param, "l=16"))  webman_config->lang=16; // Korean
-					if(strstr(param, "l=17"))  webman_config->lang=17; // Japanese
+					if(strstr(param, "l=13"))  webman_config->lang=13; // Indonesian
+					if(strstr(param, "l=14"))  webman_config->lang=14; // Turkish
+					if(strstr(param, "l=15"))  webman_config->lang=15; // Arabian
+					if(strstr(param, "l=16"))  webman_config->lang=16; // Chinese
+					if(strstr(param, "l=17"))  webman_config->lang=17; // Korean
+					if(strstr(param, "l=18"))  webman_config->lang=18; // Japanese
 
 					// Other
 					if(strstr(param, "l=99"))  webman_config->lang=99;	// Unknown LANG_XX.TXT
@@ -4886,13 +4889,14 @@ just_leave:
 						add_option_item("9" , "Polski"                                                  , (webman_config->lang==9) , buffer);
 						add_option_item("10", "\xCE\x95\xCE\xBB\xCE\xBB\xCE\xB7\xCE\xBD\xCE\xB9\xCE\xBA\xCF\x8E\xCE\xBD", (webman_config->lang==10), buffer);
 						add_option_item("11", "Hrvatski"                                                , (webman_config->lang==11), buffer);
+						add_option_item("12", "българин"												, (webman_config->lang==12), buffer);
 
-						add_option_item("12", "Indonesian"															  , (webman_config->lang==12), buffer);
-						add_option_item("13", "T\xC3\xBCrk\xC3\xA7\x65"												  , (webman_config->lang==13), buffer);
-						add_option_item("14", "\xD8\xA7\xD9\x84\xD8\xB9\xD8\xB1\xD8\xA8\xD9\x8A\xD8\xA9"				  , (webman_config->lang==14), buffer);
-						add_option_item("15", "\xE4\xB8\xAD\xE6\x96\x87"												  , (webman_config->lang==15), buffer);
-						add_option_item("16", "\xED\x95\x9C\xEA\xB5\xAD\xEC\x96\xB4"									  , (webman_config->lang==16), buffer);
-						add_option_item("17", "\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E"									  , (webman_config->lang==17), buffer);
+						add_option_item("13", "Indonesian"															  , (webman_config->lang==13), buffer);
+						add_option_item("14", "T\xC3\xBCrk\xC3\xA7\x65"												  , (webman_config->lang==14), buffer);
+						add_option_item("15", "\xD8\xA7\xD9\x84\xD8\xB9\xD8\xB1\xD8\xA8\xD9\x8A\xD8\xA9"				  , (webman_config->lang==15), buffer);
+						add_option_item("16", "\xE4\xB8\xAD\xE6\x96\x87"												  , (webman_config->lang==16), buffer);
+						add_option_item("17", "\xED\x95\x9C\xEA\xB5\xAD\xEC\x96\xB4"									  , (webman_config->lang==17), buffer);
+						add_option_item("18", "\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E"									  , (webman_config->lang==18), buffer);
 						add_option_item("99", "Unknown"																  , (webman_config->lang==99), buffer);
 
 						sprintf(templn, "</select><hr color=\"#0099FF\"/><b><u> %s :</u></b><br><table width=\"760\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap>", STR_COMBOS2); strcat(buffer, templn);
