@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.8 MOD"						// webMAN version
+#define WM_VERSION			"1.30.9 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -268,6 +268,8 @@ typedef struct
 	char vPSID1[17];
 	char vPSID2[17];
 	uint8_t tid;
+	uint8_t wmdn;
+
 } __attribute__((packed)) WebmanCfg;
 
 #define FAIL_SAFE (1<<0)
@@ -295,7 +297,7 @@ static char smonth[12][4]={"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug
 static char drives[10][16]={"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_usb002", "/dev_usb003", "/dev_usb006", "/dev_usb007", "/net0", "/net1", "/ext"};
 static char paths [11][16]={"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video"};
 
-static bool covers_exist[5];
+static bool covers_exist[7];
 
 uint64_t convertH(char *val);
 uint64_t find_syscall();
@@ -348,6 +350,7 @@ char STR_ACCESS[100]		= "Disable remote access to FTP/WWW services";
 char STR_NOSETUP[150]		= "Disable webMAN Setup entry in \"My Games\"";
 char STR_NOSPOOF[100]		= "Disable firmware version spoofing";
 char STR_NOGRP[100]			= "Disable grouping of content in \"My Games\"";
+char STR_NOWMDN[100]		= "Disable startup notification of WebMAN on the XMB";
 char STR_TITLEID[100]		= "Include the ID as part of the title of the game";
 char STR_FANCTRL[100]		= "Enable dynamic fan control";
 char STR_NOWARN[100]		= "Disable temperature warnings";
@@ -443,6 +446,7 @@ char STR_FANCH3[50]			= "MIN FAN SPEED: ";
 char STR_OVERHEAT[100]		= "System overheat warning!";
 char STR_OVERHEAT2[100]		= "  OVERHEAT DANGER!\r\nFAN SPEED INCREASED!";
 
+char COVERS_PATH[100]		= "";
 
 int wwwd_start(uint64_t arg);
 int wwwd_stop(void);
@@ -1972,6 +1976,7 @@ void update_language()
 		language("STR_NOSETUP", STR_NOSETUP);
 		language("STR_NOSPOOF", STR_NOSPOOF);
 		language("STR_NOGRP", STR_NOGRP);
+		language("STR_NOWMDN", STR_NOWMDN);
 		language("STR_TITLEID", STR_TITLEID);
 		language("STR_FANCTRL", STR_FANCTRL);
 		language("STR_NOWARN", STR_NOWARN);
@@ -2066,6 +2071,8 @@ void update_language()
 
 		language("STR_OVERHEAT", STR_OVERHEAT);
 		language("STR_OVERHEAT2", STR_OVERHEAT2);
+
+		language("COVERS_PATH", COVERS_PATH);
 	}
 }
 
@@ -2550,36 +2557,46 @@ static void get_cover(char *icon, char *titleid)
 
 	if(covers_exist[0])
 	{
+        sprintf(icon, "%s/%s.JPG", COVERS_PATH, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+        sprintf(icon, "%s/%s.PNG", COVERS_PATH, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	}
+
+	if(covers_exist[1])
+	{
         sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_STD, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
         sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_STD, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 	}
 
-	if(covers_exist[1])
+	if(covers_exist[2])
 	{
 		sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_STL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 		sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_STL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 	}
 
-	if(covers_exist[2])
+	if(covers_exist[3])
 	{
 		sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_SSTL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 		sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_SSTL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 	}
 
-	if(covers_exist[3])
+	if(covers_exist[4])
 	{
 		sprintf(icon, "/dev_hdd0/GAMES/covers/%s.JPG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 		sprintf(icon, "/dev_hdd0/GAMES/covers/%s.PNG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 	}
 
-	if(covers_exist[4])
+	if(covers_exist[5])
 	{
 		sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.JPG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 		sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.PNG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 	}
 
-	sprintf(icon, "%/%s.JPG", WMTMP, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-	sprintf(icon, "%/%s.PNG", WMTMP, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	if(covers_exist[6])
+	{
+		sprintf(icon, WMTMP "/%s.JPG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, WMTMP "/%s.PNG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+	}
 
 	icon[0]=0;
 }
@@ -2777,7 +2794,7 @@ static void handleclient(u64 conn_s_p)
 	{
 		update_language();
 
-        if(conn_s_p==0xC0FEBABE && strlen(STR_WMSTART)>0)
+		if(conn_s_p==0xC0FEBABE && !(webman_config->wmdn) && strlen(STR_WMSTART)>0)
 		{
 			sys_timer_sleep(10);
 			show_msg((char*)STR_WMSTART);
@@ -2787,11 +2804,13 @@ static void handleclient(u64 conn_s_p)
 		//reset_settings(webman_config);
 
 		//identify covers folders to be scanned
-		sprintf(templn, "%s/covers", MM_ROOT_STD) ; covers_exist[0]=(cellFsStat(templn, &buf) ==CELL_FS_SUCCEEDED);
-		sprintf(templn, "%s/covers", MM_ROOT_STL) ; covers_exist[1]=(cellFsStat(templn, &buf) ==CELL_FS_SUCCEEDED);
-		sprintf(templn, "%s/covers", MM_ROOT_SSTL); covers_exist[2]=(cellFsStat(templn, &buf) ==CELL_FS_SUCCEEDED);
-												    covers_exist[3]=(cellFsStat("/dev_hdd0/GAMES/covers", &buf)==CELL_FS_SUCCEEDED);
-												    covers_exist[4]=(cellFsStat("/dev_hdd0/GAMEZ/covers", &buf)==CELL_FS_SUCCEEDED);
+													covers_exist[0]=(cellFsStat(COVERS_PATH, &buf)==CELL_FS_SUCCEEDED);
+		sprintf(templn, "%s/covers", MM_ROOT_STD) ; covers_exist[1]=(cellFsStat(templn, &buf)==CELL_FS_SUCCEEDED);
+		sprintf(templn, "%s/covers", MM_ROOT_STL) ; covers_exist[2]=(cellFsStat(templn, &buf)==CELL_FS_SUCCEEDED);
+		sprintf(templn, "%s/covers", MM_ROOT_SSTL); covers_exist[3]=(cellFsStat(templn, &buf)==CELL_FS_SUCCEEDED);
+													covers_exist[4]=(cellFsStat("/dev_hdd0/GAMES/covers", &buf)==CELL_FS_SUCCEEDED);
+													covers_exist[5]=(cellFsStat("/dev_hdd0/GAMEZ/covers", &buf)==CELL_FS_SUCCEEDED);
+													covers_exist[6]=(cellFsStat(WMTMP, &buf)==CELL_FS_SUCCEEDED);
 
 #ifdef COBRA_ONLY
 		//if(cobra_mode)
@@ -4128,7 +4147,7 @@ again3:
 					if(!strstr(param, "dsbcfan")) webman_config->combo|=DISABLEFC;
 					if(!strstr(param, "mincfan")) webman_config->combo|=MINDYNFAN;
 
-
+					if(strstr(param, "wmdn")) webman_config->wmdn=1;
 					if(strstr(param, "tid")) webman_config->tid=1;
 					if(strstr(param, "poll")) webman_config->poll=1;
 					if(strstr(param, "ftpd")) webman_config->ftpd=1;
@@ -4828,6 +4847,7 @@ just_leave:
        						add_check_box("sp", "nospf", STR_NOSPOOF, NULL, (webman_config->nospoof), buffer);
 #endif
 						add_check_box("gr", "nogrp", STR_NOGRP, NULL, (webman_config->nogrp), buffer);
+						add_check_box("wn", "wmdn", STR_NOWMDN, NULL, (webman_config->wmdn), buffer);
 						add_check_box("ti", "tid", STR_TITLEID, NULL, (webman_config->tid), buffer);
 
 						strcat(buffer, "<hr color=\"#0099FF\"/><table width=\"760\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr class=\"propfont\"><td width=\"320\">");
@@ -7158,7 +7178,7 @@ void reset_settings()
 	webman_config->usb1=1;
 	webman_config->usb2=0;
 	webman_config->usb3=0;
-	webman_config->usb6=0;
+	webman_config->usb6=1;
 	webman_config->usb7=0;
 
 	webman_config->ftpd=0;
@@ -7170,6 +7190,8 @@ void reset_settings()
 	webman_config->bootd=0;
 	webman_config->boots=3;
 	webman_config->nogrp=0;
+	webman_config->wmdn=0;
+	webman_config->tid=0;
 	webman_config->noset=0;
 	webman_config->cmask=0;
 
@@ -8074,7 +8096,7 @@ patch:
 			poke_lv1(HV_START_OFFSET_460 + 24, 0x65140cd200000000ULL);
 		}
 
-		//if(do_eject) eject_insert(1, 0);
+		if(do_eject) eject_insert(1, 1);
 
 		if(c_firmware==4.30f || c_firmware==4.31f || c_firmware==4.40f || c_firmware==4.41f || c_firmware==4.46f ||
            c_firmware==4.50f || c_firmware==4.53f || c_firmware==4.55f || c_firmware==4.60f)

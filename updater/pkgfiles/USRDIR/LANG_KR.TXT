@@ -38,6 +38,7 @@ STR_ACCESS			[FTP/WWW 서비스에 대한 원격 권한끄기]
 STR_NOSETUP			["My Games" 웹맨 설정항목 사용안함]
 STR_NOSPOOF			[펌웨어 버젼 스푸핑 사용안함]
 STR_NOGRP			["My Games"에 있는 컨텐츠 그룹 사용안함]
+STR_NOWMDN		[XMB에 WebMAN의 시작 알림을 사용하지 않도록 설정]
 STR_TITLEID		[게임의 타이틀의 일부로서 ID를 포함]
 STR_FANCTRL			[다이나믹 팬 컨트롤 사용]
 STR_NOWARN			[온도 경고 표시 사용안함]
@@ -132,3 +133,5 @@ STR_FANCH3			[중간 팬속도: ]
 
 STR_OVERHEAT		[시스템 과열 경고!]
 STR_OVERHEAT2		[오버히트 위험! 팬속도가 증가!]
+
+COVERS_PATH			[]

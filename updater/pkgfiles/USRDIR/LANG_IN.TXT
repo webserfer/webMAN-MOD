@@ -38,6 +38,7 @@ STR_ACCESS		[Nonaktifkan akses remote ke layanan FTP/WWW]
 STR_NOSETUP		[Nonaktifkan Pengaturan webMAN yg ada di "Game Saya"]
 STR_NOSPOOF		[Nonaktifkan firmware versi spoofing]
 STR_NOGRP		[Nonaktifkan pengelompokan konten di "Game Saya"]
+STR_NOWMDN		[Nonaktifkan pemberitahuan startup dari Webman di XMB]
 STR_TITLEID		[Sertakan ID sebagai bagian dari judul permainan]
 STR_FANCTRL		[Aktifkan kontrol kipas dinamis]
 STR_NOWARN		[Nonaktifkan peringatan temperatur]
@@ -132,3 +133,5 @@ STR_FANCH3		[MIN KECEPATAN KIPAS: ]
 
 STR_OVERHEAT	[Sistem peringatan terlalu panas!]
 STR_OVERHEAT2	[TERLALU PANAS BAHAYA! KECEPATAN KIPAS MENINGKAT!]
+
+COVERS_PATH		[]

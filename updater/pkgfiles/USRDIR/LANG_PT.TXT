@@ -38,6 +38,7 @@ STR_ACCESS			[Desativar Acesso Remoto aos Serviços FTP/WWW]
 STR_NOSETUP			[Desativar Menu de Configurações webMAN em "Meus Jogos"]
 STR_NOSPOOF			[Desativar Spoof de Versão]
 STR_NOGRP			[Desativar Grupos de Conteúdo em "Meus Jogos"]
+STR_NOWMDN		[Desativar notificação de inicialização de WebMAN no XMB]
 STR_TITLEID		[Inclua o ID como parte do título do jogo]
 STR_FANCTRL			[Ativar Controle Dinâmico do Cooler]
 STR_NOWARN			[Desativar Alertas de Temperatura]
@@ -132,3 +133,5 @@ STR_FANCH3			[Velocidade Mínima do Cooler: ]
 
 STR_OVERHEAT		[Alerta de Superaquecimento do Sistema!]
 STR_OVERHEAT2		[Perigo de Superaquecimento! Velocidade do Cooler Aumentada]
+
+COVERS_PATH			[]

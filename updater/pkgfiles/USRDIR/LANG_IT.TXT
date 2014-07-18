@@ -38,6 +38,7 @@ STR_ACCESS		[Disattiva accesso remoto ai servizi FTP/WWW]
 STR_NOSETUP		[Non mostrare Setup di webMAN in "My Games"]
 STR_NOSPOOF		[Disattiva spoof versione firmware]
 STR_NOGRP		[Non raggruppare i contenuti in "My Games"]
+STR_NOWMDN		[Disabilitare la notifica di avvio del webMAN sulla XMB]
 STR_TITLEID		[Includere l'ID come parte del titolo del gioco]
 STR_FANCTRL		[Controllo dinamico ventola]
 STR_NOWARN		[Disattiva avvisi temperatura]
@@ -132,3 +133,5 @@ STR_FANCH3		[VELOCITA' VENTOLA MIN: ]
 
 STR_OVERHEAT	[Avviso Surriscaldamento!]
 STR_OVERHEAT2	[PERICOLO SURRISCALDAMENTO! VELOCITA' VENTOLA AUMENTATA!]
+
+COVERS_PATH		[]

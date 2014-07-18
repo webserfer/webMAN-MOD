@@ -38,6 +38,7 @@ STR_ACCESS			[Távoli hozzáférés kikapcsolása az FTP/WWW szolgáltatásokhoz
 STR_NOSETUP			[webMAN Setup bejegyzés kikapcsolása a "Játékaim" menüben]
 STR_NOSPOOF			[Firmware spoofing kikapcsolása]
 STR_NOGRP			[Tartalmak csoportosításának kikapcsolása a "Játékaim" menüben]
+STR_NOWMDN		[Letiltása indítási értesítést WebMAN az XMB]
 STR_TITLEID		[Game ID megjelenítése a játékcímben]
 STR_FANCTRL			[Dinamikus ventilátor szabályzó bekapcsolása]
 STR_NOWARN			[Hőmérséklet figyelmeztetés kikapcsolása]
@@ -132,3 +133,5 @@ STR_FANCH3			[MIN VENT SEBESSÉG: ]
 
 STR_OVERHEAT		[Figyelem! A rendszer túlmelegedett!]
 STR_OVERHEAT2		[TÚLMELEGEDÉSI VESZÉLY! A VENTILÁTOR SEBESSÉGE FELJEBB LETT VÉVE!]
+
+COVERS_PATH			[]

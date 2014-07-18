@@ -38,6 +38,7 @@ STR_ACCESS		[Onemoguci daljinski pristup za FTP/WWW usluge]
 STR_NOSETUP		[Onemoguci webMAN postavke u mapi "Igre"]
 STR_NOSPOOF		[Onemoguci imitiranje verzije softvera]
 STR_NOGRP		[Onemoguci grupiranje sadrzaja u mapi "Igre"]
+STR_NOWMDN		[Onemogućite pokretanje obavijest webMAN na XMB]
 STR_TITLEID		[Uključite ID kao dio naslova u igri]
 STR_FANCTRL		[Onemoguci dinamicnu kontrolu ventilatora]
 STR_NOWARN		[Onemoguci upozorenja za pregrijavanje konzole]
@@ -132,3 +133,5 @@ STR_FANCH3		[MIN BRZINA VENTILATORA: ]
 
 STR_OVERHEAT	[UPOZORENJE! Sustav se pregrijava!]
 STR_OVERHEAT2	[ OPASNOST OD PREGRIJAVANJA! BRZINA VENTILATORA SE POVECAVA!]
+
+COVERS_PATH		[]

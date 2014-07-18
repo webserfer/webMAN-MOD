@@ -38,6 +38,7 @@ STR_ACCESS		[Deaktiviere Remote-Access zum FTP/WWW Dienst]
 STR_NOSETUP		[Deaktiviere webMAN Einstellungen in "Meine Spiele"]
 STR_NOSPOOF		[Deaktiviere Firmware Version's Spoofer]
 STR_NOGRP		[Deaktiviere Gruppierung von Inhalten in "Meine Spiele"]
+STR_NOWMDN		[Deaktivieren Start Bekanntgabe webMAN auf dem XMB]
 STR_TITLEID		[Fügen Sie die ID als Teil der Titel des Spiels]
 STR_FANCTRL		[Aktiviere Dynamischen Lüfter-Mod]
 STR_NOWARN		[Deaktiviere Temperatur-Warnung]
@@ -132,3 +133,5 @@ STR_FANCH3		[GESCHWINDIGKEIT MIN: ]
 
 STR_OVERHEAT	[System Überhitzung-Warnung!]
 STR_OVERHEAT2	[ÜBERHITZUNGSGEFAHR!LÜFTER-GESCHWINDIGKEIT ERHÖHT!]
+
+COVERS_PATH		[]

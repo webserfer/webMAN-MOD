@@ -22,7 +22,7 @@ DATA		:=	data
 INCLUDES	:=	include
 PKGFILES	:=	$(CURDIR)/pkgfiles
 
-TITLE		:=	webMAN MOD 1.30.8 Updater
+TITLE		:=	webMAN MOD 1.30.9 Updater
 APPID		:=	UPDWEBMOD
 CONTENTID	:=	EP0001-$(APPID)_00-0000000000000000
 
