@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.9 MOD"						// webMAN version
+#define WM_VERSION			"1.30.10 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -1821,9 +1821,15 @@ void absPath(char* absPath_s, const char* path, const char* cwd)
 	}
 }
 
-void pokeq( uint64_t addr, uint64_t val)
+void pokeq( uint64_t addr, uint64_t val) //lv2
 {
 	system_call_2(7, addr, val);
+}
+
+uint64_t peekq(uint64_t addr) //lv2
+{
+	system_call_1(6, addr);
+	return_to_user_prog(uint64_t);
 }
 
 void poke_lv1( uint64_t addr, uint64_t val)
@@ -1831,10 +1837,10 @@ void poke_lv1( uint64_t addr, uint64_t val)
 	system_call_2(9, addr, val);
 }
 
-uint64_t peekq(uint64_t addr)
+uint64_t peek_lv1(uint64_t addr)
 {
-	system_call_1(6, addr);
-	return_to_user_prog(uint64_t);
+	system_call_1(8, (uint64_t) addr);
+	return (uint64_t) p1;
 }
 
 bool language(const char *file_str, char *default_str)
@@ -2099,7 +2105,7 @@ uint64_t convertH(char *val)
         if(val[i]=='D' || val[i]=='d') buff=0xD0; else
         if(val[i]=='E' || val[i]=='e') buff=0xE0; else
         if(val[i]=='F' || val[i]=='f') buff=0xF0; else
-        return 0;
+        return ret;
 
         i++;
 
@@ -2119,7 +2125,7 @@ uint64_t convertH(char *val)
         if(val[i]=='D' || val[i]=='d') buff+=0x0D; else
         if(val[i]=='E' || val[i]=='e') buff+=0x0E; else
         if(val[i]=='F' || val[i]=='f') buff+=0x0F; else
-        return 0;
+        return ret;
 
         ret = (ret << 8) | buff;
     }
@@ -2523,20 +2529,21 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title)
 	{
 		if(mem[str]==0) break;
 
-		if(!strcmp((char *) &mem[str], "TITLE_ID"))
+		if(!strncmp((char *) &mem[str], "TITLE_ID", 8))
 		{
 			memset(titleID, 0, 16);
 			strncpy(titleID, (char *) &mem[pos], 9);
-            fcount++;
+			fcount++;
+			if(fcount>1) break;
 		}
 		else
-		if(!strcmp((char *) &mem[str], "TITLE"))
+		if(!strncmp((char *) &mem[str], "TITLE", 6))
 		{
 			memset(title, 0, 64);
 			strncpy(title, (char *) &mem[pos], 63);
 			fcount++;
+			if(fcount>1) break;
 		}
-		if(fcount>=2) break;
 
 		while(mem[str]) str++;str++;
 		pos+=(mem[0x1c+indx]+(mem[0x1d+indx]<<8));
@@ -3922,7 +3929,11 @@ again3:
 				strstr(param, "mount_ps3/")  ||
 				strstr(param, "setup.ps3")   ||
 				strstr(param, "refresh.ps3") ||
-				strstr(param, "copy.ps3/")    ||
+				strstr(param, "copy.ps3/")   ||
+				strstr(param, "peek.lv2?")   ||
+				strstr(param, "poke.lv2?")   ||
+				strstr(param, "peek.lv1?")   ||
+				strstr(param, "poke.lv1?")   ||
 				strstr(param, "eject.ps3")   ||
 				strstr(param, "insert.ps3"))
 				is_binary=0;
@@ -4792,6 +4803,60 @@ just_leave:
 					{
 						eject_insert(0, 1);
 						strcat(buffer, STR_LOADED);
+					}
+					else
+					if(strstr(param, "peek.lv") || strstr(param, "poke.lv"))
+					{
+						uint64_t address, value=0;
+						u8 byte, p=0, lv1=0;
+
+						address = convertH(param+10);
+						strcat(buffer, "<pre>");
+
+						lv1=strstr(param,".lv1?")?1:0;
+
+						if(strstr(param, "poke.lv2"))
+                        {
+							value = convertH(strstr(param+10, "=")+1);
+							pokeq(address, value);
+						}
+						else
+						if(strstr(param, "poke.lv1"))
+                        {
+							value = convertH(strstr(param+10, "=")+1);
+							poke_lv1(address, value);
+						}
+
+						address|=0x8000000000000000ULL;
+						address&=0xFFFFFFFFFFFFFFF0ULL;
+
+						if(address+0x200<0x8000000010000000ULL)
+						for(int i=0; i<0x200; i++)
+						{
+							if(!p)
+							{
+								sprintf(templn, "%X  ", (int)((address & 0xFFFFFFFFULL) +i));
+								for(int c=10-strlen(templn);c>0;c--) strcat(buffer, "0");
+								strcat(buffer, templn);
+							}
+
+							byte=lv1?peek_lv1(address+i):peekq(address+i);
+							sprintf(templn, byte<16?"0%X ":"%X ", byte); strcat(buffer, templn);
+
+							if(p==0xF)
+							{
+								strcat(buffer, " ");
+								for(int c=0;c<0x10;c++)
+								{
+									byte=lv1?peek_lv1(address+i):peekq(address+i);
+									if(byte<32 || byte>127) byte='.';
+									sprintf(templn, "%c", byte); strcat(buffer, templn);
+								}
+								strcat(buffer, "<br>");
+							}
+							p++; if(p>=0x10) p=0;
+						}
+						strcat(buffer, "</pre>");
 					}
 					else
 					if(strstr(param, "setup.ps3?"))
