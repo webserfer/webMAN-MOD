@@ -134,4 +134,6 @@ STR_DISABLED	[Désactivé]
 STR_OVERHEAT	[Attention système en surchauffe!]
 STR_OVERHEAT2	[DANGER SURCHAUFFE! VITESSE DU VENTILATEUR AUGMENTÉE!]
 
+STR_NOTFOUND		[N'a pas été trouvé!]
+
 COVERS_PATH		[]

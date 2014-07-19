@@ -134,4 +134,6 @@ STR_ENABLED		[Geactiveerd]
 STR_OVERHEAT	[Systeem overhittings waarschuwing!]
 STR_OVERHEAT2	[OVERHITTINGS GEVAAR!     VENTILATOR SNELHEID VERHOOGD!]
 
+STR_NOTFOUND		[Niet gevonden!]
+
 COVERS_PATH		[]

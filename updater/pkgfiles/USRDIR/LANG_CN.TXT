@@ -134,4 +134,6 @@ STR_FANCH3			[最低风扇转速: ]
 STR_OVERHEAT		[系统过热警告!]
 STR_OVERHEAT2		[过热危险! 风扇转速增加!]
 
+STR_NOTFOUND		[未找到]
+
 COVERS_PATH			[]

@@ -134,4 +134,6 @@ STR_FANCH3			[Velocidade Mínima do Cooler: ]
 STR_OVERHEAT		[Alerta de Superaquecimento do Sistema!]
 STR_OVERHEAT2		[Perigo de Superaquecimento! Velocidade do Cooler Aumentada]
 
+STR_NOTFOUND		[Não encontrado!]
+
 COVERS_PATH			[]

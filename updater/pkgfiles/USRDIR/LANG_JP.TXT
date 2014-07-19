@@ -134,4 +134,6 @@ STR_FANCH3		[Fan最低速度： ]
 STR_OVERHEAT	[システム温度異常！]
 STR_OVERHEAT2	[温度異常でシステムが危険な状態です。Fanスピードを上げてください！]
 
+STR_NOTFOUND		[見つかりませんでした！]
+
 COVERS_PATH		[]

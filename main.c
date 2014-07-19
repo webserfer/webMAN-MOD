@@ -4852,7 +4852,6 @@ just_leave:
 						strcat(buffer, "<pre>");
 
 						address|=0x8000000000000000ULL;
-						address&=0xFFFFFFFFFFFFFFF0ULL;
 
 						lv1=strstr(param,".lv1?")?1:0;
 						upper_memory=(lv1?LV1_UPPER_MEMORY:LV2_UPPER_MEMORY)-8;
@@ -4882,19 +4881,19 @@ just_leave:
 							}
 							else
 							{
-								address=found_address=j;
+								found_address=address=j;
 								sprintf(templn, "Offset: 0x%X<br><br>", address); strcat(buffer, templn);
-								address&=0xFFFFFFFFFFFFFFF0ULL;
 							}
 						}
 						else
-						if(v!=NULL && strstr(param, "poke.lv2") && (address+8<upper_memory))
+						if(v!=NULL && strstr(param, "poke.lv2") && (address<upper_memory))
                         {
 							value = convertH(v+1);
 							if(bits32) pokeq(address, (((u64) value) <<32) | (peekq(address) & 0xffffffffULL));
 							if(bits16) pokeq(address, (((u64) value) <<48) | (peekq(address) & 0xffffffffffffULL));
 							if(bits8)  pokeq(address, (((u64) value) <<56) | (peekq(address) & 0xffffffffffffffULL));
 							else pokeq(address, value);
+							found_address=address;
 						}
 						else
 						if(v!=NULL && strstr(param, "poke.lv1") && (address<upper_memory))
@@ -4905,11 +4904,13 @@ just_leave:
 							if(bits16) poke_lv1(address, (((u64) value) <<48) | (peek_lv1(address) & 0xffffffffffffULL));
 							if(bits8)  poke_lv1(address, (((u64) value) <<56) | (peek_lv1(address) & 0xffffffffffffffULL));
 							poke_lv1(address, value);
+							found_address=address;
 						}
 
 						if(address+0x200<upper_memory+8)
 
 						flen=(bits8)?1:(bits16)?2:(bits32)?4:8;
+						address&=0xFFFFFFFFFFFFFFF0ULL;
 						addr=address;
 
 						for(int i=0; i<0x200; i++)
