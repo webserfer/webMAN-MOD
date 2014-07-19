@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.11 MOD"						// webMAN version
+#define WM_VERSION			"1.30.12 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -124,6 +124,9 @@ static sys_ppu_thread_t thread_id		=-1;
 
 #define IS_COPY				9
 #define COPY_WHOLE_FILE		0
+
+#define LV1_UPPER_MEMORY	0x8000000001000000ULL
+#define LV2_UPPER_MEMORY	0x8000000000800000ULL
 
 enum STORAGE_COMMAND
 {
@@ -446,6 +449,8 @@ char STR_FANCH3[50]			= "MIN FAN SPEED: ";
 char STR_OVERHEAT[100]		= "System overheat warning!";
 char STR_OVERHEAT2[100]		= "  OVERHEAT DANGER!\r\nFAN SPEED INCREASED!";
 
+char STR_NOTFOUND[50]		= "Not found!";
+
 char COVERS_PATH[100]		= "";
 
 int wwwd_start(uint64_t arg);
@@ -474,6 +479,7 @@ void eject_insert(u8 eject, u8 insert);
 
 bool copy_in_progress = false;
 bool copy_aborted = false;
+bool is_busy = false;
 
 void show_msg(char* msg);
 
@@ -2077,6 +2083,8 @@ void update_language()
 
 		language("STR_OVERHEAT", STR_OVERHEAT);
 		language("STR_OVERHEAT2", STR_OVERHEAT2);
+
+		language("STR_NOTFOUND", STR_NOTFOUND);
 
 		language("COVERS_PATH", COVERS_PATH);
 	}
@@ -3925,21 +3933,27 @@ again3:
 				sys_ppu_thread_exit(0);
 			}
 
-			if( strstr(param, "cpursx.ps3")  ||
-				strstr(param, "index.ps3")   ||
-				strstr(param, "mount.ps3/")  ||
-				strstr(param, "mount_ps3/")  ||
-				strstr(param, "setup.ps3")   ||
-				strstr(param, "refresh.ps3") ||
-				strstr(param, "copy.ps3/")   ||
-				strstr(param, "peek.lv2?")   ||
-				strstr(param, "poke.lv2?")   ||
-				strstr(param, "find.lv2?")   ||
-				strstr(param, "peek.lv1?")   ||
-				strstr(param, "poke.lv1?")   ||
-				strstr(param, "find.lv1?")   ||
-				strstr(param, "eject.ps3")   ||
-				strstr(param, "insert.ps3"))
+			if(is_busy)
+			{
+				int timeout=20;
+				while(is_busy || timeout>0) {sys_timer_usleep(500); timeout--;}
+			}
+
+			if(!is_busy && (strstr(param, "cpursx.ps3")  ||
+							strstr(param, "index.ps3")   ||
+							strstr(param, "mount.ps3/")  ||
+							strstr(param, "mount_ps3/")  ||
+							strstr(param, "setup.ps3")   ||
+							strstr(param, "refresh.ps3") ||
+							strstr(param, "copy.ps3/")   ||
+							strstr(param, "peek.lv2?")   ||
+							strstr(param, "poke.lv2?")   ||
+							strstr(param, "find.lv2?")   ||
+							strstr(param, "peek.lv1?")   ||
+							strstr(param, "poke.lv1?")   ||
+							strstr(param, "find.lv1?")   ||
+							strstr(param, "eject.ps3")   ||
+							strstr(param, "insert.ps3")))
 				is_binary=0;
 			else
 			{
@@ -4787,6 +4801,7 @@ just_leave:
 				else
 				{
 					//reset_settings(webman_config);
+					is_busy=true;
 
 					if(strstr(param, "refresh.ps3") && init_running==0)
 					{
@@ -4811,9 +4826,9 @@ just_leave:
 					else
 					if(strstr(param, "peek.lv") || strstr(param, "poke.lv") || strstr(param, "find.lv"))
 					{
-						uint64_t address, fvalue, value=0;
+						uint64_t address, addr, fvalue, value=0, upper_memory=LV2_UPPER_MEMORY, found_address=0;
 						u8 byte=0, p=0, lv1=0;
-						bool bits8=false, bits16=false, bits32=false;
+						bool bits8=false, bits16=false, bits32=false, found=false;
 						u8 flen=0;
 						char *v;
 
@@ -4826,7 +4841,7 @@ just_leave:
 						if(v)
 						{
 							flen=strlen(v+1);
-							for(p=1; p<=flen;p++) if(strncmp(v+p," ",1)==0) byte++;
+							for(p=1; p<=flen;p++) if(strncmp(v+p," ",1)==0) byte++; //ignore spaces
 							flen-=byte; byte=p=0;
 						}
 
@@ -4840,36 +4855,40 @@ just_leave:
 						address&=0xFFFFFFFFFFFFFFF0ULL;
 
 						lv1=strstr(param,".lv1?")?1:0;
+						upper_memory=(lv1?LV1_UPPER_MEMORY:LV2_UPPER_MEMORY)-8;
 
-						if(strstr(param, "find.lv") && (address+8<(lv1?0x8000000001000000ULL:0x8000000000800000ULL)))
+						if(v!=NULL && strstr(param, "find.lv") && (address<upper_memory))
 						{
 							uint64_t j;
-
 							fvalue = convertH(v+1);
 
-							if(bits8)  fvalue=(fvalue<<56);
+							if(bits8) fvalue=(fvalue<<56);
 							if(bits16) fvalue=(fvalue<<48);
 							if(bits32) fvalue=(fvalue<<32);
 
-							for(j = address; j < (lv1?0x8000000001000000ULL:0x8000000000800000ULL)-8; j++) {
+							for(j = address; j < upper_memory-8; j++) {
 								value = (lv1?peek_lv1(j):peekq(j));
 
-								if(bits8)  value&=0xff00000000000000ULL;
+								if(bits8 ) value&=0xff00000000000000ULL;
 								if(bits16) value&=0xffff000000000000ULL;
 								if(bits32) value&=0xffffffff00000000ULL;
 
-								if(value==fvalue) break;
+								if(value==fvalue) {found=true; break;}
 							}
 
-							if(j>=address && j<(lv1?0x8000000001000000ULL:0x8000000000800000ULL))
+							if(!found)
 							{
-								address=j;
-								sprintf(templn, "Offset: 0x%X<br>", address); strcat(buffer, templn);
+								sprintf(templn, "<b><font color=red>%s</font></b><br>", STR_NOTFOUND); strcat(buffer, templn);
 							}
-							address&=0xFFFFFFFFFFFFFFF0ULL;
+							else
+							{
+								address=found_address=j;
+								sprintf(templn, "Offset: 0x%X<br><br>", address); strcat(buffer, templn);
+								address&=0xFFFFFFFFFFFFFFF0ULL;
+							}
 						}
 						else
-						if(strstr(param, "poke.lv2") && (address+8<0x8000000000800000ULL))
+						if(v!=NULL && strstr(param, "poke.lv2") && (address+8<upper_memory))
                         {
 							value = convertH(v+1);
 							if(bits32) pokeq(address, (((u64) value) <<32) | (peekq(address) & 0xffffffffULL));
@@ -4878,7 +4897,7 @@ just_leave:
 							else pokeq(address, value);
 						}
 						else
-						if(strstr(param, "poke.lv1") && (address+8<0x8000000001000000ULL))
+						if(v!=NULL && strstr(param, "poke.lv1") && (address<upper_memory))
                         {
 							value = convertH(v+1);
 
@@ -4888,7 +4907,11 @@ just_leave:
 							poke_lv1(address, value);
 						}
 
-						if(address+0x200<(lv1?0x8000000001000000ULL:0x8000000000800000ULL))
+						if(address+0x200<upper_memory+8)
+
+						flen=(bits8)?1:(bits16)?2:(bits32)?4:8;
+						addr=address;
+
 						for(int i=0; i<0x200; i++)
 						{
 							if(!p)
@@ -4899,18 +4922,29 @@ just_leave:
 							}
 
 							byte=(u8)((lv1?peek_lv1(address+i):peekq(address+i))>>56);
+
+							if(found && address+i>=found_address && address+i<found_address+flen) strcat(buffer, "<font color=yellow><b>");
 							sprintf(templn, byte<16?"0%X ":"%X ", byte); strcat(buffer, templn);
+							if(found && address+i>=found_address && address+i<found_address+flen) strcat(buffer, "</b></font>");
 
 							if(p==0x7) strcat(buffer, " ");
 
 							if(p==0xF)
 							{
 								strcat(buffer, " ");
-								for(int c=0;c<0x10;c++)
+								for(int c=0;c<0x10;c++, addr++)
 								{
-									byte=(lv1?peek_lv1(address+i):peekq(address+i));
-									if(byte<32 || byte>127) byte='.';
-									sprintf(templn, "%c", byte); strcat(buffer, templn);
+									byte=(u8)((lv1?peek_lv1(addr):peekq(addr))>>56);
+									if(byte<32 || byte>=127) byte='.';
+
+									if(found && addr>=found_address && addr<found_address+flen) strcat(buffer, "<font color=yellow><b>");
+									if(byte==0x3C)
+										strcat(buffer, "&lt;");
+									else if(byte==0x3E)
+										strcat(buffer, "&gt;");
+									else
+										sprintf(templn,"%c", byte); strcat(buffer, templn);
+									if(found && addr>=found_address && addr<found_address+flen) strcat(buffer, "</b></font>");
 								}
 								strcat(buffer, "<br>");
 							}
@@ -5222,7 +5256,6 @@ just_leave:
 											{
 												int fdw;
 												uint64_t msiz = 0;
-												uint64_t msiz2 = 0;
 												if(cellFsOpen((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", CELL_FS_O_RDONLY, &fdw, 0,0)==CELL_FS_SUCCEEDED)
 												{
 													cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
@@ -5349,6 +5382,7 @@ just_leave:
 								loading_games=0;
 								loading_html--;
 								sys_ppu_thread_exit(0);
+								is_busy=false;
 								break;
 							}
 
@@ -5762,6 +5796,8 @@ just_leave:
 							savefile((char*)WMTMP "/games.html", (char*)(buffer+buf_len), (strlen(buffer)-buf_len));
 						}
 					}
+
+					is_busy=false;
 				}
 
 				strcat(buffer, "</font></body></html>");
