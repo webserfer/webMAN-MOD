@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.12 MOD"						// webMAN version
+#define WM_VERSION			"1.30.13 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -2135,7 +2135,7 @@ uint64_t convertH(char *val)
         if(val[i]=='D' || val[i]=='d') buff+=0x0D; else
         if(val[i]=='E' || val[i]=='e') buff+=0x0E; else
         if(val[i]=='F' || val[i]=='f') buff+=0x0F; else
-        {ret=ret<<4; return ret;}
+        {ret=(ret<<4)+(buff>>4); return ret;}
 
         ret = (ret << 8) | buff;
     }
@@ -4888,23 +4888,28 @@ just_leave:
 						else
 						if(v!=NULL && strstr(param, "poke.lv2") && (address<upper_memory))
                         {
-							value = convertH(v+1);
-							if(bits32) pokeq(address, (((u64) value) <<32) | (peekq(address) & 0xffffffffULL));
-							if(bits16) pokeq(address, (((u64) value) <<48) | (peekq(address) & 0xffffffffffffULL));
-							if(bits8)  pokeq(address, (((u64) value) <<56) | (peekq(address) & 0xffffffffffffffULL));
-							else pokeq(address, value);
-							found_address=address;
+							value  = convertH(v+1);
+							fvalue = peekq(address);
+
+							if(bits32) value = ((uint64_t)(value<<32) | (uint64_t)(fvalue & 0xffffffffULL));
+							if(bits16) value = ((uint64_t)(value<<48) | (uint64_t)(fvalue & 0xffffffffffffULL));
+							if(bits8)  value = ((uint64_t)(value<<56) | (uint64_t)(fvalue & 0xffffffffffffffULL));
+
+							pokeq(address, value);
+							found_address=address; found=true;
 						}
 						else
 						if(v!=NULL && strstr(param, "poke.lv1") && (address<upper_memory))
                         {
 							value = convertH(v+1);
+							fvalue = peek_lv1(address);
 
-							if(bits32) poke_lv1(address, (((u64) value) <<32) | (peek_lv1(address) & 0xffffffffULL));
-							if(bits16) poke_lv1(address, (((u64) value) <<48) | (peek_lv1(address) & 0xffffffffffffULL));
-							if(bits8)  poke_lv1(address, (((u64) value) <<56) | (peek_lv1(address) & 0xffffffffffffffULL));
+							if(bits32) value = ((uint64_t)(value<<32) | (uint64_t)(fvalue & 0xffffffffULL));
+							if(bits16) value = ((uint64_t)(value<<48) | (uint64_t)(fvalue & 0xffffffffffffULL));
+							if(bits8)  value = ((uint64_t)(value<<56) | (uint64_t)(fvalue & 0xffffffffffffffULL));
+
 							poke_lv1(address, value);
-							found_address=address;
+							found_address=address; found=true;
 						}
 
 						if(address+0x200<upper_memory+8)
