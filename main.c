@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.13 MOD"						// webMAN version
+#define WM_VERSION			"1.30.14 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -3936,7 +3936,7 @@ again3:
 			if(is_busy)
 			{
 				int timeout=20;
-				while(is_busy || timeout>0) {sys_timer_usleep(500); timeout--;}
+				while(is_busy && timeout>0) {sys_timer_usleep(500); timeout--;}
 			}
 
 			if(!is_busy && (strstr(param, "cpursx.ps3")  ||
@@ -3973,7 +3973,7 @@ again3:
 					{
 						c_len=0;
 						is_binary=0;
-						sprintf(buffer1, "HTTP/1.1 200 OK\r\nX-PS3-Info: [%s]\r\nContent-Type: text/plain\r\nContent-Length: 5\r\n\r\nError", param);
+						sprintf(buffer1, "HTTP/1.1 %s OK\r\nX-PS3-Info: [%s]\r\nContent-Type: text/plain\r\nContent-Length: 5\r\n\r\n%s", is_busy ? "503":"400", param, is_busy ? "503 Server is Busy":"400 Bad Request");
 						ssend(conn_s, buffer1);
 						sclose(&conn_s);
 						loading_html--;
@@ -5323,6 +5323,7 @@ just_leave:
 							else
 								mount_with_mm(param+plen, 1);
 
+							is_busy=false;
 							if(strstr(param, "mount_ps3")) continue;
 						}
 					}
@@ -5387,8 +5388,8 @@ just_leave:
 								if(sysmem) sys_memory_free(sysmem);
 								loading_games=0;
 								loading_html--;
-								sys_ppu_thread_exit(0);
 								is_busy=false;
+								sys_ppu_thread_exit(0);
 								break;
 							}
 
@@ -5416,7 +5417,7 @@ just_leave:
 									if(f1==10 && f0!=0) break; //video
 									if(f0==7 && (!webman_config->netd0 || f1>6 || !cobra_mode)) break;
 									if(f0==8 && (!webman_config->netd1 || f1>6 || !cobra_mode)) break;
-									if(f1==5 && f0!=0) continue; // PS2ISO only from /dev_hdd0 supported
+									if(f1==5 && f0!=0) continue; // PS2ISO is supported only from /dev_hdd0
 
 									if( (webman_config->cmask & PS3) && (f1< 3 || f1==10)) continue;
 									if( (webman_config->cmask & BLU) && f1==3) continue;
