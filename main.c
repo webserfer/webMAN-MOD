@@ -353,10 +353,10 @@ char STR_ACCESS[100]		= "Disable remote access to FTP/WWW services";
 char STR_NOSETUP[150]		= "Disable webMAN Setup entry in \"My Games\"";
 char STR_NOSPOOF[100]		= "Disable firmware version spoofing";
 char STR_NOGRP[100]			= "Disable grouping of content in \"My Games\"";
-char STR_NOWMDN[100]		= "Disable startup notification of WebMAN on the XMB";
-char STR_TITLEID[100]		= "Include the ID as part of the title of the game";
-char STR_FANCTRL[100]		= "Enable dynamic fan control";
-char STR_NOWARN[100]		= "Disable temperature warnings";
+char STR_NOWMDN[200]		= "Disable startup notification of WebMAN on the XMB";
+char STR_TITLEID[200]		= "Include the ID as part of the title of the game";
+char STR_FANCTRL[120]		= "Enable dynamic fan control";
+char STR_NOWARN[120]		= "Disable temperature warnings";
 char STR_AUTOAT[100]		= "Auto at";
 char STR_LOWEST[30]			= "Lowest";
 char STR_FANSPEED[80]		= "fan speed";
@@ -3973,7 +3973,7 @@ again3:
 					{
 						c_len=0;
 						is_binary=0;
-						sprintf(buffer1, "HTTP/1.1 %s OK\r\nX-PS3-Info: [%s]\r\nContent-Type: text/plain\r\nContent-Length: 5\r\n\r\n%s", is_busy ? "503":"400", param, is_busy ? "503 Server is Busy":"400 Bad Request");
+						sprintf(buffer1, "HTTP/1.1 %s OK\r\nX-PS3-Info: [%s]\r\nContent-Type: text/plain\r\nContent-Length: %s", is_busy ? "503":"400", param, is_busy ? "18\r\n\r\n503 Server is Busy":"15\r\n\r\n400 Bad Request");
 						ssend(conn_s, buffer1);
 						sclose(&conn_s);
 						loading_html--;
