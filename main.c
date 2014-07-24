@@ -311,7 +311,7 @@ void clean_history();
 bool language(const char *file_str, char *default_str);
 uint64_t IDPS[2] = {0,0};
 uint64_t PSID[2] = {0,0};
-int lang_pos;
+int lang_pos, fh;
 
 char STR_TRADBY[150]		= "";
 
@@ -649,7 +649,7 @@ int filecopy(char *file1, char *file2, uint64_t maxbytes)
     int fd1, fd2;
     int ret=-1;
 
-    uint64_t chunk_size=64*1024;
+    uint64_t chunk_size=64*1024; //64K
 
 	if(cellFsStat(file1, &buf)!=CELL_FS_SUCCEEDED) return ret;
 
@@ -687,7 +687,7 @@ int filecopy(char *file1, char *file2, uint64_t maxbytes)
 				cellFsClose(fd2);
 
 				if(copy_aborted)
-					cellFsUnlink(file2);
+					cellFsUnlink(file2); //remove incomplete file
 				else
 					cellFsChmod(file2, 0666);
 
@@ -748,39 +748,23 @@ int my_atoi(const char *c)
         multiplier = -1;
         c++;
     }
-    else
-    {
-        multiplier = 1;
-    }
 
     while (*c)
     {
-        if (*c < '0' || *c > '9')
-        {
-            return result * multiplier;
-        }
+        if (*c < '0' || *c > '9') return result * multiplier;
+
         result *= 10;
         if (result < previous_result)
-        {
-
             return(0);
-        }
         else
-        {
             previous_result *= 10;
-        }
 
         result += *c - '0';
-
         if (result < previous_result)
-        {
-
             return(0);
-        }
         else
-        {
             previous_result += *c - '0';
-        }
+
         c++;
     }
     return(result * multiplier);
@@ -974,29 +958,29 @@ static int64_t open_remote_file(char *path)
 
 	if (send(g_socket, &cmd, sizeof(cmd), 0) != sizeof(cmd))
 	{
-		DPRINTF("send failed (open_file) (errno=%d)!\n", sys_net_errno);
+		//DPRINTF("send failed (open_file) (errno=%d)!\n", sys_net_errno);
 		return -1;
 	}
 
 	if (send(g_socket, path, len, 0) != len)
 	{
-		DPRINTF("send failed (open_file) (errno=%d)!\n", sys_net_errno);
+		//DPRINTF("send failed (open_file) (errno=%d)!\n", sys_net_errno);
 		return -1;
 	}
 
 	if (recv(g_socket, &res, sizeof(res), MSG_WAITALL) != sizeof(res))
 	{
-		DPRINTF("recv failed (open_file) (errno=%d)!\n", sys_net_errno);
+		//DPRINTF("recv failed (open_file) (errno=%d)!\n", sys_net_errno);
 		return -1;
 	}
 
 	if (res.file_size == -1)
 	{
-		DPRINTF("Remote file %s doesn't exist!\n", path);
+		//DPRINTF("Remote file %s doesn't exist!\n", path);
 		return -1;
 	}
 
-	DPRINTF("Remote file %s opened. Size = %x%08lx bytes\n", path, (res.file_size>>32), res.file_size&0xFFFFFFFF);
+	//DPRINTF("Remote file %s opened. Size = %x%08lx bytes\n", path, (res.file_size>>32), res.file_size&0xFFFFFFFF);
 	return res.file_size;
 }
 
@@ -1012,13 +996,13 @@ static int read_remote_file_critical(uint64_t offset, void *buf, uint32_t size)
 
 	if (send(g_socket, &cmd, sizeof(cmd), 0) != sizeof(cmd))
 	{
-		DPRINTF("send failed (read file) (errno=%d)!\n", sys_net_errno);
+		//DPRINTF("send failed (read file) (errno=%d)!\n", sys_net_errno);
 		return -1;
 	}
 
 	if (recv(g_socket, buf, size, MSG_WAITALL) != (int)size)
 	{
-		DPRINTF("recv failed (recv file)  (errno=%d)!\n", sys_net_errno);
+		//DPRINTF("recv failed (recv file)  (errno=%d)!\n", sys_net_errno);
 		return -1;
 	}
 
@@ -1034,7 +1018,7 @@ static int process_read_iso_cmd(uint8_t *buf, uint64_t offset, uint32_t size)
 
 	if (read_end >= discsize)
 	{
-		DPRINTF("Read beyond limits: %llx %x (discsize=%llx)!\n", offset, size, discsize);
+		//DPRINTF("Read beyond limits: %llx %x (discsize=%llx)!\n", offset, size, discsize);
 
 		if (offset >= discsize)
 		{
@@ -1060,13 +1044,13 @@ static int process_read_cd_2048_cmd(uint8_t *buf, uint32_t start_sector, uint32_
 
 	if (send(g_socket, &cmd, sizeof(cmd), 0) != sizeof(cmd))
 	{
-		DPRINTF("send failed (read 2048) (errno=%d)!\n", sys_net_errno);
+		//DPRINTF("send failed (read 2048) (errno=%d)!\n", sys_net_errno);
 		return -1;
 	}
 
 	if (recv(g_socket, buf, sector_count*2048, MSG_WAITALL) != (int)(sector_count*2048))
 	{
-		DPRINTF("recv failed (read 2048)  (errno=%d)!\n", sys_net_errno);
+		//DPRINTF("recv failed (read 2048)  (errno=%d)!\n", sys_net_errno);
 		return -1;
 	}
 
@@ -1138,7 +1122,7 @@ static int process_read_cd_2352_cmd(uint8_t *buf, uint32_t sector, uint32_t rema
 		int ret = sys_memory_allocate(192*1024, SYS_MEMORY_PAGE_SIZE_64K, &addr);
 		if (ret != 0)
 		{
-			DPRINTF("sys_memory_allocate failed: %x\n", ret);
+			//DPRINTF("sys_memory_allocate failed: %x\n", ret);
 			return ret;
 		}
 
@@ -1326,7 +1310,7 @@ static void netiso_thread(uint64_t arg)
 	sys_event_port_disconnect(result_port);
 	if (sys_event_port_destroy(result_port) != 0)
 	{
-		DPRINTF("Error destroyng result_port\n");
+		//DPRINTF("Error destroyng result_port\n");
 	}
 
 	//DPRINTF("Exiting main thread!\n");
@@ -1349,7 +1333,7 @@ static void netiso_stop_thread(uint64_t arg)
 	{
 		if (sys_event_queue_destroy(command_queue, SYS_EVENT_QUEUE_DESTROY_FORCE) != 0)
 		{
-			DPRINTF("Failed in destroying command_queue\n");
+			//DPRINTF("Failed in destroying command_queue\n");
 		}
 	}
 
@@ -1392,7 +1376,7 @@ static inline void get_next_read(uint64_t discoffset, uint64_t bufsize, uint64_t
 	}
 
 	// We can be here on video blu-ray
-	DPRINTF("Offset or size out of range  %lx%08lx   %lx!!!!!!!!\n", discoffset>>32, discoffset, bufsize);
+	//DPRINTF("Offset or size out of range  %lx%08lx   %lx!!!!!!!!\n", discoffset>>32, discoffset, bufsize);
 }
 
 static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size)
@@ -1430,7 +1414,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 			ret = sys_storage_read(handle, 0, sector, 1, tmp, &r, 0);
 			if (ret != 0 || r != 1)
 			{
-				DPRINTF("sys_storage_read failed: %x 1 -> %x\n", sector, ret);
+				//DPRINTF("sys_storage_read failed: %x 1 -> %x\n", sector, ret);
 				return -1;
 			}
 
@@ -1459,7 +1443,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 				ret = sys_storage_read(handle, 0, sector, n, buf, &r, 0);
 				if (ret != 0 || r != n)
 				{
-					DPRINTF("sys_storage_read failed: %x %x -> %x\n", sector, n, ret);
+					//DPRINTF("sys_storage_read failed: %x %x -> %x\n", sector, n, ret);
 					return -1;
 				}
 
@@ -1477,7 +1461,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 				ret = sys_storage_read(handle, 0, sector, 1, tmp, &r, 0);
 				if (ret != 0 || r != 1)
 				{
-					DPRINTF("sys_storage_read failed: %x 1 -> %x\n", sector, ret);
+					//DPRINTF("sys_storage_read failed: %x 1 -> %x\n", sector, ret);
 					return -1;
 				}
 
@@ -1595,7 +1579,7 @@ static int process_read_cd_2352_cmd_iso(uint8_t *buf, uint32_t sector, uint32_t 
 		int ret = sys_memory_allocate(192*1024, SYS_MEMORY_PAGE_SIZE_64K, &addr);
 		if (ret != 0)
 		{
-			DPRINTF("sys_memory_allocate failed: %x\n", ret);
+			//DPRINTF("sys_memory_allocate failed: %x\n", ret);
 			return ret;
 		}
 
@@ -1619,7 +1603,7 @@ static void rawseciso_stop_thread(uint64_t arg)
 	{
 		if (sys_event_queue_destroy(command_queue_ntfs, SYS_EVENT_QUEUE_DESTROY_FORCE) != 0)
 		{
-			DPRINTF("Failed in destroying command_queue\n");
+			//DPRINTF("Failed in destroying command_queue\n");
 		}
 	}
 
@@ -1678,12 +1662,12 @@ static void rawseciso_thread(uint64_t arg)
 		}
 	}
 
-	DPRINTF("discsize = %lx%08lx\n", discsize>>32, discsize);
+	//DPRINTF("discsize = %lx%08lx\n", discsize>>32, discsize);
 
 	ret = sys_storage_open(args->device, 0, &handle, 0);
 	if (ret != 0)
 	{
-		DPRINTF("sys_storage_open failed: %x\n", ret);
+		//DPRINTF("sys_storage_open failed: %x\n", ret);
 		sys_memory_free((sys_addr_t)args);
 		sys_ppu_thread_exit(ret);
 	}
@@ -1691,7 +1675,7 @@ static void rawseciso_thread(uint64_t arg)
 	ret = sys_event_port_create(&result_port, 1, SYS_EVENT_PORT_NO_NAME);
 	if (ret != 0)
 	{
-		DPRINTF("sys_event_port_create failed: %x\n", ret);
+		//DPRINTF("sys_event_port_create failed: %x\n", ret);
                 sys_storage_close(handle);
 		sys_memory_free((sys_addr_t)args);
 		sys_ppu_thread_exit(ret);
@@ -1701,7 +1685,7 @@ static void rawseciso_thread(uint64_t arg)
 	ret = sys_event_queue_create(&command_queue_ntfs, &queue_attr, 0, 1);
 	if (ret != 0)
 	{
-		DPRINTF("sys_event_queue_create failed: %x\n", ret);
+		//DPRINTF("sys_event_queue_create failed: %x\n", ret);
 		sys_event_port_destroy(result_port);
 		sys_storage_close(handle);
 		sys_memory_free((sys_addr_t)args);
@@ -1716,7 +1700,7 @@ static void rawseciso_thread(uint64_t arg)
 	}
 
 	ret = sys_storage_ext_mount_discfile_proxy(result_port, command_queue_ntfs, emu_mode, discsize, 256*1024, num_tracks, tracks);
-	DPRINTF("mount = %x\n", ret);
+	//DPRINTF("mount = %x\n", ret);
 
 	fake_insert_event(real_disctype);
 
@@ -1771,7 +1755,7 @@ static void rawseciso_thread(uint64_t arg)
 		ret = sys_event_port_send(result_port, ret, 0, 0);
 		if (ret != 0)
 		{
-			DPRINTF("sys_event_port_send failed: %x\n", ret);
+			//DPRINTF("sys_event_port_send failed: %x\n", ret);
 			break;
 		}
 	}
@@ -1797,12 +1781,12 @@ static void rawseciso_thread(uint64_t arg)
 	sys_event_port_disconnect(result_port);
 	if (sys_event_port_destroy(result_port) != 0)
 	{
-		DPRINTF("Error destroyng result_port\n");
+		//DPRINTF("Error destroyng result_port\n");
 	}
 
 	// queue destroyed in stop thread
 
-	DPRINTF("Exiting main thread!\n");
+	//DPRINTF("Exiting main thread!\n");
 	rawseciso_loaded=0;
 	sys_ppu_thread_exit(0);
 }
@@ -1855,56 +1839,63 @@ bool language(const char *file_str, char *default_str)
 	uint8_t i;
 	int f=0;
 	char temp[1];
-	const char *lang_path = 0;
 
-    bool do_retry=true;
+	bool do_retry=true;
 
-	if(webman_config->lang==0) {
-		lang_path = "/dev_hdd0/tmp/LANG_EN.TXT";
-	} else if(webman_config->lang==1) {
-		lang_path = "/dev_hdd0/tmp/LANG_FR.TXT";
-	} else if(webman_config->lang==2) {
-		lang_path = "/dev_hdd0/tmp/LANG_IT.TXT";
-	} else if(webman_config->lang==3) {
-		lang_path = "/dev_hdd0/tmp/LANG_ES.TXT";
-	} else if(webman_config->lang==4) {
-		lang_path = "/dev_hdd0/tmp/LANG_DE.TXT";
-	} else if(webman_config->lang==5) {
-		lang_path = "/dev_hdd0/tmp/LANG_NL.TXT";
-	} else if(webman_config->lang==6) {
-		lang_path = "/dev_hdd0/tmp/LANG_PT.TXT";
-	} else if(webman_config->lang==7) {
-		lang_path = "/dev_hdd0/tmp/LANG_RU.TXT";
-	} else if(webman_config->lang==8) {
-		lang_path = "/dev_hdd0/tmp/LANG_HU.TXT";
-	} else if(webman_config->lang==9) {
-		lang_path = "/dev_hdd0/tmp/LANG_PL.TXT";
-	} else if(webman_config->lang==10) {
-		lang_path = "/dev_hdd0/tmp/LANG_GR.TXT";
-	} else if(webman_config->lang==11) {
-		lang_path = "/dev_hdd0/tmp/LANG_HR.TXT";
-	} else if(webman_config->lang==12) {
-		lang_path = "/dev_hdd0/tmp/LANG_BG.TXT";
-	} else if(webman_config->lang==13) {
-		lang_path = "/dev_hdd0/tmp/LANG_IN.TXT";
-	} else if(webman_config->lang==14) {
-		lang_path = "/dev_hdd0/tmp/LANG_TR.TXT";
-	} else if(webman_config->lang==15) {
-		lang_path = "/dev_hdd0/tmp/LANG_AR.TXT";
-	} else if(webman_config->lang==16) {
-		lang_path = "/dev_hdd0/tmp/LANG_CN.TXT";
-	} else if(webman_config->lang==17) {
-		lang_path = "/dev_hdd0/tmp/LANG_KR.TXT";
-	} else if(webman_config->lang==18) {
-		lang_path = "/dev_hdd0/tmp/LANG_JP.TXT";
-	} else if(webman_config->lang==99) {
-		lang_path = "/dev_hdd0/tmp/LANG_XX.TXT";
-	} else return false;
+	if(fh) f=fh; //file is already open
+    else
+    {
+		const char *lang_path = 0;
 
-	if(cellFsOpen(lang_path, CELL_FS_O_RDONLY, &f, 0,0) != CELL_FS_SUCCEEDED) return false;
+		if(webman_config->lang==0) {
+			lang_path = "/dev_hdd0/tmp/LANG_EN.TXT";
+		} else if(webman_config->lang==1) {
+			lang_path = "/dev_hdd0/tmp/LANG_FR.TXT";
+		} else if(webman_config->lang==2) {
+			lang_path = "/dev_hdd0/tmp/LANG_IT.TXT";
+		} else if(webman_config->lang==3) {
+			lang_path = "/dev_hdd0/tmp/LANG_ES.TXT";
+		} else if(webman_config->lang==4) {
+			lang_path = "/dev_hdd0/tmp/LANG_DE.TXT";
+		} else if(webman_config->lang==5) {
+			lang_path = "/dev_hdd0/tmp/LANG_NL.TXT";
+		} else if(webman_config->lang==6) {
+			lang_path = "/dev_hdd0/tmp/LANG_PT.TXT";
+		} else if(webman_config->lang==7) {
+			lang_path = "/dev_hdd0/tmp/LANG_RU.TXT";
+		} else if(webman_config->lang==8) {
+			lang_path = "/dev_hdd0/tmp/LANG_HU.TXT";
+		} else if(webman_config->lang==9) {
+			lang_path = "/dev_hdd0/tmp/LANG_PL.TXT";
+		} else if(webman_config->lang==10) {
+			lang_path = "/dev_hdd0/tmp/LANG_GR.TXT";
+		} else if(webman_config->lang==11) {
+			lang_path = "/dev_hdd0/tmp/LANG_HR.TXT";
+		} else if(webman_config->lang==12) {
+			lang_path = "/dev_hdd0/tmp/LANG_BG.TXT";
+		} else if(webman_config->lang==13) {
+			lang_path = "/dev_hdd0/tmp/LANG_IN.TXT";
+		} else if(webman_config->lang==14) {
+			lang_path = "/dev_hdd0/tmp/LANG_TR.TXT";
+		} else if(webman_config->lang==15) {
+			lang_path = "/dev_hdd0/tmp/LANG_AR.TXT";
+		} else if(webman_config->lang==16) {
+			lang_path = "/dev_hdd0/tmp/LANG_CN.TXT";
+		} else if(webman_config->lang==17) {
+			lang_path = "/dev_hdd0/tmp/LANG_KR.TXT";
+		} else if(webman_config->lang==18) {
+			lang_path = "/dev_hdd0/tmp/LANG_JP.TXT";
+		} else if(webman_config->lang==99) {
+			lang_path = "/dev_hdd0/tmp/LANG_XX.TXT";
+		} else return false;
+
+		if(cellFsOpen(lang_path, CELL_FS_O_RDONLY, &f, 0,0) != CELL_FS_SUCCEEDED) return false;
+
+		fh = f;
 
 retry:
-	cellFsLseek(f, lang_pos, CELL_FS_SEEK_SET, &siz);
+		cellFsLseek(f, lang_pos, CELL_FS_SEEK_SET, &siz);
+	}
 
 	do {
 		cellFsRead(f, (void *)&temp, 0x01, &siz);
@@ -1919,12 +1910,11 @@ retry:
 						lang_pos++;
 					}
 					int str_len = 0;
-					while(1) {
+					while(true) {
 						cellFsRead(f, (void *)&temp, 0x01, &siz);
 						lang_pos++;
 						if(temp[0] == ']') {
 							default_str[str_len] = NULL;
-							cellFsClose(f);
 							return true;
 						}
 						default_str[str_len] = temp[0];
@@ -1940,14 +1930,13 @@ retry:
 
 	if(do_retry) {do_retry=false; lang_pos=0; goto retry;}
 
-	cellFsClose(f);
-
 	return true;
 }
 
 void update_language()
 {
-	lang_pos=0;
+	lang_pos=fh=0;
+
 	if(language("STR_TRADBY", STR_TRADBY))
 	{
 		language("STR_FILES", STR_FILES);
@@ -2088,6 +2077,7 @@ void update_language()
 
 		language("COVERS_PATH", COVERS_PATH);
 	}
+	if(fh) {cellFsClose(fh); lang_pos=fh=0;}
 }
 
 uint64_t convertH(char *val)
@@ -2612,7 +2602,6 @@ static void get_cover(char *icon, char *titleid)
 	{
 		sprintf(icon, WMTMP "/%s.JPG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 		sprintf(icon, WMTMP "/%s.PNG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-
 	}
 
 	icon[0]=0;
@@ -2642,15 +2631,15 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 		if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 
 		icon[flen-4]=0; // remove file extension
-		strcat(icon, ".JPG");
-
-		//file name + .JPG
-		if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-
-		icon[flen-4]=0; // remove file extension
 		strcat(icon, ".jpg");
 
 		//file name + .jpg
+		if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+		icon[flen-4]=0; // remove file extension
+		strcat(icon, ".JPG");
+
+		//file name + .JPG
 		if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 
 		icon[flen-4]=0; // remove file extension
@@ -3106,9 +3095,9 @@ again1:
 
 		led(YELLOW, BLINK);
 
-		for(u8 f0=0; f0<10; f0++)
+		for(u8 f0=0; f0<10; f0++)  // drives: 0="/dev_hdd0", 1="/dev_usb000", 2="/dev_usb001", 3="/dev_usb002", 4="/dev_usb003", 5="/dev_usb006", 6="/dev_usb007", 7="/net0", 8="/net1", 9="/ext"
 		{
-			for(u8 f1=0; f1<11; f1++)
+			for(u8 f1=0; f1<11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
 			{
 				if(!cobra_mode && (f1>1 && f1<10)) continue;
 
@@ -3116,6 +3105,7 @@ again1:
 
 				cellRtcGetCurrentTick(&pTick);
 
+				if(f1==5 && f0!=0) continue; // PS2ISO only on /dev_hdd0 supported
 				if(f0==9 && f1>6) break;   //ntfs
 				if(f1==10 && f0!=0) break; //video
 				if(f0==7 && (!webman_config->netd0 || f1>6 || !cobra_mode)) break;
@@ -3129,9 +3119,10 @@ again1:
 				{
 reconnect:
 					if(f0==7)
-						ns=connect_to_server(webman_config->neth0, webman_config->netp0);
+						ns=connect_to_server(webman_config->neth0, webman_config->netp0);  //net0
 					else
-						ns=connect_to_server(webman_config->neth1, webman_config->netp1);
+						ns=connect_to_server(webman_config->neth1, webman_config->netp1);  //net1
+
 					if(ns<0)
 					{
 						if(retries<10)
@@ -3156,8 +3147,6 @@ reconnect:
 						sprintf(param, "%s/%s", drives[f0], paths[f1]);
 				}
 
-				if(f1==5 && f0!=0) continue; // PS2ISO only on /dev_hdd0 supported
-
 				//if(cobra_mode)
 				{
 					if(f0==1 && (f1==0 || f1==1 || f1==10) && webman_config->bootd)
@@ -3171,7 +3160,7 @@ reconnect:
 						}
 					}
 
-					if(f0>=1 && f0<=6 && (f1==0 || f1==1 || f1==10)) // usb000->006
+					if(f0>=1 && f0<=6 && (f1==0 || f1==1 || f1==10)) // usb000->007  (f1: 0=/GAMES, 1=/GAMEZ, 10=/video)
 					{
 
 						if(((webman_config->usb0 && f0==1) ||
@@ -5542,7 +5531,7 @@ just_leave:
 														sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, data[v3_entry].name);
 														open_remote_file_2(ns, templn, &abort_connection);
 														int boff=0;
-														while(1)
+														while(true)
 														{
 															bytes_read = read_remote_file(ns, (char*)tempstr, boff, 3072, &abort_connection);
 															if(bytes_read>0)
