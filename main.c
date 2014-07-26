@@ -6198,7 +6198,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 									filecopy(source, filename, COPY_WHOLE_FILE);
 
 								show_msg((char*)STR_CPYFINISH);
-								memset(source, 0, 512);
+								//memset(source, 0, 512);
 								copy_in_progress=false;
 							}
 							else
