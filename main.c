@@ -6006,13 +6006,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 						if(strcasecmp(cmd, "HELP") == 0)
 						{
-							ssend(conn_s_ftp, "214-CMDs:\r\n");
-							ssend(conn_s_ftp, " SITE FLASH\r\n");
-							ssend(conn_s_ftp, " SITE CHMOD 777 <file>\r\n");
-							ssend(conn_s_ftp, " SITE SHUTDOWN\r\n");
-							ssend(conn_s_ftp, " SITE RESTART\r\n");
-							ssend(conn_s_ftp, "214 End\r\n");
-
+							ssend(conn_s_ftp, "214-CMDs:\r\n SITE FLASH\r\n SITE CHMOD 777 <file>\r\n SITE COPY <file>\r\n SITE PASTE <file>\r\n SITE SHUTDOWN\r\n SITE RESTART\r\n214 End\r\n");
 						}
 						else
 						if(strcasecmp(cmd, "SHUTDOWN") == 0)

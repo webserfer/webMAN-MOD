@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <ppu-lv2.h>
 #include <sys/file.h>
 #include <stdio.h>
 #include <string.h>
@@ -168,6 +169,9 @@ int main()
 {
     sysFSStat s;
 
+    sysLv2FsMkdir("/dev_hdd0/tmp", 0666);
+    sysLv2FsMkdir("/dev_hdd0/tmp/wm_lang", 0666);
+
     sysLv2FsUnlink("/dev_hdd0/tmp/LANG_EN.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/LANG_AR.TXT");
 	sysLv2FsUnlink("/dev_hdd0/tmp/LANG_CN.TXT");
@@ -187,28 +191,50 @@ int main()
 	sysLv2FsUnlink("/dev_hdd0/tmp/LANG_PT.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/LANG_RU.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/LANG_TR.TXT");
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_EN.TXT","/dev_hdd0/tmp/LANG_EN.TXT");
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_AR.TXT","/dev_hdd0/tmp/LANG_AR.TXT");
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_CN.TXT","/dev_hdd0/tmp/LANG_CN.TXT");
-    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_DE.TXT","/dev_hdd0/tmp/LANG_DE.TXT");
-    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_ES.TXT","/dev_hdd0/tmp/LANG_ES.TXT");
-    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_FR.TXT","/dev_hdd0/tmp/LANG_FR.TXT");
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_GR.TXT","/dev_hdd0/tmp/LANG_GR.TXT");
-    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_HU.TXT","/dev_hdd0/tmp/LANG_HU.TXT");
-    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_HR.TXT","/dev_hdd0/tmp/LANG_HR.TXT");
-    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_BG.TXT","/dev_hdd0/tmp/LANG_BG.TXT");
-    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_IN.TXT","/dev_hdd0/tmp/LANG_IN.TXT");
-    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_IT.TXT","/dev_hdd0/tmp/LANG_IT.TXT");
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_JP.TXT","/dev_hdd0/tmp/LANG_JP.TXT");
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_KR.TXT","/dev_hdd0/tmp/LANG_KR.TXT");
-    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_NL.TXT","/dev_hdd0/tmp/LANG_NL.TXT");
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_PL.TXT","/dev_hdd0/tmp/LANG_PL.TXT");
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_PT.TXT","/dev_hdd0/tmp/LANG_PT.TXT");
-    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_RU.TXT","/dev_hdd0/tmp/LANG_RU.TXT");
-    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_TR.TXT","/dev_hdd0/tmp/LANG_TR.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/LANG_XX.TXT");
 
-    if(sysLv2FsStat("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_XX.TXT", &s))
-        CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_XX.TXT","/dev_hdd0/tmp/LANG_XX.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_EN.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_AR.TXT");
+	sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_CN.TXT");
+	sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_DE.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_ES.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_FR.TXT");
+	sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_GR.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_HU.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_HR.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_BG.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_IN.TXT");
+	sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_JP.TXT");
+	sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_KR.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_IT.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_NL.TXT");
+	sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_PL.TXT");
+	sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_PT.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_RU.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_TR.TXT");
+
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_EN.TXT","/dev_hdd0/tmp/wm_lang/LANG_EN.TXT");
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_AR.TXT","/dev_hdd0/tmp/wm_lang/LANG_AR.TXT");
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_CN.TXT","/dev_hdd0/tmp/wm_lang/LANG_CN.TXT");
+    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_DE.TXT","/dev_hdd0/tmp/wm_lang/LANG_DE.TXT");
+    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_ES.TXT","/dev_hdd0/tmp/wm_lang/LANG_ES.TXT");
+    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_FR.TXT","/dev_hdd0/tmp/wm_lang/LANG_FR.TXT");
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_GR.TXT","/dev_hdd0/tmp/wm_lang/LANG_GR.TXT");
+    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_HU.TXT","/dev_hdd0/tmp/wm_lang/LANG_HU.TXT");
+    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_HR.TXT","/dev_hdd0/tmp/wm_lang/LANG_HR.TXT");
+    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_BG.TXT","/dev_hdd0/tmp/wm_lang/LANG_BG.TXT");
+    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_IN.TXT","/dev_hdd0/tmp/wm_lang/LANG_IN.TXT");
+    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_IT.TXT","/dev_hdd0/tmp/wm_lang/LANG_IT.TXT");
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_JP.TXT","/dev_hdd0/tmp/wm_lang/LANG_JP.TXT");
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_KR.TXT","/dev_hdd0/tmp/wm_lang/LANG_KR.TXT");
+    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_NL.TXT","/dev_hdd0/tmp/wm_lang/LANG_NL.TXT");
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_PL.TXT","/dev_hdd0/tmp/wm_lang/LANG_PL.TXT");
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_PT.TXT","/dev_hdd0/tmp/wm_lang/LANG_PT.TXT");
+    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_RU.TXT","/dev_hdd0/tmp/wm_lang/LANG_RU.TXT");
+    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_TR.TXT","/dev_hdd0/tmp/wm_lang/LANG_TR.TXT");
+
+    if(sysLv2FsStat("/dev_hdd0/tmp/wm_lang/LANG_XX.TXT", &s))
+        CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_XX.TXT","/dev_hdd0/tmp/wm_lang/LANG_XX.TXT");
 
     char ligne[255];
     if(is_cobra()) {
