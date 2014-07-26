@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.14 MOD"						// webMAN version
+#define WM_VERSION			"1.30.15 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -1845,49 +1845,32 @@ bool language(const char *file_str, char *default_str)
 	if(fh) f=fh; //file is already open
     else
     {
-		const char *lang_path = 0;
+		const char *lang_file = 0;
 
-		if(webman_config->lang==0) {
-			lang_path = "/dev_hdd0/tmp/LANG_EN.TXT";
-		} else if(webman_config->lang==1) {
-			lang_path = "/dev_hdd0/tmp/LANG_FR.TXT";
-		} else if(webman_config->lang==2) {
-			lang_path = "/dev_hdd0/tmp/LANG_IT.TXT";
-		} else if(webman_config->lang==3) {
-			lang_path = "/dev_hdd0/tmp/LANG_ES.TXT";
-		} else if(webman_config->lang==4) {
-			lang_path = "/dev_hdd0/tmp/LANG_DE.TXT";
-		} else if(webman_config->lang==5) {
-			lang_path = "/dev_hdd0/tmp/LANG_NL.TXT";
-		} else if(webman_config->lang==6) {
-			lang_path = "/dev_hdd0/tmp/LANG_PT.TXT";
-		} else if(webman_config->lang==7) {
-			lang_path = "/dev_hdd0/tmp/LANG_RU.TXT";
-		} else if(webman_config->lang==8) {
-			lang_path = "/dev_hdd0/tmp/LANG_HU.TXT";
-		} else if(webman_config->lang==9) {
-			lang_path = "/dev_hdd0/tmp/LANG_PL.TXT";
-		} else if(webman_config->lang==10) {
-			lang_path = "/dev_hdd0/tmp/LANG_GR.TXT";
-		} else if(webman_config->lang==11) {
-			lang_path = "/dev_hdd0/tmp/LANG_HR.TXT";
-		} else if(webman_config->lang==12) {
-			lang_path = "/dev_hdd0/tmp/LANG_BG.TXT";
-		} else if(webman_config->lang==13) {
-			lang_path = "/dev_hdd0/tmp/LANG_IN.TXT";
-		} else if(webman_config->lang==14) {
-			lang_path = "/dev_hdd0/tmp/LANG_TR.TXT";
-		} else if(webman_config->lang==15) {
-			lang_path = "/dev_hdd0/tmp/LANG_AR.TXT";
-		} else if(webman_config->lang==16) {
-			lang_path = "/dev_hdd0/tmp/LANG_CN.TXT";
-		} else if(webman_config->lang==17) {
-			lang_path = "/dev_hdd0/tmp/LANG_KR.TXT";
-		} else if(webman_config->lang==18) {
-			lang_path = "/dev_hdd0/tmp/LANG_JP.TXT";
-		} else if(webman_config->lang==99) {
-			lang_path = "/dev_hdd0/tmp/LANG_XX.TXT";
-		} else return false;
+		if(webman_config->lang==0 ) lang_file = "EN.TXT"; else
+		if(webman_config->lang==1 ) lang_file = "FR.TXT"; else
+		if(webman_config->lang==2 ) lang_file = "IT.TXT"; else
+		if(webman_config->lang==3 ) lang_file = "ES.TXT"; else
+		if(webman_config->lang==4 ) lang_file = "DE.TXT"; else
+		if(webman_config->lang==5 ) lang_file = "NL.TXT"; else
+		if(webman_config->lang==6 ) lang_file = "PT.TXT"; else
+		if(webman_config->lang==7 ) lang_file = "RU.TXT"; else
+		if(webman_config->lang==8 ) lang_file = "HU.TXT"; else
+		if(webman_config->lang==9 ) lang_file = "PL.TXT"; else
+		if(webman_config->lang==10) lang_file = "GR.TXT"; else
+		if(webman_config->lang==11) lang_file = "HR.TXT"; else
+		if(webman_config->lang==12) lang_file = "BG.TXT"; else
+		if(webman_config->lang==13) lang_file = "IN.TXT"; else
+		if(webman_config->lang==14) lang_file = "TR.TXT"; else
+		if(webman_config->lang==15) lang_file = "AR.TXT"; else
+		if(webman_config->lang==16) lang_file = "CN.TXT"; else
+		if(webman_config->lang==17) lang_file = "KR.TXT"; else
+		if(webman_config->lang==18) lang_file = "JP.TXT"; else
+		if(webman_config->lang==99) lang_file = "XX.TXT"; else
+		return false;
+
+		const char lang_path[34];
+		sprintf(lang_path, "/dev_hdd0/tmp/wm_lang/LANG_%s", lang_file);
 
 		if(cellFsOpen(lang_path, CELL_FS_O_RDONLY, &f, 0,0) != CELL_FS_SUCCEEDED) return false;
 
@@ -4130,7 +4113,7 @@ again3:
 					if(strstr(param, "blind")) webman_config->blind=1;
 					if(webman_config->blind)
 						{system_call_8(837, (u64)(char*)"CELL_FS_IOS:BUILTIN_FLSH1", (u64)(char*)"CELL_FS_FAT", (u64)(char*)"/dev_blind", 0, 0, 0, 0, 0);}
-						else
+					else
 						{system_call_3(838, (u64)(char*)"/dev_blind", 0, 1);}
 
 
@@ -4961,7 +4944,7 @@ just_leave:
 					else
 					if(strstr(param, "setup.ps3"))
 					{
-						sprintf(templn, "<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\"><font face=\"Courier New\"><table width=\"760\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td width=\"220\"><u>%s:</u><br>", STR_SCAN1); strcat(buffer, templn);
+						sprintf(templn, "<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\"><font face=\"Courier New\"><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td width=\"220\"><u>%s:</u><br>", STR_SCAN1); strcat(buffer, templn);
 						add_check_box("u0", "usb0", drives[1], NULL, (webman_config->usb0), buffer);
 						add_check_box("u1", "usb1", drives[2], NULL, (webman_config->usb1), buffer);
 						add_check_box("u2", "usb2", drives[3], NULL, (webman_config->usb2), buffer);
@@ -4969,7 +4952,7 @@ just_leave:
 						add_check_box("u6", "usb6", drives[5], NULL, (webman_config->usb6), buffer);
 						add_check_box("u7", "usb7", drives[6], NULL, (webman_config->usb7), buffer);
 
-						sprintf(templn, "<td width=\"520\"><u>%s:</u><br>", STR_SCAN2); strcat(buffer, templn);
+						sprintf(templn, "<td nowrap><u>%s:</u><br>", STR_SCAN2); strcat(buffer, templn);
 
 						sprintf(templn, "<input name=\"p0\" type=\"checkbox\" value=\"pst\" %s/> PLAYSTATION\xC2\xAE\x33<br>", (!(webman_config->cmask & PS3))?(char*)"checked=\"checked\"" : (char*)" "); strcat(buffer, templn);
 #ifdef COBRA_ONLY
@@ -5005,7 +4988,7 @@ just_leave:
 						add_check_box("wn", "wmdn", STR_NOWMDN, NULL, (webman_config->wmdn), buffer);
 						add_check_box("ti", "tid", STR_TITLEID, NULL, (webman_config->tid), buffer);
 
-						strcat(buffer, "<hr color=\"#0099FF\"/><table width=\"760\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr class=\"propfont\"><td width=\"320\">");
+						strcat(buffer, "<hr color=\"#0099FF\"/><table width=\"900\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr class=\"propfont\"><td>");
 
 						add_check_box("fc", "fanc", STR_FANCTRL, " </td><td>", (webman_config->fanc), buffer);
 						add_check_box("warn", "1" , STR_NOWARN, " </td></tr>", (webman_config->warn), buffer);
@@ -5084,7 +5067,7 @@ just_leave:
 						add_option_item("18", "\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E"									  , (webman_config->lang==18), buffer);
 						add_option_item("99", "Unknown"																  , (webman_config->lang==99), buffer);
 
-						sprintf(templn, "</select><hr color=\"#0099FF\"/><b><u> %s :</u></b><br><table width=\"760\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap>", STR_COMBOS2); strcat(buffer, templn);
+						sprintf(templn, "</select><hr color=\"#0099FF\"/><b><u> %s :</u></b><br><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap>", STR_COMBOS2); strcat(buffer, templn);
 
 						add_check_box("c0" , "failsaf", STR_FAILSAFE,   " : <b>SELECT+L3+L2+R2</b><br>"   , !(webman_config->combo & FAIL_SAFE), buffer);
 						add_check_box("c1" , "showtem", STR_SHOWTEMP,   " : <b>SELECT+R3</b><br>"         , !(webman_config->combo & SHOW_TEMP), buffer);
@@ -5202,7 +5185,7 @@ just_leave:
 							if(strstr(param, "copy.ps3")) plen=9;
 							if(strstr(param, "mount.ps3")) plen=10;
 
-							char target[1024];
+							char target[512];
 
 							if(plen)
 							{
@@ -5839,6 +5822,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 	char buffer[2048];
 	char filename[384];
+	char source[384];
 	char tempcwd[512];
 	char cmd[16], param[384];
 	struct CellFsStat buf;
@@ -5878,7 +5862,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 			buffer[strcspn(buffer, "\n")] = '\0';
 			buffer[strcspn(buffer, "\r")] = '\0';
 
-			int split = ssplit(buffer, cmd, 15, param, 511);
+			int split = ssplit(buffer, cmd, 15, param, 383);
 
 			if(loggedin == 1)
 			{
@@ -6018,11 +6002,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				{
 					if(split == 1)
 					{
-						split = ssplit(param, cmd, 31, filename, 511);
+						split = ssplit(param, cmd, 10, filename, 383);
 
 						if(strcasecmp(cmd, "HELP") == 0)
 						{
 							ssend(conn_s_ftp, "214-CMDs:\r\n");
+							ssend(conn_s_ftp, " SITE FLASH\r\n");
+							ssend(conn_s_ftp, " SITE CHMOD 777 <file>\r\n");
 							ssend(conn_s_ftp, " SITE SHUTDOWN\r\n");
 							ssend(conn_s_ftp, " SITE RESTART\r\n");
 							ssend(conn_s_ftp, "214 End\r\n");
@@ -6045,6 +6031,62 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
 							{system_call_4(379,0x1200,0,0,0);}
 							sys_ppu_thread_exit(0);
+						}
+						else
+						if(strcasecmp(cmd, "FLASH") == 0)
+						{
+							ssend(conn_s_ftp, "221 OK\r\n");
+
+							struct CellFsStat s;
+							if(cellFsStat("/dev_blind", &s)!=CELL_FS_SUCCEEDED)
+								{system_call_8(837, (u64)(char*)"CELL_FS_IOS:BUILTIN_FLSH1", (u64)(char*)"CELL_FS_FAT", (u64)(char*)"/dev_blind", 0, 0, 0, 0, 0);}
+							else
+								{system_call_3(838, (u64)(char*)"/dev_blind", 0, 1);}
+						}
+						else if(strcasecmp(cmd, "CHMOD") == 0)
+						{
+							strcpy(param, filename);
+							split = ssplit(param, cmd, 5, filename, 383);
+
+							ssend(conn_s_ftp, "221 OK\r\n");
+							int attributes = my_atoi(cmd);
+							if(attributes == 0)
+								cellFsChmod(filename, 777);
+							else
+								cellFsChmod(filename, attributes);
+						}
+						else if(strcasecmp(cmd, "COPY") == 0)
+						{
+							sprintf(buffer, "%s %s", STR_COPYING, filename);
+							show_msg((char*)buffer);
+
+							strcpy(source, filename);
+							ssend(conn_s_ftp, "221 OK\r\n");
+						}
+						else if(strcasecmp(cmd, "PASTE") == 0)
+						{
+							struct CellFsStat s;
+							if((!copy_in_progress) && (strlen(source) > 0) && (strcmp(source, filename) != 0) && cellFsStat(source, &s)==CELL_FS_SUCCEEDED)
+							{
+								copy_in_progress=true;
+								ssend(conn_s_ftp, "221 OK\r\n");
+
+								sprintf(buffer, "%s %s\n%s %s", STR_COPYING, source, STR_CPYDEST, filename);
+								show_msg((char*)buffer);
+
+								if(isDir(source))
+									folder_copy(source, filename);
+								else
+									filecopy(source, filename, COPY_WHOLE_FILE);
+
+								show_msg((char*)STR_CPYFINISH);
+								memset(source, 0, 512);
+								copy_in_progress=false;
+							}
+							else
+							{
+								ssend(conn_s_ftp, "500 Error\r\n");
+							}
 						}
 						else
 						{
