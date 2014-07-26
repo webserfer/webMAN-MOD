@@ -3042,7 +3042,22 @@ again1:
 
 		sprintf(xml, "/dev_hdd0/xmlhost/game_plugin/fb.xml");
 		cellFsUnlink(xml);
-		sprintf(myxml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMBML version=\"1.0\"><View id=\"seg_fb\"><Attributes><Table key=\"mgames\"><Pair key=\"icon_rsc\"><String>item_tex_ps3util</String></Pair><Pair key=\"icon_notation\"><String>WNT_XmbItemSavePS3</String></Pair><Pair key=\"title\"><String>%s</String></Pair><Pair key=\"info\"><String>%s</String></Pair></Table></Attributes><Items><Query class=\"type:x-xmb/folder-pixmap\" key=\"mgames\" attr=\"mgames\" src=\"xmb://localhost/dev_hdd0/xmlhost/game_plugin/mygames.xml#seg_mygames\"/></Items></View></XMBML>", STR_MYGAMES, STR_LOADGAMES);
+		sprintf(myxml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                       "<XMBML version=\"1.0\">"
+                       "<View id=\"seg_fb\">"
+                       "<Attributes><Table key=\"mgames\">"
+                       "<Pair key=\"icon_rsc\"><String>item_tex_ps3util</String></Pair>"
+                       "<Pair key=\"icon_notation\"><String>WNT_XmbItemSavePS3</String></Pair>"
+                       "<Pair key=\"title\"><String>%s</String></Pair>"
+                       "<Pair key=\"info\"><String>%s</String></Pair>"
+                       "</Table>"
+                       "</Attributes>"
+                       "<Items>"
+                       "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mgames\" attr=\"mgames\" "
+                              "src=\"xmb://localhost/dev_hdd0/xmlhost/game_plugin/mygames.xml#seg_mygames\"/>"
+                       "</Items>"
+                       "</View>"
+                       "</XMBML>", STR_MYGAMES, STR_LOADGAMES);
 		savefile(xml, (char*)myxml, strlen(myxml));
 
 		myxml[0]=0;
@@ -3062,7 +3077,12 @@ again1:
 				if(!(webman_config->cmask & PSP)) {
 					strcpy(myxml_psp, "<View id=\"seg_mygames_psp_items\"><Attributes>");
 					if(webman_config->pspl && cobra_mode && cellFsStat((char*)"/dev_hdd0/game/PSPC66820", &buf)==CELL_FS_SUCCEEDED) {
-						sprintf(templn, "<Table key=\"cobra_psp_launcher\"><Pair key=\"icon\"><String>/dev_hdd0/game/PSPC66820/ICON0.PNG</String></Pair><Pair key=\"icon_notation\"><String>WNT_XmbItemBrowser</String></Pair><Pair key=\"title\"><String>PSP Launcher</String></Pair><Pair key=\"info\"><String>%s</String></Pair></Table>", STR_LAUNCHPSP);
+						sprintf(templn, "<Table key=\"cobra_psp_launcher\">"
+                                        "<Pair key=\"icon\"><String>/dev_hdd0/game/PSPC66820/ICON0.PNG</String></Pair>"
+                                        "<Pair key=\"icon_notation\"><String>WNT_XmbItemBrowser</String></Pair>"
+                                        "<Pair key=\"title\"><String>PSP Launcher</String></Pair>"
+                                        "<Pair key=\"info\"><String>%s</String></Pair>"
+                                        "</Table>", STR_LAUNCHPSP);
 						strcat(myxml_psp, templn);
 					}
 				}
@@ -3298,7 +3318,13 @@ reconnect:
 
 							get_default_icon(icon, param, data[v3_entry].name, data[v3_entry].is_directory, ns, abort_connection);
 
-							sprintf(tempstr, "<Table key=\"%04i\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>%s</String></Pair><Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair><Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/net%i%s/%s?random=%i</String></Pair><Pair key=\"info\"><String>/net%i%s</String></Pair></Table>",
+							sprintf(tempstr, "<Table key=\"%04i\">"
+											 "<Pair key=\"icon\"><String>%s</String></Pair>"
+											 "<Pair key=\"title\"><String>%s</String></Pair>"
+											 "<Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair>"
+											 "<Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/net%i%s/%s?random=%i</String></Pair>"
+											 "<Pair key=\"info\"><String>/net%i%s</String></Pair>"
+											 "</Table>",
 								key, icon, templn, (f0-7), param, data[v3_entry].name, (int)pTick.tick, (f0-7), param);
 
 							v3_entry++;
@@ -3466,7 +3492,13 @@ reconnect:
 
 								get_default_icon(icon, param, entry.d_name, 0, ns, abort_connection);
 
-								sprintf(tempstr, "<Table key=\"%04i\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>%s</String></Pair><Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair><Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3%s/%s?random=%i</String></Pair><Pair key=\"info\"><String>%s</String></Pair></Table>",
+								sprintf(tempstr, "<Table key=\"%04i\">"
+                                                 "<Pair key=\"icon\"><String>%s</String></Pair>"
+                                                 "<Pair key=\"title\"><String>%s</String></Pair>"
+                                                 "<Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair>"
+                                                 "<Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3%s/%s?random=%i</String></Pair>"
+                                                 "<Pair key=\"info\"><String>%s</String></Pair>"
+                                                 "</Table>",
 									key, icon, templn, param, entry.d_name, (int)pTick.tick, (f0==9?(char*)" ":param));
 
 								if(strlen(templn)<5) strcat(templn, "     ");
@@ -3624,16 +3656,41 @@ reconnect:
 		}
 
 		//sprintf(myxml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMBML version=\"1.0\"><View id=\"seg_mygames\"><Attributes><Table key=\"eject\"><Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/icon/icon_home.png</String></Pair><Pair key=\"title\"><String>Eject Disc</String></Pair><Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair><Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/unmount?random=-1059561539</String></Pair><Pair key=\"info\"><String>Unmount current game</String></Pair></Table><Table key=\"mygames_ps3\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x33</String></Pair><Pair key=\"info\"><String>PS3 format games                              </String></Pair></Table><Table key=\"mygames_ps2\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x32</String></Pair><Pair key=\"info\"><String>PS2 format games                              </String></Pair></Table><Table key=\"mygames_psx\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>PLAYSTATION\xC2\xAE</String></Pair><Pair key=\"info\"><String>PSOne format games                              </String></Pair></Table><Table key=\"mygames_dvd\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>Blu-ray\xE2\x84\xA2 and DVD</String></Pair><Pair key=\"info\"><String>Video content                              </String></Pair></Table></Attributes><Items><Item class=\"type:x-xmb/module-action\" key=\"eject\" attr=\"eject\"/><Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_ps3\" attr=\"mygames_ps3\" src=\"#seg_mygames_ps3_items\"/><Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_ps2\" attr=\"mygames_ps2\" src=\"#seg_mygames_ps2_items\"/><Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_psx\" attr=\"mygames_psx\" src=\"#seg_mygames_psx_items\"/><Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_dvd\" attr=\"mygames_dvd\" src=\"#seg_mygames_dvd_items\"/></Items></View>", ps3icon, ps2icon, psxicon, dvdicon);
-		sprintf(templn, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMBML version=\"1.0\"><View id=\"seg_mygames\"><Attributes><Table key=\"eject\"><Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/icon/icon_home.png</String></Pair><Pair key=\"title\"><String>%s</String></Pair><Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair><Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/unmount?random=-1059561539</String></Pair><Pair key=\"info\"><String>%s</String></Pair></Table>", STR_EJECTDISC, STR_UNMOUNTGAME); strcpy(myxml, templn);
+		sprintf(templn, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+						"<XMBML version=\"1.0\"><View id=\"seg_mygames\">"
+						"<Attributes>"
+						"<Table key=\"eject\">"
+						"<Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/icon/icon_home.png</String></Pair>"
+						"<Pair key=\"title\"><String>%s</String></Pair>"
+						"<Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair>"
+						"<Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/unmount?random=-1059561539</String></Pair>"
+						"<Pair key=\"info\"><String>%s</String></Pair></Table>", STR_EJECTDISC, STR_UNMOUNTGAME); strcpy(myxml, templn);
 		if( !(webman_config->nogrp))
 		{
 			if( !(webman_config->cmask & PS3)) {sprintf(templn, "<Table key=\"mygames_ps3\"><Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/user/024.png</String></Pair><Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x33</String></Pair><Pair key=\"info\"><String>%s</String></Pair><Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair></Table>", STR_PS3FORMAT); strcat(myxml, templn);}
 #ifdef COBRA_ONLY
 			{
-				if( !(webman_config->cmask & PS2)) {sprintf(templn, "<Table key=\"mygames_ps2\"><Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/user/025.png</String></Pair><Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x32</String></Pair><Pair key=\"info\"><String>%s</String></Pair><Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair></Table>", STR_PS2FORMAT); strcat(myxml, templn);}
-				if( !(webman_config->cmask & PS1)) {sprintf(templn, "<Table key=\"mygames_psx\"><Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/user/026.png</String></Pair><Pair key=\"title\"><String>PLAYSTATION\xC2\xAE</String></Pair><Pair key=\"info\"><String>%s</String></Pair><Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair></Table>", STR_PS1FORMAT);strcat(myxml, templn);}
-				if( !(webman_config->cmask & PSP)) {sprintf(templn, "<Table key=\"mygames_psp\"><Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/user/022.png</String></Pair><Pair key=\"title\"><String>PLAYSTATION\xC2\xAEPORTABLE</String></Pair><Pair key=\"info\"><String>%s</String></Pair><Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair></Table>", STR_PSPFORMAT);strcat(myxml, templn);}
-				if( !(webman_config->cmask & DVD) || !(webman_config->cmask & BLU)) {sprintf(templn, "<Table key=\"mygames_dvd\"><Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/user/023.png</String></Pair><Pair key=\"title\"><String>%s</String></Pair><Pair key=\"info\"><String>%s</String></Pair><Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair></Table>", STR_VIDFORMAT, STR_VIDEO );strcat(myxml, templn);}
+				if( !(webman_config->cmask & PS2)) {sprintf(templn, "<Table key=\"mygames_ps2\">"
+																	"<Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/user/025.png</String></Pair>"
+                                                                    "<Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x32</String></Pair><Pair key=\"info\"><String>%s</String></Pair>"
+                                                                    "<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
+                                                                    "</Table>", STR_PS2FORMAT); strcat(myxml, templn);}
+				if( !(webman_config->cmask & PS1)) {sprintf(templn, "<Table key=\"mygames_psx\">"
+																	"<Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/user/026.png</String></Pair>"
+                                                                    "<Pair key=\"title\"><String>PLAYSTATION\xC2\xAE</String></Pair><Pair key=\"info\"><String>%s</String></Pair>"
+                                                                    "<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
+                                                                    "</Table>", STR_PS1FORMAT);strcat(myxml, templn);}
+				if( !(webman_config->cmask & PSP)) {sprintf(templn, "<Table key=\"mygames_psp\">"
+																	"<Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/user/022.png</String></Pair>"
+																	"<Pair key=\"title\"><String>PLAYSTATION\xC2\xAEPORTABLE</String></Pair>"
+																	"<Pair key=\"info\"><String>%s</String></Pair><Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
+																	"</Table>", STR_PSPFORMAT);strcat(myxml, templn);}
+				if( !(webman_config->cmask & DVD) ||
+                    !(webman_config->cmask & BLU)) {sprintf(templn, "<Table key=\"mygames_dvd\">"
+																	"<Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/user/023.png</String></Pair>"
+																	"<Pair key=\"title\"><String>%s</String></Pair><Pair key=\"info\"><String>%s</String></Pair>"
+																	"<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
+																	"</Table>", STR_VIDFORMAT, STR_VIDEO );strcat(myxml, templn);}
 			}
 #endif
 		}
@@ -3652,7 +3709,8 @@ reconnect:
 				if(!(webman_config->cmask & PS2)) strcat(myxml, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_ps2\" attr=\"mygames_ps2\" src=\"#seg_mygames_ps2_items\"/>");
 				if(!(webman_config->cmask & PS1)) strcat(myxml, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_psx\" attr=\"mygames_psx\" src=\"#seg_mygames_psx_items\"/>");
 				if(!(webman_config->cmask & PSP)) strcat(myxml, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_psp\" attr=\"mygames_psp\" src=\"#seg_mygames_psp_items\"/>");
-				if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU) ) strcat(myxml, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_dvd\" attr=\"mygames_dvd\" src=\"#seg_mygames_dvd_items\"/>");
+				if(!(webman_config->cmask & DVD) ||
+                   !(webman_config->cmask & BLU)) strcat(myxml, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_dvd\" attr=\"mygames_dvd\" src=\"#seg_mygames_dvd_items\"/>");
 			}
 #endif
 		}
@@ -3864,7 +3922,13 @@ again3:
 			{
 				if(strlen(param)>10)
 				{
-					sprintf(buffer1, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: %i\r\n\r\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><meta http-equiv=\"Content-type\" content=\"text/html;charset=UTF-8\"><META HTTP-EQUIV=\"CACHE-CONTROL\" CONTENT=\"NO-CACHE\"><html><body>Message sent: %s</body></html>", strlen(param)+312, param+11);
+					sprintf(buffer1, "HTTP/1.1 200 OK\r\n"
+                                     "Content-Type: text/html\r\n"
+                                     "Content-Length: %i\r\n\r\n"
+                                     "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+                                     "<html xmlns=\"http://www.w3.org/1999/xhtml\"><meta http-equiv=\"Content-type\" content=\"text/html;charset=UTF-8\">"
+                                     "<META HTTP-EQUIV=\"CACHE-CONTROL\" CONTENT=\"NO-CACHE\">"
+                                     "<html><body>Message sent: %s</body></html>", strlen(param)+312, param+11);
 					ssend(conn_s, buffer1);
 					show_msg((char*)param+11);
 				}
@@ -3945,7 +4009,8 @@ again3:
 					{
 						c_len=0;
 						is_binary=0;
-						sprintf(buffer1, "HTTP/1.1 %s OK\r\nX-PS3-Info: [%s]\r\nContent-Type: text/plain\r\nContent-Length: %s", is_busy ? "503":"400", param, is_busy ? "18\r\n\r\n503 Server is Busy":"15\r\n\r\n400 Bad Request");
+						sprintf(buffer1, "HTTP/1.1 %s OK\r\nX-PS3-Info: [%s]\r\nContent-Type: text/plain\r\nContent-Length: %s",
+                                         is_busy ? "503":"400", param, is_busy ? "18\r\n\r\n503 Server is Busy":"15\r\n\r\n400 Bad Request");
 						ssend(conn_s, buffer1);
 						sclose(&conn_s);
 						loading_html--;
@@ -4376,10 +4441,20 @@ again3:
 				strcpy(buffer, "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><meta http-equiv=\"Content-type\" content=\"text/html;charset=UTF-8\"><META HTTP-EQUIV=\"CACHE-CONTROL\" CONTENT=\"NO-CACHE\">");
 				if(strstr(param, "cpursx.ps3"))
 					strcat(buffer, "<meta http-equiv=\"refresh\" content=\"3\">");
-				strcat(buffer, "<head><title>PS3 webMAN</title>");
-				strcat(buffer, "<style type=\"text/css\">\r\n<!--\r\na:visited {color: #A0A0A0; text-decoration: none;}\r\na:hover {color: #C0C0C0; text-decoration: none;}\r\na:active {color: #F0F0F0; text-decoration: none;}\r\na:link {color: #909090;	text-decoration: none;}a.f:visited {color: #E0E0E0; text-decoration: none;}a.f:hover {color: #F0F0F0; text-decoration: none;}a.f:active {color: #F8F8F8; text-decoration: none;}a.f:link {color: #D0D0D0;	text-decoration: none;}\r\nbody,td,th {color: #f0f0f0;}\r\n.propfont {font-family: \"Courier New\", Courier, monospace;}");
-				strcat(buffer, ".gc{float: left;overflow: hidden;position: relative;text-align: center;width: 280px;height: 260px;margin: 3px;border: 1px dashed grey;}");
-				strcat(buffer, ".ic{position: absolute;top: 5px;right: 5px;left: 5px;bottom: 40px;}");
+				strcat(buffer,	"<head><title>PS3 webMAN</title>"
+								"<style type=\"text/css\">\r\n"
+								"<!--\r\na:visited {color: #A0A0A0; text-decoration: none;}\r\n"
+								"a:hover {color: #C0C0C0; text-decoration: none;}\r\n"
+								"a:active {color: #F0F0F0; text-decoration: none;}\r\n"
+								"a:link {color: #909090;	text-decoration: none;}"
+								"a.f:visited {color: #E0E0E0; text-decoration: none;}"
+								"a.f:hover {color: #F0F0F0; text-decoration: none;}"
+								"a.f:active {color: #F8F8F8; text-decoration: none;}"
+								"a.f:link {color: #D0D0D0;	text-decoration: none;}\r\n"
+								"body,td,th {color: #f0f0f0;}\r\n"
+								".propfont {font-family: \"Courier New\", Courier, monospace;}"
+								".gc{float: left;overflow: hidden;position: relative;text-align: center;width: 280px;height: 260px;margin: 3px;border: 1px dashed grey;}"
+								".ic{position: absolute;top: 5px;right: 5px;left: 5px;bottom: 40px;}");
 
 				if(is_ps3_http)
 					strcat(buffer, ".gi{height: 210px;width: 267px;");
@@ -4451,7 +4526,22 @@ again3:
 						PSID[1] = peekq(0x8000000000474F34ULL+8);
 					}
 
-					sprintf(templn, "<hr><font size=42px><b>CPU: %i°C (MAX: %i°C)<br>RSX: %i°C<hr>CPU: %i°F (MAX: %i°F)<br>RSX: %i°F<hr>MEM: %iKB<hr>FAN SPEED: 0x%X (%i%%)<hr>PSID LV2 : %llX%llX<hr>IDPS EID0: %llX%llX<br>IDPS LV2 : %llX%llX</b></font><hr>", t1, max_temp, t2, t1f, (int)(1.8f*(float)max_temp+32.f), t2f, (meminfo.avail>>10), fan_speed, (int)((int)fan_speed*100)/255, PSID[0], PSID[1], eid0_idps[0], eid0_idps[1], IDPS[0], IDPS[1]);
+					sprintf(templn, "<hr><font size=42px><b>CPU: %i°C (MAX: %i°C)<br>"
+                                                           "RSX: %i°C<hr>"
+                                                           "CPU: %i°F (MAX: %i°F)<br>"
+                                                           "RSX: %i°F<hr>MEM: %iKB<hr>"
+                                                           "FAN SPEED: 0x%X (%i%%)<hr>"
+                                                           "PSID LV2 : %llX%llX<hr>"
+                                                           "IDPS EID0: %llX%llX<br>"
+                                                           "IDPS LV2 : %llX%llX</b>"
+                                    "</font><hr>",
+                                    t1, max_temp, t2,
+                                    t1f, (int)(1.8f*(float)max_temp+32.f),
+                                    t2f, (meminfo.avail>>10),
+                                    fan_speed, (int)((int)fan_speed*100)/255,
+                                    PSID[0], PSID[1],
+                                    eid0_idps[0], eid0_idps[1],
+                                    IDPS[0], IDPS[1]);
 					strcat(buffer, templn);
 
 
@@ -4471,10 +4561,19 @@ again3:
 					sprintf(templn, " [<a href=\"/cpursx.ps3\">CPU: %i°C | RSX: %i°C</a>]<hr/>", t1, t2);
 					strcat(buffer, templn);
 
-					sprintf(templn, "<form action=\"\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/eject.ps3';\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/insert.ps3';\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/mount.ps3/unmount';\">", STR_EJECT, STR_INSERT, STR_UNMOUNT); strcat(buffer, templn);
+					sprintf(templn, "<form action=\"\">"
+                                    " <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/eject.ps3';\">"
+                                    " <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/insert.ps3';\">"
+                                    " <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/mount.ps3/unmount';\">",
+                                    STR_EJECT, STR_INSERT, STR_UNMOUNT); strcat(buffer, templn);
 					if(((strstr(param, "/dev_") && strlen(param)>12) || strstr(param, "/dev_bdvd")) && !strstr(param,".ps3/"))
 					{sprintf(templn, " <input type=\"button\" value=\"%s\" onclick='window.location.href=\"/copy.ps3%s\";'\">", STR_COPY, param); strcat(buffer, templn);}
-					sprintf(templn, " <input type=\"button\" value=\"%s XML\" onclick=\"window.location.href='/refresh.ps3';\">  <input type=\"button\" value=\"%s HTML\" onclick=\"window.location.href='/index.ps3?html';\"> <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/shutdown.ps3';\">  <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/restart.ps3';\"> </form><hr/>", STR_REFRESH, STR_REFRESH, STR_SHUTDOWN, STR_RESTART); strcat(buffer, templn);
+					sprintf(templn,  " <input type=\"button\" value=\"%s XML\" onclick=\"window.location.href='/refresh.ps3';\"> "
+                                     " <input type=\"button\" value=\"%s HTML\" onclick=\"window.location.href='/index.ps3?html';\">"
+                                     " <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/shutdown.ps3';\"> "
+                                     " <input type=\"button\" value=\"%s\" onclick=\"window.location.href='/restart.ps3';\"> "
+                                     "</form><hr/>",
+                                     STR_REFRESH, STR_REFRESH, STR_SHUTDOWN, STR_RESTART); strcat(buffer, templn);
 				}
 
 				if(is_binary==2) // folder listing
@@ -4694,7 +4793,10 @@ again3:
 										sprintf(fsize, "%llu %s", sz, sf);
 									snprintf(ename, 6, "%s    ", entry.d_name);
 
-									sprintf(tempstr, "%c%c%c%c%c%c<tr><td><a%shref=\"%s\">%s</a></td><td align=right>&nbsp; %s &nbsp;</td><td>%02i-%s-%04i %02i:%02i</td></tr>", //<td> %s%s%s%s%s%s%s%s%s</td>
+									sprintf(tempstr, "%c%c%c%c%c%c<tr>"
+                                                     "<td><a%shref=\"%s\">%s</a></td>"
+                                                     "<td align=right>&nbsp; %s &nbsp;</td>"
+                                                     "<td>%02i-%s-%04i %02i:%02i</td></tr>", //<td> %s%s%s%s%s%s%s%s%s</td>
 									((buf.st_mode & S_IFDIR) != 0) ? '0' : '1',
 									ename[0], ename[1], ename[2], ename[3], ename[4],
 									((buf.st_mode & S_IFDIR) != 0) ? " class=\"f\" " : " ",
@@ -4716,14 +4818,20 @@ just_leave:
 							{
 								if(webman_config->netd0 && webman_config->neth0[0] && webman_config->netp0)
 								{
-									sprintf(tempstr, "0net0 <tr><td><a class=\"f\" href=\"/net0\">net0 (%s:%i)</a></td><td align=right>&nbsp; &lt;dir&gt; &nbsp;</td><td>11-Nov-2006 11:11</td></tr>", webman_config->neth0, webman_config->netp0);
+									sprintf(tempstr, "0net0 <tr>"
+                                                           "<td><a class=\"f\" href=\"/net0\">net0 (%s:%i)</a></td>"
+                                                           "<td align=right>&nbsp; &lt;dir&gt; &nbsp;</td><td>11-Nov-2006 11:11</td>"
+                                                           "</tr>", webman_config->neth0, webman_config->netp0);
 									strncpy(line_entry[idx].path, tempstr, 512);
 									idx++;
 									tlen+=strlen(tempstr);
 								}
 								if(webman_config->netd1 && webman_config->neth1[0] && webman_config->netp1)
 								{
-									sprintf(tempstr, "0net1 <tr><td><a class=\"f\" href=\"/net1\">net1 (%s:%i)</a></td><td align=right>&nbsp; &lt;dir&gt; &nbsp;</td><td>11-Nov-2006 11:11</td></tr>", webman_config->neth1, webman_config->netp1);
+									sprintf(tempstr, "0net1 <tr>"
+                                                           "<td><a class=\"f\" href=\"/net1\">net1 (%s:%i)</a></td>"
+                                                           "<td align=right>&nbsp; &lt;dir&gt; &nbsp;</td><td>11-Nov-2006 11:11</td>"
+                                                           "</tr>", webman_config->neth1, webman_config->netp1);
 									strncpy(line_entry[idx].path, tempstr, 512);
 									idx++;
 									tlen+=strlen(tempstr);
@@ -4944,7 +5052,11 @@ just_leave:
 					else
 					if(strstr(param, "setup.ps3"))
 					{
-						sprintf(templn, "<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\"><font face=\"Courier New\"><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td width=\"220\"><u>%s:</u><br>", STR_SCAN1); strcat(buffer, templn);
+						sprintf(templn, "<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
+										"<font face=\"Courier New\">"
+                                        "<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
+                                        "<tr><td width=\"220\"><u>%s:</u><br>", STR_SCAN1); strcat(buffer, templn);
+
 						add_check_box("u0", "usb0", drives[1], NULL, (webman_config->usb0), buffer);
 						add_check_box("u1", "usb1", drives[2], NULL, (webman_config->usb1), buffer);
 						add_check_box("u2", "usb2", drives[3], NULL, (webman_config->usb2), buffer);
@@ -5247,7 +5359,12 @@ just_leave:
 										}
 									}
 
-									sprintf(templn, "%s <a href=\"%s\">%s</a><hr/><img src=\"%s\"><hr/>%s: <a href=\"%s\">%s</a>", STR_COPYING, param+plen, param+plen, tempstr, STR_CPYDEST, target, target);
+									sprintf(templn, "%s <a href=\"%s\">%s</a><hr/>"
+													"<img src=\"%s\"><hr/>"
+													"%s: <a href=\"%s\">%s</a>",
+													STR_COPYING, param+plen, param+plen,
+													tempstr,
+													STR_CPYDEST, target, target);
 								}
 								else if(strstr(param, "/PSPISO") || strstr(param, "/ISO"))
 									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, tempstr, STR_PSPLOADED);
@@ -5939,18 +6056,18 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(strcasecmp(cmd, "FEAT") == 0)
 				{
-					ssend(conn_s_ftp, "211-Ext:\r\n");
-					ssend(conn_s_ftp, " SIZE\r\n");
-					ssend(conn_s_ftp, " MDTM\r\n");
-					ssend(conn_s_ftp, " PORT\r\n");
-					ssend(conn_s_ftp, " CDUP\r\n");
-					ssend(conn_s_ftp, " ABOR\r\n");
-					ssend(conn_s_ftp, " REST STREAM\r\n");
-					ssend(conn_s_ftp, " PASV\r\n");
-					ssend(conn_s_ftp, " LIST\r\n");
-					ssend(conn_s_ftp, " MLSD\r\n");
-					ssend(conn_s_ftp, " MLST type*;size*;modify*;UNIX.mode*;UNIX.uid*;UNIX.gid*;\r\n");
-					ssend(conn_s_ftp, "211 End\r\n");
+					ssend(conn_s_ftp,	"211-Ext:\r\n"
+										" SIZE\r\n"
+										" MDTM\r\n"
+										" PORT\r\n"
+										" CDUP\r\n"
+										" ABOR\r\n"
+										" REST STREAM\r\n"
+										" PASV\r\n"
+										" LIST\r\n"
+										" MLSD\r\n"
+										" MLST type*;size*;modify*;UNIX.mode*;UNIX.uid*;UNIX.gid*;\r\n"
+										"211 End\r\n");
 				}
 				else
 				if(strcasecmp(cmd, "PORT") == 0)
@@ -6006,7 +6123,14 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 						if(strcasecmp(cmd, "HELP") == 0)
 						{
-							ssend(conn_s_ftp, "214-CMDs:\r\n SITE FLASH\r\n SITE CHMOD 777 <file>\r\n SITE COPY <file>\r\n SITE PASTE <file>\r\n SITE SHUTDOWN\r\n SITE RESTART\r\n214 End\r\n");
+							ssend(conn_s_ftp, "214-CMDs:\r\n"
+                                              " SITE FLASH\r\n"
+                                              " SITE CHMOD 777 <file>\r\n"
+                                              " SITE COPY <file>\r\n"
+                                              " SITE PASTE <file>\r\n"
+                                              " SITE SHUTDOWN\r\n"
+                                              " SITE RESTART\r\n"
+                                              "214 End\r\n");
 						}
 						else
 						if(strcasecmp(cmd, "SHUTDOWN") == 0)
