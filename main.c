@@ -1845,32 +1845,12 @@ bool language(const char *file_str, char *default_str)
 	if(fh) f=fh; //file is already open
     else
     {
-		const char *lang_file = 0;
+		const char lang_code[21][3]={"EN", "FR", "IT", "ES", "DE", "NL", "PT", "RU", "HU", "PL", "GR", "HR", "BG", "IN", "TR", "AR", "CN", "KR", "JP", "XX"};
 
-		if(webman_config->lang==0 ) lang_file = "EN.TXT"; else
-		if(webman_config->lang==1 ) lang_file = "FR.TXT"; else
-		if(webman_config->lang==2 ) lang_file = "IT.TXT"; else
-		if(webman_config->lang==3 ) lang_file = "ES.TXT"; else
-		if(webman_config->lang==4 ) lang_file = "DE.TXT"; else
-		if(webman_config->lang==5 ) lang_file = "NL.TXT"; else
-		if(webman_config->lang==6 ) lang_file = "PT.TXT"; else
-		if(webman_config->lang==7 ) lang_file = "RU.TXT"; else
-		if(webman_config->lang==8 ) lang_file = "HU.TXT"; else
-		if(webman_config->lang==9 ) lang_file = "PL.TXT"; else
-		if(webman_config->lang==10) lang_file = "GR.TXT"; else
-		if(webman_config->lang==11) lang_file = "HR.TXT"; else
-		if(webman_config->lang==12) lang_file = "BG.TXT"; else
-		if(webman_config->lang==13) lang_file = "IN.TXT"; else
-		if(webman_config->lang==14) lang_file = "TR.TXT"; else
-		if(webman_config->lang==15) lang_file = "AR.TXT"; else
-		if(webman_config->lang==16) lang_file = "CN.TXT"; else
-		if(webman_config->lang==17) lang_file = "KR.TXT"; else
-		if(webman_config->lang==18) lang_file = "JP.TXT"; else
-		if(webman_config->lang==99) lang_file = "XX.TXT"; else
-		return false;
+        if(webman_config->lang>18 && webman_config->lang!=99) return false;
 
 		const char lang_path[34];
-		sprintf(lang_path, "/dev_hdd0/tmp/wm_lang/LANG_%s", lang_file);
+		sprintf(lang_path, "/dev_hdd0/tmp/wm_lang/LANG_%s.TXT", lang_code[webman_config->lang]);
 
 		if(cellFsOpen(lang_path, CELL_FS_O_RDONLY, &f, 0,0) != CELL_FS_SUCCEEDED) return false;
 
@@ -2072,42 +2052,15 @@ uint64_t convertH(char *val)
     for(i = 0; i < 16+n; i++) {
         if(val[i]==' ') {n++; continue;}
 
-        if(val[i]=='0'               ) buff=0x00; else
-        if(val[i]=='1'               ) buff=0x10; else
-        if(val[i]=='2'               ) buff=0x20; else
-        if(val[i]=='3'               ) buff=0x30; else
-        if(val[i]=='4'               ) buff=0x40; else
-        if(val[i]=='5'               ) buff=0x50; else
-        if(val[i]=='6'               ) buff=0x60; else
-        if(val[i]=='7'               ) buff=0x70; else
-        if(val[i]=='8'               ) buff=0x80; else
-        if(val[i]=='9'               ) buff=0x90; else
-        if(val[i]=='A' || val[i]=='a') buff=0xA0; else
-        if(val[i]=='B' || val[i]=='b') buff=0xB0; else
-        if(val[i]=='C' || val[i]=='c') buff=0xC0; else
-        if(val[i]=='D' || val[i]=='d') buff=0xD0; else
-        if(val[i]=='E' || val[i]=='e') buff=0xE0; else
-        if(val[i]=='F' || val[i]=='f') buff=0xF0; else
+        if(val[i]>='0' && val[i]<='9') buff=(   val[i]-'0')*0x10; else
+        if(val[i]>='A' && val[i]<='F') buff=(10+val[i]-'A')*0x10; else
+        if(val[i]>='a' && val[i]<='f') buff=(10+val[i]-'a')*0x10; else
         return ret;
 
         i++;
-
-        if(val[i]=='0'               ) buff+=0x00; else
-        if(val[i]=='1'               ) buff+=0x01; else
-        if(val[i]=='2'               ) buff+=0x02; else
-        if(val[i]=='3'               ) buff+=0x03; else
-        if(val[i]=='4'               ) buff+=0x04; else
-        if(val[i]=='5'               ) buff+=0x05; else
-        if(val[i]=='6'               ) buff+=0x06; else
-        if(val[i]=='7'               ) buff+=0x07; else
-        if(val[i]=='8'               ) buff+=0x08; else
-        if(val[i]=='9'               ) buff+=0x09; else
-        if(val[i]=='A' || val[i]=='a') buff+=0x0A; else
-        if(val[i]=='B' || val[i]=='b') buff+=0x0B; else
-        if(val[i]=='C' || val[i]=='c') buff+=0x0C; else
-        if(val[i]=='D' || val[i]=='d') buff+=0x0D; else
-        if(val[i]=='E' || val[i]=='e') buff+=0x0E; else
-        if(val[i]=='F' || val[i]=='f') buff+=0x0F; else
+        if(val[i]>='0' && val[i]<='9') buff+=(   val[i]-'0'); else
+        if(val[i]>='A' && val[i]<='F') buff+=(10+val[i]-'A'); else
+        if(val[i]>='a' && val[i]<='f') buff+=(10+val[i]-'a'); else
         {ret=(ret<<4)+(buff>>4); return ret;}
 
         ret = (ret << 8) | buff;
@@ -2199,10 +2152,10 @@ void remove_cfw_syscalls()
 		PSID[0] = peekq(0x8000000000474F34ULL  );
 		PSID[1] = peekq(0x8000000000474F34ULL+8);
     }
-    pokeq(syscall_table + (8*6), syscall_not_impl);
-	pokeq(syscall_table + (8*7), syscall_not_impl);
-    pokeq(syscall_table + (8*8), syscall_not_impl);
-    pokeq(syscall_table + (8*9), syscall_not_impl);
+    pokeq(syscall_table + (8*6),  syscall_not_impl);
+	pokeq(syscall_table + (8*7),  syscall_not_impl);
+    pokeq(syscall_table + (8*8),  syscall_not_impl);
+    pokeq(syscall_table + (8*9),  syscall_not_impl);
     pokeq(syscall_table + (8*10), syscall_not_impl);
     pokeq(syscall_table + (8*35), syscall_not_impl);
     pokeq(syscall_table + (8*36), syscall_not_impl);
@@ -3017,18 +2970,6 @@ again1:
 		myxml_dvd	= (char*)sysmem3;
 		myxml		= (char*)sysmem+(BUFFER_SIZE)-4300;
 		myxml_items = (char*)sysmem3;
-
-		/*
-		char ps3icon[128];
-		char ps2icon[128];
-		char psxicon[128];
-		char dvdicon[128];
-
-		strcpy(ps3icon, "/dev_flash/vsh/resource/explore/user/024.png");
-		strcpy(ps2icon, "/dev_flash/vsh/resource/explore/user/025.png");
-		strcpy(psxicon, "/dev_flash/vsh/resource/explore/user/026.png");
-		strcpy(dvdicon, "/dev_flash/vsh/resource/explore/user/023.png");
-		*/
 
 		cellFsMkdir((char*)WMTMP, 0777);
 		cellFsMkdir((char*)"/dev_hdd0/xmlhost", 0777);
@@ -4439,8 +4380,7 @@ again3:
 				}
 
 				strcpy(buffer, "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><meta http-equiv=\"Content-type\" content=\"text/html;charset=UTF-8\"><META HTTP-EQUIV=\"CACHE-CONTROL\" CONTENT=\"NO-CACHE\">");
-				if(strstr(param, "cpursx.ps3"))
-					strcat(buffer, "<meta http-equiv=\"refresh\" content=\"3\">");
+				if(strstr(param, "cpursx.ps3")) strcat(buffer, "<meta http-equiv=\"refresh\" content=\"3\">");
 				strcat(buffer,	"<head><title>PS3 webMAN</title>"
 								"<style type=\"text/css\">\r\n"
 								"<!--\r\na:visited {color: #A0A0A0; text-decoration: none;}\r\n"
@@ -4461,10 +4401,10 @@ again3:
 				else
 					strcat(buffer, ".gi{position: absolute;max-height: 210px;max-width: 260px;");
 
-				strcat(buffer, "position: absolute;bottom: 0px;top: 0px;left: 0px;right: 0px;margin: auto;}");
+				strcat(buffer, "position: absolute;bottom: 0px;top: 0px;left: 0px;right: 0px;margin: auto;}"
+							   ".gn{position: absolute;height: 38px;bottom: 0px;right: 7px;left: 7px;text-align: center;} --></style></head>"
+							   "<body bgcolor=\"#101010\"><font face=\"Courier New\"><b>");
 
-				strcat(buffer, ".gn{position: absolute;height: 38px;bottom: 0px;right: 7px;left: 7px;text-align: center;} --></style></head>");
-				strcat(buffer, "<body bgcolor=\"#101010\"><font face=\"Courier New\"><b>");
 				//if(strstr(param, "mount_ps3"))
 				//	strcat(buffer, " onload=\"window.close();\"");
 				//if(cobra_mode) strcat(buffer, "[Cobra] ");
@@ -4941,7 +4881,7 @@ just_leave:
 							uint64_t j;
 							fvalue = convertH(v+1);
 
-							if(bits8) fvalue=(fvalue<<56);
+							if(bits8)  fvalue=(fvalue<<56);
 							if(bits16) fvalue=(fvalue<<48);
 							if(bits32) fvalue=(fvalue<<32);
 
@@ -5171,13 +5111,13 @@ just_leave:
 						add_option_item("11", "Hrvatski"                                                , (webman_config->lang==11), buffer);
 						add_option_item("12", "\xD0\xB1\xD1\x8A\xD0\xBB\xD0\xB3\xD0\xB0\xD1\x80\xD1\x81\xD0\xBA\xD0\xB8", (webman_config->lang==12), buffer);
 
-						add_option_item("13", "Indonesian"															  , (webman_config->lang==13), buffer);
-						add_option_item("14", "T\xC3\xBCrk\xC3\xA7\x65"												  , (webman_config->lang==14), buffer);
-						add_option_item("15", "\xD8\xA7\xD9\x84\xD8\xB9\xD8\xB1\xD8\xA8\xD9\x8A\xD8\xA9"				  , (webman_config->lang==15), buffer);
-						add_option_item("16", "\xE4\xB8\xAD\xE6\x96\x87"												  , (webman_config->lang==16), buffer);
-						add_option_item("17", "\xED\x95\x9C\xEA\xB5\xAD\xEC\x96\xB4"									  , (webman_config->lang==17), buffer);
-						add_option_item("18", "\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E"									  , (webman_config->lang==18), buffer);
-						add_option_item("99", "Unknown"																  , (webman_config->lang==99), buffer);
+						add_option_item("13", "Indonesian"												, (webman_config->lang==13), buffer);
+						add_option_item("14", "T\xC3\xBCrk\xC3\xA7\x65"									, (webman_config->lang==14), buffer);
+						add_option_item("15", "\xD8\xA7\xD9\x84\xD8\xB9\xD8\xB1\xD8\xA8\xD9\x8A\xD8\xA9", (webman_config->lang==15), buffer);
+						add_option_item("16", "\xE4\xB8\xAD\xE6\x96\x87"								, (webman_config->lang==16), buffer);
+						add_option_item("17", "\xED\x95\x9C\xEA\xB5\xAD\xEC\x96\xB4"					, (webman_config->lang==17), buffer);
+						add_option_item("18", "\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E"					, (webman_config->lang==18), buffer);
+						add_option_item("99", "Unknown"													, (webman_config->lang==99), buffer);
 
 						sprintf(templn, "</select><hr color=\"#0099FF\"/><b><u> %s :</u></b><br><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap>", STR_COMBOS2); strcat(buffer, templn);
 
@@ -5195,13 +5135,8 @@ just_leave:
 						add_check_box("c11", "dsbcfws", STR_DELCFWSYS2, " : <b>R2+&#8710;</b></td></tr></table>", !(webman_config->combo & DISABLESH), buffer);
 
 						sprintf(templn, "<hr color=\"#FF0000\"/><input name=\"save\" type=\"submit\" value=\" %s \"/></form>", STR_SAVE); strcat(buffer, templn);
-						strcat(buffer, "<hr color=\"#FF0000\"/><a href=\"http://www.deanbg.com/prepNTFS.pkg\">prepNTFS - Prepare NTFS drives for webMAN access</a><br>");
-#ifndef COBRA_ONLY
-						strcat(buffer, "<a href=\"http://www.deanbg.com/webftp_server_noncobra.sprx\">webMAN (LATEST for non-COBRA7 CFW) - Latest version of webMAN</a><br>");
-#else
-						strcat(buffer, "<a href=\"http://www.deanbg.com/webftp_server.sprx\">webMAN (LATEST for COBRA7 CFW) - Latest version of webMAN</a><br>");
-#endif
-						strcat(buffer, "<a href=\"http://www.deanbg.com/webftp_server_ccapi.sprx\">webMAN (CCAPI) - ControlConsoleAPI compatible version of webMAN</a><br><hr color=\"#0099FF\"/>");
+						strcat(buffer, "<hr color=\"#FF0000\"/><a href=\"http://www.deanbg.com/prepNTFS.pkg\">prepNTFS - Prepare NTFS drives for webMAN access</a><br>"
+									   "<a href=\"http://store.brewology.com/ahomebrew.php?brewid=257\">webMAN-MOD - Latest version of webMAN-MOD on Brewology</a><br>");
 
 /*
 	//vshmain_is_ss_enabled	= (void*)((int)getNIDfunc("vshmain", 0x981D7E9F));
@@ -6124,13 +6059,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						if(strcasecmp(cmd, "HELP") == 0)
 						{
 							ssend(conn_s_ftp, "214-CMDs:\r\n"
-                                              " SITE FLASH\r\n"
-                                              " SITE CHMOD 777 <file>\r\n"
-                                              " SITE COPY <file>\r\n"
-                                              " SITE PASTE <file>\r\n"
-                                              " SITE SHUTDOWN\r\n"
-                                              " SITE RESTART\r\n"
-                                              "214 End\r\n");
+											  " SITE FLASH\r\n"
+											  " SITE CHMOD 777 <file>\r\n"
+											  " SITE COPY <file>\r\n"
+											  " SITE PASTE <file>\r\n"
+											  " SITE SHUTDOWN\r\n"
+											  " SITE RESTART\r\n"
+											  "214 End\r\n");
 						}
 						else
 						if(strcasecmp(cmd, "SHUTDOWN") == 0)
@@ -6153,7 +6088,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						else
 						if(strcasecmp(cmd, "FLASH") == 0)
 						{
-							ssend(conn_s_ftp, "221 OK\r\n");
+							ssend(conn_s_ftp, "250 OK\r\n");
 
 							struct CellFsStat s;
 							if(cellFsStat("/dev_blind", &s)!=CELL_FS_SUCCEEDED)
@@ -6166,7 +6101,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							strcpy(param, filename);
 							split = ssplit(param, cmd, 5, filename, 383);
 
-							ssend(conn_s_ftp, "221 OK\r\n");
+							ssend(conn_s_ftp, "250 OK\r\n");
 							int attributes = my_atoi(cmd);
 							if(attributes == 0)
 								cellFsChmod(filename, 777);
@@ -6179,7 +6114,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							show_msg((char*)buffer);
 
 							strcpy(source, filename);
-							ssend(conn_s_ftp, "221 OK\r\n");
+							ssend(conn_s_ftp, "200 OK\r\n");
 						}
 						else if(strcasecmp(cmd, "PASTE") == 0)
 						{
@@ -6187,7 +6122,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							if((!copy_in_progress) && (strlen(source) > 0) && (strcmp(source, filename) != 0) && cellFsStat(source, &s)==CELL_FS_SUCCEEDED)
 							{
 								copy_in_progress=true;
-								ssend(conn_s_ftp, "221 OK\r\n");
+								ssend(conn_s_ftp, "250 OK\r\n");
 
 								sprintf(buffer, "%s %s\n%s %s", STR_COPYING, source, STR_CPYDEST, filename);
 								show_msg((char*)buffer);
@@ -6291,16 +6226,16 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 								}
 								else
 									sprintf(buffer, "%s%s%s%s%s%s%s%s%s%s   1 root  root        %llu %s %02i %02i:%02i %s\r\n",
-									((buf.st_mode & S_IFDIR) != 0) ? "d" : "-",
-									((buf.st_mode & S_IRUSR) != 0) ? "r" : "-",
-									((buf.st_mode & S_IWUSR) != 0) ? "w" : "-",
-									((buf.st_mode & S_IXUSR) != 0) ? "x" : "-",
-									((buf.st_mode & S_IRGRP) != 0) ? "r" : "-",
-									((buf.st_mode & S_IWGRP) != 0) ? "w" : "-",
-									((buf.st_mode & S_IXGRP) != 0) ? "x" : "-",
-									((buf.st_mode & S_IROTH) != 0) ? "r" : "-",
-									((buf.st_mode & S_IWOTH) != 0) ? "w" : "-",
-									((buf.st_mode & S_IXOTH) != 0) ? "x" : "-",
+									(buf.st_mode & S_IFDIR) ? "d" : "-",
+									(buf.st_mode & S_IRUSR) ? "r" : "-",
+									(buf.st_mode & S_IWUSR) ? "w" : "-",
+									(buf.st_mode & S_IXUSR) ? "x" : "-",
+									(buf.st_mode & S_IRGRP) ? "r" : "-",
+									(buf.st_mode & S_IWGRP) ? "w" : "-",
+									(buf.st_mode & S_IXGRP) ? "x" : "-",
+									(buf.st_mode & S_IROTH) ? "r" : "-",
+									(buf.st_mode & S_IWOTH) ? "w" : "-",
+									(buf.st_mode & S_IXOTH) ? "x" : "-",
 									(unsigned long long)buf.st_size, smonth[rDate.month-1], rDate.day,
 									rDate.hour, rDate.minute, entry.d_name);
 
