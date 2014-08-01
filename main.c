@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.15 MOD"						// webMAN version
+#define WM_VERSION			"1.30.16 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -1850,7 +1850,10 @@ bool language(const char *file_str, char *default_str)
         if(webman_config->lang>18 && webman_config->lang!=99) return false;
 
 		const char lang_path[34];
-		sprintf(lang_path, "/dev_hdd0/tmp/wm_lang/LANG_%s.TXT", lang_code[webman_config->lang]);
+        if(webman_config->lang==99)
+		    strcpy(lang_path, "/dev_hdd0/tmp/wm_lang/LANG_XX.TXT");
+		else
+		    sprintf(lang_path, "/dev_hdd0/tmp/wm_lang/LANG_%s.TXT", lang_code[webman_config->lang]);
 
 		if(cellFsOpen(lang_path, CELL_FS_O_RDONLY, &f, 0,0) != CELL_FS_SUCCEEDED) return false;
 
@@ -4969,7 +4972,7 @@ just_leave:
 									else if(byte==0x3E)
 										strcat(buffer, "&gt;");
 									else
-										sprintf(templn,"%c", byte); strcat(buffer, templn);
+										{sprintf(templn,"%c", byte); strcat(buffer, templn);}
 									if(found && addr>=found_address && addr<found_address+flen) strcat(buffer, "</b></font>");
 								}
 								strcat(buffer, "<br>");
@@ -7080,14 +7083,14 @@ SHOW IDPS : R2+O
 						{
 							if(max_temp) //auto mode
 							{
-								max_temp+=5;
+								if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2) max_temp+=5; else max_temp+=1;
 								if(max_temp>85) max_temp=85;
 								webman_config->temp1=max_temp;
 								sprintf((char*)tmp, "%s\r\n%s %i°C", STR_FANCH0, STR_FANCH1, max_temp);
 							}
 							else
 							{
-								webman_config->manu+=5;
+								if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2) webman_config->manu+=5; else webman_config->manu+=1;
 								webman_config->temp0= (u8)(((float)webman_config->manu * 255.f)/100.f);
 								if(webman_config->temp0<0x33) webman_config->temp0=0x33;
 								if(webman_config->temp0>MAX_FANSPEED) webman_config->temp0=MAX_FANSPEED;
@@ -7103,13 +7106,13 @@ SHOW IDPS : R2+O
 						{
 							if(max_temp) //auto mode
 							{
-								if(max_temp>30) max_temp-=5;
+								if(max_temp>30) {if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2) max_temp-=5; else max_temp-=1;}
 								webman_config->temp1=max_temp;
 								sprintf((char*)tmp, "%s\r\n%s %i°C", STR_FANCH0, STR_FANCH1, max_temp);
 							}
 							else
 							{
-								if(webman_config->manu>20) webman_config->manu-=5;
+								if(webman_config->manu>20) {if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2) webman_config->manu-=5; else webman_config->manu-=1;}
 								webman_config->temp0= (u8)(((float)webman_config->manu * 255.f)/100.f);
 								if(webman_config->temp0<0x33) webman_config->temp0=0x33;
 								if(webman_config->temp0>MAX_FANSPEED) webman_config->temp0=MAX_FANSPEED;
@@ -8340,14 +8343,14 @@ patch:
 			poke_lv1(HV_START_OFFSET_430 + 16, 0xc232fcad552c80d7ULL);
 			poke_lv1(HV_START_OFFSET_430 + 24, 0x65140cd200000000ULL);
 		}
-        else
-		if(c_firmware==4.60f)
-		{
-			poke_lv1(HV_START_OFFSET_460 +  0, 0x0000000000000001ULL);
-			poke_lv1(HV_START_OFFSET_460 +  8, 0xe0d251b556c59f05ULL);
-			poke_lv1(HV_START_OFFSET_460 + 16, 0xc232fcad552c80d7ULL);
-			poke_lv1(HV_START_OFFSET_460 + 24, 0x65140cd200000000ULL);
-		}
+        //else
+		//if(c_firmware==4.60f)
+		//{
+		//	poke_lv1(HV_START_OFFSET_460 +  0, 0x0000000000000001ULL);
+		//	poke_lv1(HV_START_OFFSET_460 +  8, 0xe0d251b556c59f05ULL);
+		//	poke_lv1(HV_START_OFFSET_460 + 16, 0xc232fcad552c80d7ULL);
+		//	poke_lv1(HV_START_OFFSET_460 + 24, 0x65140cd200000000ULL);
+		//}
 
 		if(do_eject) eject_insert(1, 1);
 
