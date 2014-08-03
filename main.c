@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.16 MOD"						// webMAN version
+#define WM_VERSION			"1.30.17 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -2104,57 +2104,68 @@ uint64_t find_syscall_table()
 
 void remove_cfw_syscalls()
 {
-    u64 syscall_table, syscall_not_impl;
+	u64 syscall_table, syscall_not_impl;
 
-    u64 CEX=0x4345580000000000ULL;
-    u64 DEX=0x4445580000000000ULL;
+	u64 CEX=0x4345580000000000ULL;
+	u64 DEX=0x4445580000000000ULL;
 
-    if(peekq(0x80000000002E79C8ULL)==DEX) {dex_mode=2; c_firmware=3.41f;}	else
-    if(peekq(0x80000000002CFF98ULL)==CEX) {dex_mode=0; c_firmware=3.41f;}	else
-    if(peekq(0x80000000002EFE20ULL)==DEX) {dex_mode=2; c_firmware=3.55f;}	else
-    if(peekq(0x80000000002D83D0ULL)==CEX) {dex_mode=0; c_firmware=3.55f;}	else
-    if(peekq(0x8000000000302D88ULL)==DEX) {dex_mode=2; c_firmware=4.21f;}	else
-    if(peekq(0x80000000002E8610ULL)==CEX) {dex_mode=0; c_firmware=4.21f;}	else
-    if(peekq(0x80000000002E9F08ULL)==CEX) {dex_mode=0; c_firmware=4.30f;}	else
-    if(peekq(0x8000000000304630ULL)==DEX) {dex_mode=2; c_firmware=4.30f;}	else
-    if(peekq(0x80000000002E9F18ULL)==CEX) {dex_mode=0; c_firmware=4.31f;}	else
-    if(peekq(0x80000000002EA488ULL)==CEX) {dex_mode=0; c_firmware=4.40f;}	else
-    if(peekq(0x80000000002EA498ULL)==CEX) {dex_mode=0; c_firmware=4.41f;}	else
-    if(peekq(0x8000000000304EF0ULL)==DEX) {dex_mode=2; c_firmware=4.41f;}	else
-    if(peekq(0x80000000002EA9B8ULL)==CEX) {dex_mode=0; c_firmware=4.46f;}	else
-    if(peekq(0x8000000000305410ULL)==DEX) {dex_mode=2; c_firmware=4.46f;}	else
-    if(peekq(0x80000000002E9BE0ULL)==CEX) {dex_mode=0; c_firmware=4.50f;}	else
-    if(peekq(0x8000000000309698ULL)==DEX) {dex_mode=2; c_firmware=4.50f;}	else
-    if(peekq(0x80000000002E9D70ULL)==CEX) {dex_mode=0; c_firmware=4.53f;}	else
+	if(peekq(0x80000000002ED850ULL)==CEX) {dex_mode=0; c_firmware=4.60f;}	else
 	if(peekq(0x80000000002EC5E0ULL)==CEX) {dex_mode=0; c_firmware=4.55f;}	else
-    if(peekq(0x80000000002ED850ULL)==CEX) {dex_mode=0; c_firmware=4.60f;}	else
+	if(peekq(0x80000000002E9D70ULL)==CEX) {dex_mode=0; c_firmware=4.53f;}	else
+	if(peekq(0x800000000030AEA8ULL)==DEX) {dex_mode=2; c_firmware=4.53f;}	else
+	if(peekq(0x80000000002E9BE0ULL)==CEX) {dex_mode=0; c_firmware=4.50f;}	else
+	if(peekq(0x80000000002EA9B8ULL)==CEX) {dex_mode=0; c_firmware=4.46f;}	else
+	if(peekq(0x80000000002D83D0ULL)==CEX) {dex_mode=0; c_firmware=3.55f;}	else
+#ifndef COBRA_ONLY
+	if(peekq(0x80000000002E79C8ULL)==DEX) {dex_mode=2; c_firmware=3.41f;}	else
+	if(peekq(0x80000000002CFF98ULL)==CEX) {dex_mode=0; c_firmware=3.41f;}	else
+	if(peekq(0x80000000002EFE20ULL)==DEX) {dex_mode=2; c_firmware=3.55f;}	else
+	if(peekq(0x8000000000302D88ULL)==DEX) {dex_mode=2; c_firmware=4.21f;}	else
+	if(peekq(0x80000000002E8610ULL)==CEX) {dex_mode=0; c_firmware=4.21f;}	else
+	if(peekq(0x80000000002E9F08ULL)==CEX) {dex_mode=0; c_firmware=4.30f;}	else
+	if(peekq(0x8000000000304630ULL)==DEX) {dex_mode=2; c_firmware=4.30f;}	else
+	if(peekq(0x80000000002E9F18ULL)==CEX) {dex_mode=0; c_firmware=4.31f;}	else
+	if(peekq(0x80000000002EA488ULL)==CEX) {dex_mode=0; c_firmware=4.40f;}	else
+	if(peekq(0x80000000002EA498ULL)==CEX) {dex_mode=0; c_firmware=4.41f;}	else
+	if(peekq(0x8000000000304EF0ULL)==DEX) {dex_mode=2; c_firmware=4.41f;}	else
+	if(peekq(0x8000000000305410ULL)==DEX) {dex_mode=2; c_firmware=4.46f;}	else
+	if(peekq(0x8000000000309698ULL)==DEX) {dex_mode=2; c_firmware=4.50f;}	else
+	if(peekq(0x800000000030D6A8ULL)==DEX) {dex_mode=2; c_firmware=4.55f;}	else
+#endif
     c_firmware=0.00f;
 
+	if(c_firmware==4.60f && !dex_mode) syscall_table = SYSCALL_TABLE_460;	else
+	if(c_firmware==4.55f && !dex_mode) syscall_table = SYSCALL_TABLE_455;	else
+	if(c_firmware==4.53f && !dex_mode) syscall_table = SYSCALL_TABLE_453;	else
+    if(c_firmware==4.53f &&  dex_mode) syscall_table = SYSCALL_TABLE_453D;	else
+    if(c_firmware==4.50f && !dex_mode) syscall_table = SYSCALL_TABLE_450;	else
+    if(c_firmware==4.46f && !dex_mode) syscall_table = SYSCALL_TABLE_446;	else
+#ifndef COBRA_ONLY
     if(c_firmware==4.21f && !dex_mode) syscall_table = SYSCALL_TABLE_421;	else
-	if(c_firmware==4.21f && dex_mode)  syscall_table = SYSCALL_TABLE_421D;	else
+	if(c_firmware==4.21f &&  dex_mode) syscall_table = SYSCALL_TABLE_421D;	else
     if(c_firmware==4.30f && !dex_mode) syscall_table = SYSCALL_TABLE_430;	else
-    if(c_firmware==4.30f && dex_mode)  syscall_table = SYSCALL_TABLE_430D;	else
+    if(c_firmware==4.30f &&  dex_mode) syscall_table = SYSCALL_TABLE_430D;	else
     if(c_firmware==4.31f && !dex_mode) syscall_table = SYSCALL_TABLE_431;	else
     if(c_firmware==4.40f && !dex_mode) syscall_table = SYSCALL_TABLE_440;	else
     if(c_firmware==4.41f && !dex_mode) syscall_table = SYSCALL_TABLE_441;	else
-    if(c_firmware==4.41f && dex_mode)  syscall_table = SYSCALL_TABLE_441D;	else
-    if(c_firmware==4.46f && !dex_mode) syscall_table = SYSCALL_TABLE_446;	else
-    if(c_firmware==4.50f && !dex_mode) syscall_table = SYSCALL_TABLE_450;	else
-    if(c_firmware==4.46f && dex_mode)  syscall_table = SYSCALL_TABLE_446D;	else
-	if(c_firmware==4.50f && dex_mode)  syscall_table = SYSCALL_TABLE_450D;	else
-	if(c_firmware==4.53f && !dex_mode) syscall_table = SYSCALL_TABLE_453;	else
-	if(c_firmware==4.55f && !dex_mode) syscall_table = SYSCALL_TABLE_455;	else
-	if(c_firmware==4.60f && !dex_mode) syscall_table = SYSCALL_TABLE_460;	else
-
+    if(c_firmware==4.41f &&  dex_mode) syscall_table = SYSCALL_TABLE_441D;	else
+    if(c_firmware==4.46f &&  dex_mode) syscall_table = SYSCALL_TABLE_446D;	else
+	if(c_firmware==4.50f &&  dex_mode) syscall_table = SYSCALL_TABLE_450D;	else
+	if(c_firmware==4.55f &&  dex_mode) syscall_table = SYSCALL_TABLE_455D;	else
+#endif
 	syscall_table = find_syscall_table();
 	syscall_not_impl = peekq(syscall_table);
 
-	if(c_firmware==4.55f || c_firmware==4.60f) {
-		IDPS[0] = peekq(0x8000000000474F1CULL  );
-		IDPS[1] = peekq(0x8000000000474F1CULL+8);
-		PSID[0] = peekq(0x8000000000474F34ULL  );
-		PSID[1] = peekq(0x8000000000474F34ULL+8);
-    }
+	if(!dex_mode)
+	{
+		if(c_firmware==4.55f || c_firmware==4.60f) {
+			IDPS[0] = peekq(0x8000000000474F1CULL  );
+			IDPS[1] = peekq(0x8000000000474F1CULL+8);
+			PSID[0] = peekq(0x8000000000474F34ULL  );
+			PSID[1] = peekq(0x8000000000474F34ULL+8);
+		}
+	}
+
     pokeq(syscall_table + (8*6),  syscall_not_impl);
 	pokeq(syscall_table + (8*7),  syscall_not_impl);
     pokeq(syscall_table + (8*8),  syscall_not_impl);
@@ -4427,19 +4438,38 @@ again3:
 					if(!webman_config->fanc)
 					{
 						u8 st, mode, unknown;
-						if(c_firmware==4.55f || c_firmware==4.60f)
+						if(!dex_mode)
 						{
-							backup[5]=peekq(0x8000000000009E38ULL);
-							lv2poke32(0x8000000000009E38ULL, 0x38600001); // sys 409 get_fan_policy
+							if(c_firmware==4.55f || c_firmware==4.60f)
+							{
+								backup[5]=peekq(0x8000000000009E38ULL);
+								lv2poke32(0x8000000000009E38ULL, 0x38600001); // sys 409 get_fan_policy
+								sys_sm_get_fan_policy(0, &st, &mode, &fan_speed, &unknown);
+								pokeq(0x8000000000009E38ULL, backup[5]);
+							}
+							else
+							{
+								backup[5]=peekq(0x8000000000009E28ULL);
+								lv2poke32(0x8000000000009E28ULL, 0x38600001); // sys 409 get_fan_policy
+								sys_sm_get_fan_policy(0, &st, &mode, &fan_speed, &unknown);
+								pokeq(0x8000000000009E28ULL, backup[5]);
+							}
+						}
+						else // DEX
+						if(c_firmware==4.53f)
+						{
+							backup[5]=peekq(0x8000000000009EA8ULL);
+							lv2poke32(0x8000000000009EA8ULL, 0x38600001); // sys 409 get_fan_policy
 							sys_sm_get_fan_policy(0, &st, &mode, &fan_speed, &unknown);
-							pokeq(0x8000000000009E38ULL, backup[5]);
+							pokeq(0x8000000000009EA8ULL, backup[5]);
 						}
 						else
+						if(c_firmware==4.55f)
 						{
-							backup[5]=peekq(0x8000000000009E28ULL);
-							lv2poke32(0x8000000000009E28ULL, 0x38600001); // sys 409 get_fan_policy
+							backup[5]=peekq(0x8000000000009EB8ULL);
+							lv2poke32(0x8000000000009EB8ULL, 0x38600001); // sys 409 get_fan_policy
 							sys_sm_get_fan_policy(0, &st, &mode, &fan_speed, &unknown);
-							pokeq(0x8000000000009E28ULL, backup[5]);
+							pokeq(0x8000000000009EB8ULL, backup[5]);
 						}
 					}
 
@@ -4459,32 +4489,35 @@ again3:
 					eid0_idps[0]=buffr[0x0E];
 					eid0_idps[1]=buffr[0x0F];
 
-					if(!(c_firmware==4.55f || c_firmware==4.60f)) {
-						{system_call_1(870, IDPS);}
-						{system_call_1(872, PSID);}
-					} else if(peekq(0x8000000000003000ULL)!=0xFFFFFFFF80010003ULL) {
-						IDPS[0] = peekq(0x8000000000474F1CULL  );
-						IDPS[1] = peekq(0x8000000000474F1CULL+8);
-						PSID[0] = peekq(0x8000000000474F34ULL  );
-						PSID[1] = peekq(0x8000000000474F34ULL+8);
+					if(!dex_mode)
+					{
+						if(!(c_firmware==4.55f || c_firmware==4.60f)) {
+							{system_call_1(870, IDPS);}
+							{system_call_1(872, PSID);}
+						} else if(peekq(0x8000000000003000ULL)!=0xFFFFFFFF80010003ULL) {
+							IDPS[0] = peekq(0x8000000000474F1CULL  );
+							IDPS[1] = peekq(0x8000000000474F1CULL+8);
+							PSID[0] = peekq(0x8000000000474F34ULL  );
+							PSID[1] = peekq(0x8000000000474F34ULL+8);
+						}
 					}
 
 					sprintf(templn, "<hr><font size=42px><b>CPU: %i°C (MAX: %i°C)<br>"
-                                                           "RSX: %i°C<hr>"
-                                                           "CPU: %i°F (MAX: %i°F)<br>"
-                                                           "RSX: %i°F<hr>MEM: %iKB<hr>"
-                                                           "FAN SPEED: 0x%X (%i%%)<hr>"
-                                                           "PSID LV2 : %llX%llX<hr>"
-                                                           "IDPS EID0: %llX%llX<br>"
-                                                           "IDPS LV2 : %llX%llX</b>"
-                                    "</font><hr>",
-                                    t1, max_temp, t2,
-                                    t1f, (int)(1.8f*(float)max_temp+32.f),
-                                    t2f, (meminfo.avail>>10),
-                                    fan_speed, (int)((int)fan_speed*100)/255,
-                                    PSID[0], PSID[1],
-                                    eid0_idps[0], eid0_idps[1],
-                                    IDPS[0], IDPS[1]);
+															"RSX: %i°C<hr>"
+															"CPU: %i°F (MAX: %i°F)<br>"
+															"RSX: %i°F<hr>MEM: %iKB<hr>"
+															"FAN SPEED: 0x%X (%i%%)<hr>"
+															"PSID LV2 : %llX%llX<hr>"
+															"IDPS EID0: %llX%llX<br>"
+															"IDPS LV2 : %llX%llX</b>"
+									"</font><hr>",
+									t1, max_temp, t2,
+									t1f, (int)(1.8f*(float)max_temp+32.f),
+									t2f, (meminfo.avail>>10),
+									fan_speed, (int)((int)fan_speed*100)/255,
+									PSID[0], PSID[1],
+									eid0_idps[0], eid0_idps[1],
+									IDPS[0], IDPS[1]);
 					strcat(buffer, templn);
 
 
@@ -7050,15 +7083,30 @@ SHOW IDPS : R2+O
 							u8 st, mode, speed, unknown;
 							if(!webman_config->fanc)
 							{
-								if(c_firmware==4.55f || c_firmware==4.60f)
+								if(!dex_mode)
 								{
-									backup[5]=peekq(0x8000000000009E38ULL);
-									lv2poke32(0x8000000000009E38ULL, 0x38600001); // sys 409 get_fan_policy
+									if(c_firmware==4.55f || c_firmware==4.60f)
+									{
+										backup[5]=peekq(0x8000000000009E38ULL);
+										lv2poke32(0x8000000000009E38ULL, 0x38600001); // sys 409 get_fan_policy
+									}
+									else
+									{
+									backup[5]=peekq(0x8000000000009E28ULL);
+									lv2poke32(0x8000000000009E28ULL, 0x38600001); // sys 409 get_fan_policy
+									}
+								}
+								else // DEX
+								if(c_firmware==4.53f)
+								{
+									backup[5]=peekq(0x8000000000009EA8ULL);
+									lv2poke32(0x8000000000009EA8ULL, 0x38600001); // sys 409 get_fan_policy
 								}
 								else
+								if(c_firmware==4.55f)
 								{
-								backup[5]=peekq(0x8000000000009E28ULL);
-								lv2poke32(0x8000000000009E28ULL, 0x38600001); // sys 409 get_fan_policy
+									backup[5]=peekq(0x8000000000009EB8ULL);
+									lv2poke32(0x8000000000009EB8ULL, 0x38600001); // sys 409 get_fan_policy
 								}
 							}
 
@@ -7066,10 +7114,23 @@ SHOW IDPS : R2+O
 
 							if(!webman_config->fanc)
 							{
-								if(c_firmware==4.55f || c_firmware==4.60f)
-									pokeq(0x8000000000009E38ULL, backup[5]);
+								if(!dex_mode)
+								{
+									if(c_firmware==4.55f || c_firmware==4.60f)
+										pokeq(0x8000000000009E38ULL, backup[5]);
+									else
+										pokeq(0x8000000000009E28ULL, backup[5]);
+								}
+								else // DEX
+								if(c_firmware==4.53f)
+								{
+									pokeq(0x8000000000009EA8ULL, backup[5]); // sys 409 get_fan_policy
+								}
 								else
-									pokeq(0x8000000000009E28ULL, backup[5]);
+								if(c_firmware==4.55f)
+								{
+									pokeq(0x8000000000009EB8ULL, backup[5]); // sys 409 get_fan_policy
+								}
 							}
 							_meminfo meminfo;
 							{system_call_1(352, (uint64_t) &meminfo);}
@@ -7345,15 +7406,30 @@ void restore_fan(u8 settemp)
 		sys_sm_set_fan_policy(0, 1, ((webman_config->ps2temp*255)/100));
 		if(settemp) sys_sm_set_fan_policy(0, 2, ((webman_config->ps2temp*255)/100));
 
-		if(c_firmware==4.55f || c_firmware==4.60f)
+		if(!dex_mode)
 		{
-			pokeq(0x800000000000A334ULL, backup[4]);
-			pokeq(0x8000000000009E38ULL, backup[5]);
+			if(c_firmware==4.55f || c_firmware==4.60f)
+			{
+				pokeq(0x800000000000A334ULL, backup[4]);
+				pokeq(0x8000000000009E38ULL, backup[5]);
+			}
+			else
+			{
+				pokeq(0x800000000000A324ULL, backup[4]);
+				pokeq(0x8000000000009E28ULL, backup[5]);
+			}
+		}
+        else // DEX
+		if(c_firmware==4.53f)
+		{
+			pokeq(0x800000000000A3A4ULL, backup[4]);
+			pokeq(0x8000000000009EA8ULL, backup[5]);
 		}
 		else
+		if(c_firmware==4.55f)
 		{
-			pokeq(0x800000000000A324ULL, backup[4]);
-			pokeq(0x8000000000009E28ULL, backup[5]);
+			pokeq(0x800000000000A3B4ULL, backup[4]);
+			pokeq(0x8000000000009EB8ULL, backup[5]);
 		}
 		backup[0]=0;
 	}
@@ -7361,7 +7437,7 @@ void restore_fan(u8 settemp)
 
 void fan_control(u8 temp0, u8 initial)
 {
-	if(!dex_mode && (c_firmware==4.60f || c_firmware==4.55f || c_firmware==4.53f || c_firmware==4.46f || c_firmware==4.21f || c_firmware==4.30f || c_firmware==4.31f || c_firmware==4.40f || c_firmware==4.41f || c_firmware==4.50f) )
+	if(c_firmware==4.60f || c_firmware==4.55f || c_firmware==4.53f || c_firmware==4.46f || c_firmware==4.21f || c_firmware==4.30f || c_firmware==4.31f || c_firmware==4.40f || c_firmware==4.41f || c_firmware==4.50f)
 	{
 		if(!initial)
 		{
@@ -7371,19 +7447,39 @@ void fan_control(u8 temp0, u8 initial)
 				//backup[1]=peekq(syscall_base + (u64) (130 * 8));
 				//backup[2]=peekq(syscall_base + (u64) (138 * 8));
 				//backup[3]=peekq(syscall_base + (u64) (379 * 8));
-				if(c_firmware==4.55f || c_firmware==4.60f)
+
+				if(!dex_mode)
 				{
-					backup[4]=peekq(0x800000000000A334ULL);
-					backup[5]=peekq(0x8000000000009E38ULL);
-					lv2poke32(0x8000000000009E38ULL, 0x38600001); // sys 409 get_fan_policy
-					lv2poke32(0x800000000000A334ULL, 0x38600001); // sys 389 set_fan_policy
+					if(c_firmware==4.55f || c_firmware==4.60f)
+					{
+						backup[4]=peekq(0x800000000000A334ULL);
+						backup[5]=peekq(0x8000000000009E38ULL);
+						lv2poke32(0x8000000000009E38ULL, 0x38600001); // sys 409 get_fan_policy
+						lv2poke32(0x800000000000A334ULL, 0x38600001); // sys 389 set_fan_policy
+					}
+					else
+					{
+						backup[4]=peekq(0x800000000000A324ULL);
+						backup[5]=peekq(0x8000000000009E28ULL);
+						lv2poke32(0x8000000000009E28ULL, 0x38600001); // sys 409 get_fan_policy
+						lv2poke32(0x800000000000A324ULL, 0x38600001); // sys 389 set_fan_policy
+					}
+				}
+				else // DEX
+				if(c_firmware==4.53f)
+				{
+						backup[4]=peekq(0x800000000000A3A4ULL);
+						backup[5]=peekq(0x8000000000009EA8ULL);
+						lv2poke32(0x8000000000009EA8ULL, 0x38600001); // sys 409 get_fan_policy
+						lv2poke32(0x800000000000A3A4ULL, 0x38600001); // sys 389 set_fan_policy
 				}
 				else
+				if(c_firmware==4.55f)
 				{
-				backup[4]=peekq(0x800000000000A324ULL);
-				backup[5]=peekq(0x8000000000009E28ULL);
-				lv2poke32(0x8000000000009E28ULL, 0x38600001); // sys 409 get_fan_policy
-				lv2poke32(0x800000000000A324ULL, 0x38600001); // sys 389 set_fan_policy
+						backup[4]=peekq(0x800000000000A3B4ULL);
+						backup[5]=peekq(0x8000000000009EB8ULL);
+						lv2poke32(0x8000000000009EB8ULL, 0x38600001); // sys 409 get_fan_policy
+						lv2poke32(0x800000000000A3B4ULL, 0x38600001); // sys 389 set_fan_policy
 				}
 
 			    sys_sm_set_fan_policy(0, 2, 0x33);
@@ -7516,19 +7612,20 @@ static void wwwd_thread(uint64_t arg)
 	backup[0]=0;
 
 	u64 CEX=0x4345580000000000ULL;
-#ifndef COBRA_ONLY
 	u64 DEX=0x4445580000000000ULL;
-#endif
-	dex_mode=0;
+
+    dex_mode=0;
 	c_firmware=0.00f;
 
 			if(peekq(0x80000000002ED850ULL)==CEX) {c_firmware=4.60f;}
 	else	if(peekq(0x80000000002EC5E0ULL)==CEX) {c_firmware=4.55f;}
 	else	if(peekq(0x80000000002E9D70ULL)==CEX) {c_firmware=4.53f;}
+    else	if(peekq(0x800000000030AEA8ULL)==DEX) {c_firmware=4.53f;}
 	else	if(peekq(0x80000000002E9BE0ULL)==CEX) {c_firmware=4.50f;}
 	else	if(peekq(0x80000000002EA9B8ULL)==CEX) {c_firmware=4.46f;}
 	else	if(peekq(0x80000000002D83D0ULL)==CEX) {c_firmware=3.55f;}
 #ifndef COBRA_ONLY
+	else	if(peekq(0x800000000030D6A8ULL)==DEX) {c_firmware=4.55f;}
 	else	if(peekq(0x8000000000309698ULL)==DEX) {c_firmware=4.50f; dex_mode=2;}
 	else	if(peekq(0x8000000000305410ULL)==DEX) {c_firmware=4.46f; dex_mode=2;}
 	else	if(peekq(0x8000000000304EF0ULL)==DEX) {c_firmware=4.41f; dex_mode=2;}
@@ -8441,7 +8538,7 @@ patch:
 				}
 			}
 
-			else // 4.30DEX
+			else // DEX
 			{
 				if(c_firmware==4.30f)
 				{
@@ -8475,6 +8572,22 @@ patch:
 					pokeq(0x80000000003836A0ULL, 0x8000000000001790ULL); //sc9
 					pokeq(0x80000000003836A8ULL, 0x8000000000001798ULL); //sc10
 				}
+				else if(c_firmware==4.53f)
+				{
+					pokeq(0x8000000000385130ULL, 0x8000000000001778ULL); //sc6  0x385100+8*(SC_6)=385130
+					pokeq(0x8000000000385138ULL, 0x8000000000001780ULL); //sc7
+					pokeq(0x8000000000385140ULL, 0x8000000000001788ULL); //sc8
+					pokeq(0x8000000000385148ULL, 0x8000000000001790ULL); //sc9
+					pokeq(0x8000000000385150ULL, 0x8000000000001798ULL); //sc10
+				}
+				else if(c_firmware==4.55f)
+				{
+					pokeq(0x80000000003884B0ULL, 0x8000000000001778ULL); //sc6  0x388480+8*(SC_6)=3884B0
+					pokeq(0x80000000003884B8ULL, 0x8000000000001780ULL); //sc7
+					pokeq(0x80000000003884C0ULL, 0x8000000000001788ULL); //sc8
+					pokeq(0x80000000003884C8ULL, 0x8000000000001790ULL); //sc9
+					pokeq(0x80000000003884D0ULL, 0x8000000000001798ULL); //sc10
+				}
 			}
 		}
 	}
@@ -8485,6 +8598,11 @@ patch:
 	if(c_firmware==4.21f && !dex_mode)
 	{
 		SYSCALL_TABLE			= SYSCALL_TABLE_421;
+	}
+	else
+	if(c_firmware==4.21f && dex_mode)
+	{
+		SYSCALL_TABLE			= SYSCALL_TABLE_421D;
 	}
 	else
 	if(c_firmware==4.30f && !dex_mode)
@@ -8522,9 +8640,19 @@ patch:
 		SYSCALL_TABLE			= SYSCALL_TABLE_446;
 	}
 	else
+	if(c_firmware==4.46f && dex_mode)
+	{
+		SYSCALL_TABLE			= SYSCALL_TABLE_446D;
+	}
+	else
 	if(c_firmware==4.50f && !dex_mode)
 	{
 		SYSCALL_TABLE			= SYSCALL_TABLE_450;
+	}
+	else
+	if(c_firmware==4.50f && dex_mode)
+	{
+		SYSCALL_TABLE			= SYSCALL_TABLE_450D;
 	}
 	else
 	if(c_firmware==4.53f && !dex_mode)
@@ -8532,29 +8660,24 @@ patch:
 		SYSCALL_TABLE			= SYSCALL_TABLE_453;
 	}
 	else
+	if(c_firmware==4.53f && dex_mode)
+	{
+		SYSCALL_TABLE			= SYSCALL_TABLE_453D;
+	}
+	else
 	if(c_firmware==4.55f && !dex_mode)
 	{
 		SYSCALL_TABLE			= SYSCALL_TABLE_455;
 	}
 	else
+	if(c_firmware==4.55f && dex_mode)
+	{
+		SYSCALL_TABLE			= SYSCALL_TABLE_455D;
+	}
+	else
 	if(c_firmware==4.60f && !dex_mode)
 	{
 		SYSCALL_TABLE			= SYSCALL_TABLE_460;
-	}
-	else
-	if(c_firmware==4.50f &&  dex_mode)
-	{
-		SYSCALL_TABLE			= SYSCALL_TABLE_450D;
-	}
-	else
-	if(c_firmware==4.46f && dex_mode)
-	{
-		SYSCALL_TABLE			= SYSCALL_TABLE_446D;
-	}
-	else
-	if(c_firmware==4.21f && dex_mode)
-	{
-		SYSCALL_TABLE			= SYSCALL_TABLE_421D;
 	}
 
 	u64 sc_600 = 0;
@@ -8825,6 +8948,40 @@ patch:
 			sc_604=0x35EB68;
 			sc_142=0x322B38;
 		}
+		else
+		if(c_firmware==4.53f)
+		{
+			pokeq(0x8000000000275F0CULL, 0x4E80002038600000ULL ); // fix 8001003C error
+			pokeq(0x8000000000275F14ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
+			pokeq(0x8000000000059A90ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
+			pokeq(0x8000000000059B54ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
+
+			pokeq(0x8000000000059B00ULL, 0x419E00D860000000ULL );
+			pokeq(0x8000000000059B08ULL, 0x2F84000448000098ULL );
+			pokeq(0x800000000005D4C4ULL, 0x2F83000060000000ULL );
+			pokeq(0x800000000005D4D8ULL, 0x2F83000060000000ULL );
+
+			sc_600=0x339E30; //0x385100 + 600*8 = 003863C0 -> 80 00 00 00 00 33 9E 30
+			sc_604=0x360398; //0x385100 + 604*8 = 003863E0 -> 80 00 00 00 00 36 03 98
+			sc_142=0x3242C0; //0x385100 + 142*8 = 00385570 -> 80 00 00 00 00 32 42 C0
+		}
+        else
+		if(c_firmware==4.55f)
+		{
+			pokeq(0x8000000000277758ULL, 0x4E80002038600000ULL ); // fix 8001003C error
+			pokeq(0x8000000000277760ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
+			pokeq(0x8000000000059D50ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
+			pokeq(0x8000000000059E14ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
+
+			pokeq(0x8000000000059DC0ULL, 0x419E00D860000000ULL );
+			pokeq(0x8000000000059DC8ULL, 0x2F84000448000098ULL );
+			pokeq(0x800000000005DCB8ULL, 0x2F83000060000000ULL );
+            pokeq(0x800000000005DCD0ULL, 0x2F83000060000000ULL );
+
+			sc_600=0x33D050; //0x388480 + 600*8 = 00389740 -> 80 00 00 00 00 33 D0 50
+			sc_604=0x3635E8; //0x388480 + 604*8 = 00389760 -> 80 00 00 00 00 36 35 E8
+			sc_142=0x327318; //0x388480 + 142*8 = 003888F0 -> 80 00 00 00 00 32 73 18
+		}
 	}
 
 	if(cobra_mode) return;
@@ -8931,6 +9088,16 @@ patch:
 	{
 		base_addr=0x2F4778;
 		open_hook=0x2B81E8;
+	}
+	else if(c_firmware==4.53f && dex_mode)
+	{
+		base_addr=0x2F5F88;
+		open_hook=0x2B83C0;
+	}
+	else if(c_firmware==4.55f && dex_mode)
+	{
+		base_addr=0x2F8730;
+		open_hook=0x2B9C14;
 	}
 	else return;
 

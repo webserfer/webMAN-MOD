@@ -24,7 +24,9 @@
 #define HVSC_SYSCALL_ADDR_450		0x80000000001A6750ULL	// where above syscall is in lv2 4.50
 #define HVSC_SYSCALL_ADDR_450D		0x80000000001ACC00ULL	// where above syscall is in lv2 4.50 DEX
 #define HVSC_SYSCALL_ADDR_453		0x80000000001A68B8ULL	// where above syscall is in lv2 4.53
+#define HVSC_SYSCALL_ADDR_453D		0x80000000001AC0F4ULL	// where above syscall is in lv2 4.53 DEX
 #define HVSC_SYSCALL_ADDR_455		0x80000000001A7DA4ULL	// where above syscall is in lv2 4.55
+#define HVSC_SYSCALL_ADDR_455D		0x80000000001AD5E0ULL	// where above syscall is in lv2 4.55 DEX
 #define HVSC_SYSCALL_ADDR_460		0x80000000001A6A14ULL	// where above syscall is in lv2 4.60
 
 #define NEW_POKE_SYSCALL			813                  	// which syscall to overwrite with new poke
@@ -44,7 +46,9 @@
 #define NEW_POKE_SYSCALL_ADDR_450	0x80000000001A6C78ULL	// where above syscall is in lv2 4.50
 #define NEW_POKE_SYSCALL_ADDR_450D	0x80000000001AD128ULL	// where above syscall is in lv2 4.50 DEX
 #define NEW_POKE_SYSCALL_ADDR_453	0x80000000001A6DE0ULL	// where above syscall is in lv2 4.53
+#define NEW_POKE_SYSCALL_ADDR_453D	0x80000000001ACFF4ULL	// where above syscall is in lv2 4.53 DEX
 #define NEW_POKE_SYSCALL_ADDR_455	0x80000000001A82CCULL	// where above syscall is in lv2 4.55
+#define NEW_POKE_SYSCALL_ADDR_455D	0x80000000001AE4E0ULL	// where above syscall is in lv2 4.55 DEX
 #define NEW_POKE_SYSCALL_ADDR_460	0x80000000001A6F3CULL	// where above syscall is in lv2 4.60
 
 
@@ -64,7 +68,9 @@
 #define SYSCALL_TABLE_450			0x800000000035F0D0ULL	// 4.50
 #define SYSCALL_TABLE_450D			0x8000000000383658ULL	// 4.50 DEX
 #define SYSCALL_TABLE_453			0x800000000035F300ULL	// 4.53
+#define SYSCALL_TABLE_453D			0x8000000000385100ULL	// 4.53 DEX
 #define SYSCALL_TABLE_455			0x8000000000362680ULL	// 4.55
+#define SYSCALL_TABLE_455D			0x8000000000388480ULL	// 4.55 DEX
 #define SYSCALL_TABLE_460			0x8000000000363A18ULL	// 4.60
 
 #define SYSCALL_PTR(n)				( (SYSCALL_TABLE) + ( 8 * (n) ) )
@@ -113,6 +119,8 @@
 #define HTAB_LV2_START_446D			(0x08000000ULL)
 #define HTAB_LV2_START_450			(0x01000000ULL)
 #define HTAB_LV2_START_450D			(0x08000000ULL)
+#define HTAB_LV2_START_453			(0x01000000ULL)
+#define HTAB_LV2_START_453D			(0x08000000ULL)
 #define HTAB_LV2_START_460			(0x01000000ULL)
 
 #define MAP_BASE (0x80000000007FAE00ULL)		// lv2 memory area to store path redirections table
