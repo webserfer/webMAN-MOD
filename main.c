@@ -2797,7 +2797,6 @@ static void handleclient(u64 conn_s_p)
 			cobra_write_config(cobra_config);
 
 		}
-
 #endif
 
 		if(webman_config->spsid)
@@ -7620,14 +7619,14 @@ static void wwwd_thread(uint64_t arg)
 			if(peekq(0x80000000002ED850ULL)==CEX) {c_firmware=4.60f;}
 	else	if(peekq(0x80000000002EC5E0ULL)==CEX) {c_firmware=4.55f;}
 	else	if(peekq(0x80000000002E9D70ULL)==CEX) {c_firmware=4.53f;}
-    else	if(peekq(0x800000000030AEA8ULL)==DEX) {c_firmware=4.53f;}
+    else	if(peekq(0x800000000030AEA8ULL)==DEX) {c_firmware=4.53f; dex_mode=2;}
 	else	if(peekq(0x80000000002E9BE0ULL)==CEX) {c_firmware=4.50f;}
 	else	if(peekq(0x80000000002EA9B8ULL)==CEX) {c_firmware=4.46f;}
+	else	if(peekq(0x8000000000305410ULL)==DEX) {c_firmware=4.46f; dex_mode=2;}
 	else	if(peekq(0x80000000002D83D0ULL)==CEX) {c_firmware=3.55f;}
 #ifndef COBRA_ONLY
 	else	if(peekq(0x800000000030D6A8ULL)==DEX) {c_firmware=4.55f;}
 	else	if(peekq(0x8000000000309698ULL)==DEX) {c_firmware=4.50f; dex_mode=2;}
-	else	if(peekq(0x8000000000305410ULL)==DEX) {c_firmware=4.46f; dex_mode=2;}
 	else	if(peekq(0x8000000000304EF0ULL)==DEX) {c_firmware=4.41f; dex_mode=2;}
 	else	if(peekq(0x80000000002EA498ULL)==CEX) {c_firmware=4.41f;}
 	else	if(peekq(0x80000000002EA488ULL)==CEX) {c_firmware=4.40f;}
