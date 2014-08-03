@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.17 MOD"						// webMAN version
+#define WM_VERSION			"1.30.18 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -3609,7 +3609,7 @@ reconnect:
 #endif
 		}
 
-		//sprintf(myxml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMBML version=\"1.0\"><View id=\"seg_mygames\"><Attributes><Table key=\"eject\"><Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/icon/icon_home.png</String></Pair><Pair key=\"title\"><String>Eject Disc</String></Pair><Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair><Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/unmount?random=-1059561539</String></Pair><Pair key=\"info\"><String>Unmount current game</String></Pair></Table><Table key=\"mygames_ps3\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x33</String></Pair><Pair key=\"info\"><String>PS3 format games                              </String></Pair></Table><Table key=\"mygames_ps2\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x32</String></Pair><Pair key=\"info\"><String>PS2 format games                              </String></Pair></Table><Table key=\"mygames_psx\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>PLAYSTATION\xC2\xAE</String></Pair><Pair key=\"info\"><String>PSOne format games                              </String></Pair></Table><Table key=\"mygames_dvd\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>Blu-ray\xE2\x84\xA2 and DVD</String></Pair><Pair key=\"info\"><String>Video content                              </String></Pair></Table></Attributes><Items><Item class=\"type:x-xmb/module-action\" key=\"eject\" attr=\"eject\"/><Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_ps3\" attr=\"mygames_ps3\" src=\"#seg_mygames_ps3_items\"/><Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_ps2\" attr=\"mygames_ps2\" src=\"#seg_mygames_ps2_items\"/><Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_psx\" attr=\"mygames_psx\" src=\"#seg_mygames_psx_items\"/><Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_dvd\" attr=\"mygames_dvd\" src=\"#seg_mygames_dvd_items\"/></Items></View>", ps3icon, ps2icon, psxicon, dvdicon);
+		//sprintf(myxml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMBML version=\"1.0\"><View id=\"seg_mygames\"><Attributes><Table key=\"eject\"><Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/icon/icon_home.png</String></Pair><Pair key=\"title\"><String>Eject Disc</String></Pair><Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair><Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/unmount</String></Pair><Pair key=\"info\"><String>Unmount current game</String></Pair></Table><Table key=\"mygames_ps3\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x33</String></Pair><Pair key=\"info\"><String>PS3 format games                              </String></Pair></Table><Table key=\"mygames_ps2\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x32</String></Pair><Pair key=\"info\"><String>PS2 format games                              </String></Pair></Table><Table key=\"mygames_psx\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>PLAYSTATION\xC2\xAE</String></Pair><Pair key=\"info\"><String>PSOne format games                              </String></Pair></Table><Table key=\"mygames_dvd\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>Blu-ray\xE2\x84\xA2 and DVD</String></Pair><Pair key=\"info\"><String>Video content                              </String></Pair></Table></Attributes><Items><Item class=\"type:x-xmb/module-action\" key=\"eject\" attr=\"eject\"/><Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_ps3\" attr=\"mygames_ps3\" src=\"#seg_mygames_ps3_items\"/><Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_ps2\" attr=\"mygames_ps2\" src=\"#seg_mygames_ps2_items\"/><Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_psx\" attr=\"mygames_psx\" src=\"#seg_mygames_psx_items\"/><Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_dvd\" attr=\"mygames_dvd\" src=\"#seg_mygames_dvd_items\"/></Items></View>", ps3icon, ps2icon, psxicon, dvdicon);
 		sprintf(templn, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 						"<XMBML version=\"1.0\"><View id=\"seg_mygames\">"
 						"<Attributes>"
@@ -3617,7 +3617,7 @@ reconnect:
 						"<Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/icon/icon_home.png</String></Pair>"
 						"<Pair key=\"title\"><String>%s</String></Pair>"
 						"<Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair>"
-						"<Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/unmount?random=-1059561539</String></Pair>"
+						"<Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/unmount</String></Pair>"
 						"<Pair key=\"info\"><String>%s</String></Pair></Table>", STR_EJECTDISC, STR_UNMOUNTGAME); strcpy(myxml, templn);
 		if( !(webman_config->nogrp))
 		{
@@ -4110,7 +4110,6 @@ again3:
 			char *buffer= (char*)sysmem;
 			//else	// text page
 			{
-
 				if(is_binary!=2 && strstr(param, "setup.ps3?"))
 				{
 					memset(webman_config, 0, sizeof(WebmanCfg));
@@ -5350,11 +5349,6 @@ just_leave:
 							{
 								strcat(buffer, "<script type=\"text/javascript\">window.close(this);</script>");
 								strcat(buffer, "</font></body></html>");
-
-								sprintf(templn, "Content-Length: %i\r\n\r\n", strlen(buffer)); strcat(header, templn);
-								ssend(conn_s, header);
-								ssend(conn_s, buffer);
-								buffer[0]=0;
 								plen=10;
 							}
 
@@ -5381,10 +5375,18 @@ just_leave:
 							}
 							else
 								mount_with_mm(param+plen, 1);
-
-							is_busy=false;
-							if(strstr(param, "mount_ps3")) continue;
 						}
+
+						if(buffer)
+						{
+							sprintf(templn, "Content-Length: %i\r\n\r\n", strlen(buffer)); strcat(header, templn);
+							ssend(conn_s, header);
+							ssend(conn_s, buffer);
+							buffer[0]=0;
+						}
+
+						is_busy=false;
+						if(strstr(param, "mount_ps3")) continue;
 					}
 					else
 					{
