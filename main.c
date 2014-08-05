@@ -7411,26 +7411,26 @@ void restore_fan(u8 settemp)
 		{
 			if(c_firmware==4.55f || c_firmware==4.60f)
 			{
-				pokeq(0x800000000000A334ULL, backup[4]);
-				pokeq(0x8000000000009E38ULL, backup[5]);
+				pokeq(0x800000000000A334ULL, backup[4]);  // sys 389 set_fan_policy
+				pokeq(0x8000000000009E38ULL, backup[5]);  // sys 409 get_fan_policy
 			}
 			else
 			{
-				pokeq(0x800000000000A324ULL, backup[4]);
-				pokeq(0x8000000000009E28ULL, backup[5]);
+				pokeq(0x800000000000A324ULL, backup[4]);  // sys 389 set_fan_policy
+				pokeq(0x8000000000009E28ULL, backup[5]);  // sys 409 get_fan_policy
 			}
 		}
         else // DEX
 		if(c_firmware==4.53f)
 		{
-			pokeq(0x800000000000A3A4ULL, backup[4]);
-			pokeq(0x8000000000009EA8ULL, backup[5]);
+			pokeq(0x800000000000A3A4ULL, backup[4]);  // sys 389 set_fan_policy
+			pokeq(0x8000000000009EA8ULL, backup[5]);  // sys 409 get_fan_policy
 		}
 		else
 		if(c_firmware==4.55f)
 		{
-			pokeq(0x800000000000A3B4ULL, backup[4]);
-			pokeq(0x8000000000009EB8ULL, backup[5]);
+			pokeq(0x800000000000A3B4ULL, backup[4]);  // sys 389 set_fan_policy
+			pokeq(0x8000000000009EB8ULL, backup[5]);  // sys 409 get_fan_policy
 		}
 		backup[0]=0;
 	}
