@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.18 MOD"						// webMAN version
+#define WM_VERSION			"1.30.19 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -2132,79 +2132,64 @@ void remove_cfw_syscalls()
 	if(peekq(0x8000000000309698ULL)==DEX) {dex_mode=2; c_firmware=4.50f;}	else
 	if(peekq(0x800000000030D6A8ULL)==DEX) {dex_mode=2; c_firmware=4.55f;}	else
 #endif
-	c_firmware=0.00f;
+    c_firmware=0.00f;
 
 	if(c_firmware==4.60f && !dex_mode) syscall_table = SYSCALL_TABLE_460;	else
 	if(c_firmware==4.55f && !dex_mode) syscall_table = SYSCALL_TABLE_455;	else
 	if(c_firmware==4.53f && !dex_mode) syscall_table = SYSCALL_TABLE_453;	else
-	if(c_firmware==4.53f &&  dex_mode) syscall_table = SYSCALL_TABLE_453D;	else
-	if(c_firmware==4.50f && !dex_mode) syscall_table = SYSCALL_TABLE_450;	else
-	if(c_firmware==4.46f && !dex_mode) syscall_table = SYSCALL_TABLE_446;	else
+    if(c_firmware==4.53f &&  dex_mode) syscall_table = SYSCALL_TABLE_453D;	else
+    if(c_firmware==4.50f && !dex_mode) syscall_table = SYSCALL_TABLE_450;	else
+    if(c_firmware==4.46f && !dex_mode) syscall_table = SYSCALL_TABLE_446;	else
 #ifndef COBRA_ONLY
-	if(c_firmware==4.21f && !dex_mode) syscall_table = SYSCALL_TABLE_421;	else
+    if(c_firmware==4.21f && !dex_mode) syscall_table = SYSCALL_TABLE_421;	else
 	if(c_firmware==4.21f &&  dex_mode) syscall_table = SYSCALL_TABLE_421D;	else
-	if(c_firmware==4.30f && !dex_mode) syscall_table = SYSCALL_TABLE_430;	else
-	if(c_firmware==4.30f &&  dex_mode) syscall_table = SYSCALL_TABLE_430D;	else
-	if(c_firmware==4.31f && !dex_mode) syscall_table = SYSCALL_TABLE_431;	else
-	if(c_firmware==4.40f && !dex_mode) syscall_table = SYSCALL_TABLE_440;	else
-	if(c_firmware==4.41f && !dex_mode) syscall_table = SYSCALL_TABLE_441;	else
-	if(c_firmware==4.41f &&  dex_mode) syscall_table = SYSCALL_TABLE_441D;	else
-	if(c_firmware==4.46f &&  dex_mode) syscall_table = SYSCALL_TABLE_446D;	else
+    if(c_firmware==4.30f && !dex_mode) syscall_table = SYSCALL_TABLE_430;	else
+    if(c_firmware==4.30f &&  dex_mode) syscall_table = SYSCALL_TABLE_430D;	else
+    if(c_firmware==4.31f && !dex_mode) syscall_table = SYSCALL_TABLE_431;	else
+    if(c_firmware==4.40f && !dex_mode) syscall_table = SYSCALL_TABLE_440;	else
+    if(c_firmware==4.41f && !dex_mode) syscall_table = SYSCALL_TABLE_441;	else
+    if(c_firmware==4.41f &&  dex_mode) syscall_table = SYSCALL_TABLE_441D;	else
+    if(c_firmware==4.46f &&  dex_mode) syscall_table = SYSCALL_TABLE_446D;	else
 	if(c_firmware==4.50f &&  dex_mode) syscall_table = SYSCALL_TABLE_450D;	else
 	if(c_firmware==4.55f &&  dex_mode) syscall_table = SYSCALL_TABLE_455D;	else
 #endif
 	syscall_table = find_syscall_table();
 	syscall_not_impl = peekq(syscall_table);
 
-	if(c_firmware==4.55f && dex_mode) {
-		IDPS[0] = peekq(0x8000000000494F1CULL  );
-		IDPS[1] = peekq(0x8000000000494F1CULL+8);
-		PSID[0] = peekq(0x8000000000494F34ULL  );
-		PSID[1] = peekq(0x8000000000494F34ULL+8);
-	}
-	else
-	if((c_firmware==4.55f || c_firmware==4.60f) && !dex_mode) {
-		IDPS[0] = peekq(0x8000000000474F1CULL  );
-		IDPS[1] = peekq(0x8000000000474F1CULL+8);
-		PSID[0] = peekq(0x8000000000474F34ULL  );
-		PSID[1] = peekq(0x8000000000474F34ULL+8);
+	if(!dex_mode)
+	{
+		if(c_firmware==4.55f || c_firmware==4.60f) {
+			IDPS[0] = peekq(0x8000000000474F1CULL  );
+			IDPS[1] = peekq(0x8000000000474F1CULL+8);
+			PSID[0] = peekq(0x8000000000474F34ULL  );
+			PSID[1] = peekq(0x8000000000474F34ULL+8);
+		}
 	}
 
-	pokeq(syscall_table + (8*8),  syscall_not_impl); //Peek - ps3cobra / (4.3x peek) / Remapper - Hermes4
+    pokeq(syscall_table + (8*6),  syscall_not_impl);
+	pokeq(syscall_table + (8*7),  syscall_not_impl);
+    pokeq(syscall_table + (8*8),  syscall_not_impl);
+    pokeq(syscall_table + (8*9),  syscall_not_impl);
+    pokeq(syscall_table + (8*10), syscall_not_impl);
+    pokeq(syscall_table + (8*35), syscall_not_impl);
+    pokeq(syscall_table + (8*36), syscall_not_impl);
 
-	pokeq(syscall_table + (8*9),  syscall_not_impl); //lv2_lv1_poke
-	pokeq(syscall_table + (8*10), syscall_not_impl); //lv2_lv1_call -rebug
+    u64 sc_not_impl_pt = peekq(syscall_not_impl);
+    u64 sc6 = peekq(syscall_table + (8*6));
+	u64 sc7 = peekq(syscall_table + (8*7));
+    //u64 sc8 = peekq(syscall_table + (8*8));
+    u64 sc9 = peekq(syscall_table + (8*9));
+    u64 sc10 = peekq(syscall_table + (8*10));
+    //u64 sc35 = peekq(syscall_table + (8*35));
+    u64 sc36 = peekq(syscall_table + (8*36));
 
-	pokeq(syscall_table + (8*35), syscall_not_impl); //Remapper - PL3, PSGroove, PSFreedom
-	pokeq(syscall_table + (8*36), syscall_not_impl); //Remapper - Hermes, PSJailbreak / (4.2x BD-Emulator)
-
-#ifdef CCAPI
-	pokeq(syscall_table + (8*200), syscall_not_impl); //sys_dbg_read_process_memory - CCAPI
-	pokeq(syscall_table + (8*201), syscall_not_impl); //sys_dbg_write_process_memory - CCAPI
-	pokeq(syscall_table + (8*203), syscall_not_impl); //lv2_peek - CCAPI
-	pokeq(syscall_table + (8*204), syscall_not_impl); //lv2_poke - CCAPI
-#endif
-
-	u64 sc_not_impl_pt = peekq(syscall_not_impl);
-  //u64 sc6  = peekq(syscall_table + (8*6));
-  //u64 sc7  = peekq(syscall_table + (8*7));
-  //u64 sc8  = peekq(syscall_table + (8*8));
-	u64 sc9  = peekq(syscall_table + (8*9));
-	u64 sc10 = peekq(syscall_table + (8*10));
-  //u64 sc35 = peekq(syscall_table + (8*35));
-	u64 sc36 = peekq(syscall_table + (8*36));
-
-  //if(sc6!=syscall_not_impl)  pokeq(sc6, sc_not_impl_pt);
-  //if(sc7!=syscall_not_impl)  pokeq(sc7, sc_not_impl_pt);
-  //if(sc8!=syscall_not_impl)  pokeq(sc8, sc_not_impl_pt);
-	if(sc9!=syscall_not_impl)  pokeq(sc9, sc_not_impl_pt);
-	if(sc10!=syscall_not_impl) pokeq(sc10, sc_not_impl_pt);
-  //if(sc35!=syscall_not_impl) pokeq(sc35, sc_not_impl_pt);
-	if(sc36!=syscall_not_impl) pokeq(sc36, sc_not_impl_pt);
-
-	pokeq(syscall_table + (8*6),  syscall_not_impl); //lv2_peek (peekq uses sc6)
-	pokeq(syscall_table + (8*7),  syscall_not_impl); //lv2_poke (pokeq uses sc7 - must be the last poke)
-
+    if(sc6!=syscall_not_impl) pokeq(sc6, sc_not_impl_pt);
+	if(sc7!=syscall_not_impl) pokeq(sc7, sc_not_impl_pt);
+    //if(sc8!=syscall_not_impl) pokeq(sc8, sc_not_impl_pt);
+    if(sc9!=syscall_not_impl) pokeq(sc9, sc_not_impl_pt);
+    if(sc10!=syscall_not_impl) pokeq(sc10, sc_not_impl_pt);
+    //if(sc35!=syscall_not_impl) pokeq(sc35, sc_not_impl_pt);
+    if(sc36!=syscall_not_impl) pokeq(sc36, sc_not_impl_pt);
 }
 
  void delete_history()
@@ -8616,11 +8601,11 @@ patch:
 				}
 				else if(c_firmware==4.53f)
 				{
-					pokeq(0x8000000000385130ULL, 0x8000000000001778ULL); //sc6  0x385100+8*(SC_6)=385130
-					pokeq(0x8000000000385138ULL, 0x8000000000001780ULL); //sc7
-					pokeq(0x8000000000385140ULL, 0x8000000000001788ULL); //sc8
-					pokeq(0x8000000000385148ULL, 0x8000000000001790ULL); //sc9
-					pokeq(0x8000000000385150ULL, 0x8000000000001798ULL); //sc10
+					pokeq(0x8000000000385138ULL, 0x8000000000001778ULL); //sc6  0x385108+8*(SC_6)=385138
+					pokeq(0x8000000000385140ULL, 0x8000000000001780ULL); //sc7
+					pokeq(0x8000000000385148ULL, 0x8000000000001788ULL); //sc8
+					pokeq(0x8000000000385150ULL, 0x8000000000001790ULL); //sc9
+					pokeq(0x8000000000385158ULL, 0x8000000000001798ULL); //sc10
 				}
 				else if(c_firmware==4.55f)
 				{
@@ -8937,9 +8922,9 @@ patch:
 			pokeq(0x800000000005D4C4ULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000005D4D8ULL, 0x2F83000060000000ULL );
 
-			sc_600=0x339E30; //0x385100 + 600*8 = 003863C0 -> 80 00 00 00 00 33 9E 30
-			sc_604=0x360398; //0x385100 + 604*8 = 003863E0 -> 80 00 00 00 00 36 03 98
-			sc_142=0x3242C0; //0x385100 + 142*8 = 00385570 -> 80 00 00 00 00 32 42 C0
+			sc_600=0x3602A8; //0x385108 + 600*8 = 003863C8 -> 80 00 00 00 00 36 02 A8
+			sc_604=0x360380; //0x385108 + 604*8 = 003863E8 -> 80 00 00 00 00 36 03 80
+			sc_142=0x3242F0; //0x385108 + 142*8 = 00385578 -> 80 00 00 00 00 32 42 F0
 		}
         else
 		if(c_firmware==4.55f)
