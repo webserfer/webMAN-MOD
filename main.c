@@ -350,9 +350,9 @@ char STR_FTPSVC[100]		= "Disable FTP service";
 char STR_COMBOS[100]		= "Disable all PAD shortcuts";
 char STR_MMCOVERS[100]		= "Disable multiMAN covers";
 char STR_ACCESS[100]		= "Disable remote access to FTP/WWW services";
-char STR_NOSETUP[150]		= "Disable webMAN Setup entry in \"My Games\"";
+char STR_NOSETUP[150]		= "Disable webMAN Setup entry in \"webMAN Games\"";
 char STR_NOSPOOF[100]		= "Disable firmware version spoofing";
-char STR_NOGRP[100]			= "Disable grouping of content in \"My Games\"";
+char STR_NOGRP[100]			= "Disable grouping of content in \"webMAN Games\"";
 char STR_NOWMDN[200]		= "Disable startup notification of WebMAN on the XMB";
 char STR_TITLEID[200]		= "Include the ID as part of the title of the game";
 char STR_FANCTRL[120]		= "Enable dynamic fan control";
@@ -388,7 +388,7 @@ char STR_SAVE[30]			= "Save";
 char STR_SETTINGSUPD[250]	= "Settings updated.<br><br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATIONR3 system.";
 char STR_ERROR[30]			= "Error!";
 
-char STR_MYGAMES[50]		= "My Games";
+char STR_MYGAMES[50]		= "webMAN Games";
 char STR_LOADGAMES[80]		= "Load games with webMAN";
 
 char STR_WMSETUP[50]		= "webMAN Setup";
@@ -3077,11 +3077,12 @@ again1:
 
 				cellRtcGetCurrentTick(&pTick);
 
-				if(f1==5 && f0!=0) continue; // PS2ISO only on /dev_hdd0 supported
-				if(f0==9 && f1>6) break;   //ntfs
-				if(f1==10 && f0!=0) break; //video
+				if(f1==5  && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
+				if(f1==10 && f0>0)  break;    // video
+				if(f0==9 && f1>6)   break;    // ntfs
 				if(f0==7 && (!webman_config->netd0 || f1>6 || !cobra_mode)) break;
 				if(f0==8 && (!webman_config->netd1 || f1>6 || !cobra_mode)) break;
+
 				if(f0==7 || f0==8) is_net=1; else is_net=0;
 #ifdef COBRA_ONLY
 				if(ns==-2 && is_net &&
@@ -3092,7 +3093,7 @@ again1:
 reconnect:
 					if(f0==7)
 						ns=connect_to_server(webman_config->neth0, webman_config->netp0);  //net0
-					else
+					else //if(f0==8)
 						ns=connect_to_server(webman_config->neth1, webman_config->netp1);  //net1
 
 					if(ns<0)
@@ -5081,21 +5082,22 @@ just_leave:
 						add_check_box("a", "autob", STR_AUTOB  , NULL, (webman_config->autob), buffer);
 						add_check_box("d", "delay", STR_DELAYAB, NULL, (webman_config->delay), buffer);
 #endif
-						add_check_box("bl", "blind", STR_DEVBL   , NULL, (webman_config->blind), buffer);
+						add_check_box("bl", "blind", STR_DEVBL,    NULL, (webman_config->blind), buffer);
+						add_check_box("wn", "wmdn",  STR_NOWMDN,   NULL, (webman_config->wmdn) , buffer);
 						add_check_box("rf", "refr",  STR_CONTSCAN, NULL, (webman_config->refr) , buffer);
 						add_check_box("pl", "poll",  STR_USBPOLL,  NULL, (webman_config->poll) , buffer);
 						add_check_box("ft", "ftpd",  STR_FTPSVC,   NULL, (webman_config->ftpd) , buffer);
 						add_check_box("np", "nopad", STR_COMBOS,   NULL, (webman_config->nopad), buffer);
-						add_check_box("nc", "nocov", STR_MMCOVERS, NULL, (webman_config->nocov), buffer);
 						add_check_box("ip", "bind",  STR_ACCESS,   NULL, (webman_config->bind) , buffer);
-						add_check_box("ws", "noset", STR_NOSETUP,  NULL, (webman_config->noset), buffer);
 
 #ifdef COBRA_ONLY
 						if(!(c_firmware==4.53f || c_firmware==4.60f))
        						add_check_box("sp", "nospf", STR_NOSPOOF, NULL, (webman_config->nospoof), buffer);
 #endif
+						strcat(buffer, "<hr color=\"#0099FF\"/>");
 						add_check_box("gr", "nogrp", STR_NOGRP, NULL, (webman_config->nogrp), buffer);
-						add_check_box("wn", "wmdn", STR_NOWMDN, NULL, (webman_config->wmdn), buffer);
+						add_check_box("ws", "noset", STR_NOSETUP,  NULL, (webman_config->noset), buffer);
+						add_check_box("nc", "nocov", STR_MMCOVERS, NULL, (webman_config->nocov), buffer);
 						add_check_box("ti", "tid", STR_TITLEID, NULL, (webman_config->tid), buffer);
 
 						strcat(buffer, "<hr color=\"#0099FF\"/><table width=\"900\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr class=\"propfont\"><td>");
@@ -5487,24 +5489,24 @@ just_leave:
 							u16 max_entries=((BUFFER_SIZE))/512;
 
 
-							for(u8 f0=0; f0<10; f0++)
+							for(u8 f0=0; f0<10; f0++)  // drives: 0="/dev_hdd0", 1="/dev_usb000", 2="/dev_usb001", 3="/dev_usb002", 4="/dev_usb003", 5="/dev_usb006", 6="/dev_usb007", 7="/net0", 8="/net1", 9="/ext"
 							{
-								for(u8 f1=0; f1<11; f1++)
+								for(u8 f1=0; f1<11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
 								{
+									if(!cobra_mode && (f1>1 && f1<10)) continue;
 
 									if(tlen>(BUFFER_SIZE-1024)) break;
 									if(idx>=(max_entries-1)) break;
 
 									cellRtcGetCurrentTick(&pTick);
 
-									if(!cobra_mode && (f1>1 && f1<10)) break;
-									if(f0==9 && f1>6) break; //ntfs
-									if(f1==10 && f0!=0) break; //video
+									if(f1==5  && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
+									if(f1==10 && f0>0)  break;    // video
+									if(f0==9 && f1>6)   break;    // ntfs
 									if(f0==7 && (!webman_config->netd0 || f1>6 || !cobra_mode)) break;
 									if(f0==8 && (!webman_config->netd1 || f1>6 || !cobra_mode)) break;
-									if(f1==5 && f0!=0) continue; // PS2ISO is supported only from /dev_hdd0
 
-									if( (webman_config->cmask & PS3) && (f1< 3 || f1==10)) continue;
+									if( (webman_config->cmask & PS3) && (f1<3 || f1==10)) continue;
 									if( (webman_config->cmask & BLU) && f1==3) continue;
 									if( (webman_config->cmask & DVD) && f1==4) continue;
 									if( (webman_config->cmask & PS2) && f1==5) continue;
@@ -5516,14 +5518,14 @@ just_leave:
 									if(f0==7 || f0==8) is_net=1; else is_net=0;
 #ifdef COBRA_ONLY
 									if(ns==-2 && is_net &&
-										( (f0==7 && webman_config->netp0 && webman_config->neth0[0])
-										|| (f0==8 && webman_config->netp1 && webman_config->neth1[0]) )
+										( (f0==7 && webman_config->netp0 && webman_config->neth0[0]) ||
+										  (f0==8 && webman_config->netp1 && webman_config->neth1[0]) )
 										)
 									{
 		reconnect2:
 										if(f0==7)
 											ns=connect_to_server(webman_config->neth0, webman_config->netp0);
-										else
+										else //if(f0==8)
 											ns=connect_to_server(webman_config->neth1, webman_config->netp1);
 
 										if(ns<0)
@@ -8181,8 +8183,8 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 					netiso_args *mynet_iso	= (netiso_args*)addr;
 					memset(mynet_iso, 0, 64*1024);
 
-					if( (strstr(_path, "/net0") && webman_config->netd0 && webman_config->neth0[0] && webman_config->netp0>0)
-						|| (strstr(_path, "/net1") && webman_config->netd1 && webman_config->neth1[0] && webman_config->netp1>0) )
+					if( (strstr(_path, "/net0") && webman_config->netd0 && webman_config->neth0[0] && webman_config->netp0>0) ||
+						(strstr(_path, "/net1") && webman_config->netd1 && webman_config->neth1[0] && webman_config->netp1>0) )
 					{
 						if(strstr(_path, "/net1"))
 						{
