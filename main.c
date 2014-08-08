@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.19 MOD"						// webMAN version
+#define WM_VERSION			"1.30.20 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -299,6 +299,22 @@ static char smonth[12][4]={"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug
 
 static char drives[10][16]={"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_usb002", "/dev_usb003", "/dev_usb006", "/dev_usb007", "/net0", "/net1", "/ext"};
 static char paths [11][16]={"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video"};
+
+static char wm_icons[12][60]={"/dev_flash/vsh/resource/explore/icon/icon_wm_album_ps3.png", //024.png  [0]
+                              "/dev_flash/vsh/resource/explore/icon/icon_wm_album_psx.png", //026.png  [1]
+                              "/dev_flash/vsh/resource/explore/icon/icon_wm_album_ps2.png", //025.png  [2]
+                              "/dev_flash/vsh/resource/explore/icon/icon_wm_album_psp.png", //022.png  [3]
+                              "/dev_flash/vsh/resource/explore/icon/icon_wm_album_dvd.png", //023.png  [4]
+
+                              "/dev_flash/vsh/resource/explore/icon/icon_wm_ps3.png",       //024.png  [5]
+                              "/dev_flash/vsh/resource/explore/icon/icon_wm_psx.png",       //026.png  [6]
+                              "/dev_flash/vsh/resource/explore/icon/icon_wm_ps2.png",       //025.png  [7]
+                              "/dev_flash/vsh/resource/explore/icon/icon_wm_psp.png",       //022.png  [8]
+                              "/dev_flash/vsh/resource/explore/icon/icon_wm_dvd.png",       //023.png  [9]
+
+                              "/dev_flash/vsh/resource/explore/icon/icon_wm_settings.png",  //icon/icon_home.png  [10]
+                              "/dev_flash/vsh/resource/explore/icon/icon_wm_eject.png"      //icon/icon_home.png  [11]
+                             };
 
 static bool covers_exist[7];
 
@@ -2710,15 +2726,15 @@ static void get_default_icon(char *icon, char *param, char *file, int isdir, int
 
     //show the default icon by type
 	if(strstr(param, "/PS2ISO"))
-		strcpy(icon, "/dev_flash/vsh/resource/explore/user/025.png");
+		strcpy(icon, wm_icons[7]);
 	else if(strstr(param, "/PSX") || strstr(file, ".ntfs[PSX"))
-		strcpy(icon, "/dev_flash/vsh/resource/explore/user/026.png");
+		strcpy(icon, wm_icons[6]);
 	else if(strstr(param, "/PSPISO") || strstr(param, "/ISO"))
-		strcpy(icon, "/dev_flash/vsh/resource/explore/user/022.png");
+		strcpy(icon, wm_icons[8]);
 	else if(strstr(param, "/BDISO") || strstr(param, "/DVDISO") || strstr(file, ".ntfs[BDISO]") || strstr(file, ".ntfs[DVDISO]"))
-		strcpy(icon, "/dev_flash/vsh/resource/explore/user/023.png");
+		strcpy(icon, wm_icons[9]);
 	else
-		strcpy(icon, "/dev_flash/vsh/resource/explore/user/024.png");
+		strcpy(icon, wm_icons[5]);
 }
 
 static void handleclient(u64 conn_s_p)
@@ -2767,6 +2783,19 @@ static void handleclient(u64 conn_s_p)
 													covers_exist[4]=(cellFsStat("/dev_hdd0/GAMES/covers", &buf)==CELL_FS_SUCCEEDED);
 													covers_exist[5]=(cellFsStat("/dev_hdd0/GAMEZ/covers", &buf)==CELL_FS_SUCCEEDED);
 													covers_exist[6]=(cellFsStat(WMTMP, &buf)==CELL_FS_SUCCEEDED);
+
+        for(int i=0; i<12; i++)
+        {
+            if(cellFsStat(wm_icons[i], &buf)!=CELL_FS_SUCCEEDED)
+            {
+                if(i==0 || i==5) strcpy(wm_icons[i] + 32, "user/024.png"); else //ps3
+                if(i==1 || i==6) strcpy(wm_icons[i] + 32, "user/026.png"); else //psx
+                if(i==2 || i==7) strcpy(wm_icons[i] + 32, "user/025.png"); else //ps2
+                if(i==3 || i==8) strcpy(wm_icons[i] + 32, "user/022.png"); else //psp
+                if(i==4 || i==9) strcpy(wm_icons[i] + 32, "user/023.png"); else //dvd
+                                 strcpy(wm_icons[i] + 37, "icon_home.png"); //setup / eject
+            }
+        }
 
 #ifdef COBRA_ONLY
 		//if(cobra_mode)
@@ -3630,37 +3659,42 @@ reconnect:
 						"<XMBML version=\"1.0\"><View id=\"seg_mygames\">"
 						"<Attributes>"
 						"<Table key=\"eject\">"
-						"<Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/icon/icon_home.png</String></Pair>"
+						"<Pair key=\"icon\"><String>%s</String></Pair>"
 						"<Pair key=\"title\"><String>%s</String></Pair>"
 						"<Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair>"
 						"<Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/unmount</String></Pair>"
-						"<Pair key=\"info\"><String>%s</String></Pair></Table>", STR_EJECTDISC, STR_UNMOUNTGAME); strcpy(myxml, templn);
+						"<Pair key=\"info\"><String>%s</String></Pair></Table>", wm_icons[11], STR_EJECTDISC, STR_UNMOUNTGAME); strcpy(myxml, templn);
 		if( !(webman_config->nogrp))
 		{
-			if( !(webman_config->cmask & PS3)) {sprintf(templn, "<Table key=\"mygames_ps3\"><Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/user/024.png</String></Pair><Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x33</String></Pair><Pair key=\"info\"><String>%s</String></Pair><Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair></Table>", STR_PS3FORMAT); strcat(myxml, templn);}
+			if( !(webman_config->cmask & PS3)) {sprintf(templn, "<Table key=\"mygames_ps3\">"
+                                                                "<Pair key=\"icon\"><String>%s</String></Pair>"
+                                                                "<Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x33</String></Pair>"
+                                                                "<Pair key=\"info\"><String>%s</String></Pair>"
+                                                                "<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
+                                                                "</Table>", wm_icons[0], STR_PS3FORMAT); strcat(myxml, templn);}
 #ifdef COBRA_ONLY
 			{
 				if( !(webman_config->cmask & PS2)) {sprintf(templn, "<Table key=\"mygames_ps2\">"
-																	"<Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/user/025.png</String></Pair>"
+																	"<Pair key=\"icon\"><String>%s</String></Pair>"
                                                                     "<Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x32</String></Pair><Pair key=\"info\"><String>%s</String></Pair>"
                                                                     "<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
-                                                                    "</Table>", STR_PS2FORMAT); strcat(myxml, templn);}
+                                                                    "</Table>", wm_icons[2], STR_PS2FORMAT); strcat(myxml, templn);}
 				if( !(webman_config->cmask & PS1)) {sprintf(templn, "<Table key=\"mygames_psx\">"
-																	"<Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/user/026.png</String></Pair>"
+																	"<Pair key=\"icon\"><String>%s</String></Pair>"
                                                                     "<Pair key=\"title\"><String>PLAYSTATION\xC2\xAE</String></Pair><Pair key=\"info\"><String>%s</String></Pair>"
                                                                     "<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
-                                                                    "</Table>", STR_PS1FORMAT);strcat(myxml, templn);}
+                                                                    "</Table>", wm_icons[1], STR_PS1FORMAT);strcat(myxml, templn);}
 				if( !(webman_config->cmask & PSP)) {sprintf(templn, "<Table key=\"mygames_psp\">"
-																	"<Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/user/022.png</String></Pair>"
+																	"<Pair key=\"icon\"><String>%s</String></Pair>"
 																	"<Pair key=\"title\"><String>PLAYSTATION\xC2\xAEPORTABLE</String></Pair>"
 																	"<Pair key=\"info\"><String>%s</String></Pair><Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
-																	"</Table>", STR_PSPFORMAT);strcat(myxml, templn);}
+																	"</Table>", wm_icons[3], STR_PSPFORMAT);strcat(myxml, templn);}
 				if( !(webman_config->cmask & DVD) ||
                     !(webman_config->cmask & BLU)) {sprintf(templn, "<Table key=\"mygames_dvd\">"
-																	"<Pair key=\"icon\"><String>/dev_flash/vsh/resource/explore/user/023.png</String></Pair>"
+																	"<Pair key=\"icon\"><String>%s</String></Pair>"
 																	"<Pair key=\"title\"><String>%s</String></Pair><Pair key=\"info\"><String>%s</String></Pair>"
 																	"<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
-																	"</Table>", STR_VIDFORMAT, STR_VIDEO );strcat(myxml, templn);}
+																	"</Table>", wm_icons[4], STR_VIDFORMAT, STR_VIDEO );strcat(myxml, templn);}
 			}
 #endif
 		}
@@ -3668,7 +3702,7 @@ reconnect:
 		bool add_xmbm_plus = cellFsStat("/dev_hdd0/game/XMBMANPLS/USRDIR/FEATURES/webMAN.xml", &buf)==CELL_FS_SUCCEEDED;
 
 		if(!webman_config->noset)
-			{sprintf(templn, "<Table key=\"setup\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>%s</String></Pair><Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair><Pair key=\"info\"><String>%s</String></Pair>%s</Table>", add_xmbm_plus ? "/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/multiman.png" : "/dev_flash/vsh/resource/explore/icon/icon_home.png", STR_WMSETUP, STR_WMSETUP2, add_xmbm_plus ? "<Pair key=\"child\"><String>segment</String></Pair>" : "<Pair key=\"module_action\"><String>http://127.0.0.1/setup.ps3</String></Pair>");strcat(myxml, templn);}
+			{sprintf(templn, "<Table key=\"setup\"><Pair key=\"icon\"><String>%s</String></Pair><Pair key=\"title\"><String>%s</String></Pair><Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair><Pair key=\"info\"><String>%s</String></Pair>%s</Table>", add_xmbm_plus ? "/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/multiman.png" : wm_icons[10], STR_WMSETUP, STR_WMSETUP2, add_xmbm_plus ? "<Pair key=\"child\"><String>segment</String></Pair>" : "<Pair key=\"module_action\"><String>http://127.0.0.1/setup.ps3</String></Pair>");strcat(myxml, templn);}
 
 		if( !(webman_config->nogrp))
 		{
