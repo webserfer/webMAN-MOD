@@ -21,7 +21,7 @@ STR_CPYDEST			[Ścieżka docelowa:]
 STR_CPYFINISH		[Kopiowanie zakończone!]
 STR_CPYABORT		[Kopiowanie przerwane!]
 
-STR_SCAN1					[Skanuj te urządzenia]
+STR_SCAN1					[Skanuj urządzenia]
 STR_SCAN2					[Skanuj zawartość]
 STR_PSPL					[Pokaż PSP Launcher]
 STR_VIDLG					[Wideo]
