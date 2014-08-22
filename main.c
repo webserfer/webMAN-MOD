@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.20 MOD"						// webMAN version
+#define WM_VERSION			"1.30.21 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -272,6 +272,7 @@ typedef struct
 	char vPSID2[17];
 	uint8_t tid;
 	uint8_t wmdn;
+    char autoboot_path[256];
 
 } __attribute__((packed)) WebmanCfg;
 
@@ -287,6 +288,8 @@ typedef struct
 #define DISABLESH (1<<9)
 #define DISABLEFC (1<<10)
 #define MINDYNFAN (1<<11)
+
+#define AUTOBOOT_PATH "/dev_hdd0/PS3ISO/AUTOBOOT.ISO"
 
 void reset_settings(void);
 int save_settings(void);
@@ -1867,7 +1870,7 @@ bool language(const char *file_str, char *default_str)
 
 		const char lang_path[34];
         if(webman_config->lang==99)
-		    strcpy(lang_path, "/dev_hdd0/tmp/wm_lang/LANG_XX.TXT");
+		    sprintf(lang_path, "/dev_hdd0/tmp/wm_lang/LANG_XX.TXT");
 		else
 		    sprintf(lang_path, "/dev_hdd0/tmp/wm_lang/LANG_%s.TXT", lang_code[webman_config->lang]);
 
@@ -2059,6 +2062,7 @@ void update_language()
 
 		language("COVERS_PATH", COVERS_PATH);
 	}
+
 	if(fh) {cellFsClose(fh); lang_pos=fh=0;}
 }
 
@@ -2470,7 +2474,19 @@ static void add_radio_button(const char *name, const char *value, const char *id
 static void add_check_box(const char *name, const char *value, const char *label, const char *sufix, bool checked, char *buffer)
 {
 	char templn[256];
-    sprintf(templn, "<label><input type=\"checkbox\" name=\"%s\" value=\"%s\" %s/> %s%s</label>", name, value, checked?(char*)"checked=\"checked\"" : (char*)"", label, (!sufix)?"<br>":sufix);
+	char clabel[256];
+	char *p;
+	strcpy(clabel, label);
+	p=strstr(clabel, AUTOBOOT_PATH);
+	if(p!=NULL)
+	{
+		p[0]=0;
+		sprintf(templn, "<input name=\"autop\" type=\"text\" value=\"%s\" size=\"40\" maxlength=\"255\"/>", webman_config->autoboot_path);
+		strcat(clabel, templn);
+		p=strstr(label, AUTOBOOT_PATH)+strlen(AUTOBOOT_PATH);
+		strcat(clabel, p);
+	}
+    sprintf(templn, "<label><input type=\"checkbox\" name=\"%s\" value=\"%s\" %s/> %s%s</label>", name, value, checked?(char*)"checked=\"checked\"" : (char*)"", clabel, (!sufix)?"<br>":sufix);
     strcat(buffer, templn);
 }
 
@@ -2924,10 +2940,8 @@ static void handleclient(u64 conn_s_p)
 
 		u8 do_delay=0;
 
-		sprintf(tempstr, "/dev_hdd0/PS3ISO/AUTOBOOT.ISO");
-		if(cobra_mode && webman_config->autob && cellFsStat(tempstr, &buf)==CELL_FS_SUCCEEDED)
-			do_delay=1;
-
+		if(cobra_mode && webman_config->autob)
+			strcpy(tempstr, (char *)webman_config->autoboot_path);
 		else
 		{
 			sprintf(tempstr, WMTMP "/last_game.txt");
@@ -2937,30 +2951,27 @@ static void handleclient(u64 conn_s_p)
 				if(cellFsOpen(tempstr, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 				{
 					u64 read_e = 0;
-					if(cellFsRead(fd, (void *)&tempstr, 512, &read_e)==CELL_FS_SUCCEEDED)
-					{
-						cellFsClose(fd);
-						tempstr[read_e]=0;
-						u8 retries1=0;
-						if(strlen(tempstr)>10 || strstr(tempstr, "/net") || strstr(tempstr, ".ntfs["))
-						{
-again1:
-							if(strstr(tempstr, "/dev_usb") && cellFsStat(tempstr, &buf)!=CELL_FS_SUCCEEDED)
-							{
-								sys_timer_sleep(1);
-								retries1++;
-								if(retries1<10) goto again1;
-							}
-							if(strstr(tempstr, "/net") || cellFsStat(tempstr, &buf)==CELL_FS_SUCCEEDED)
-								do_delay=1;
-							if(strstr(tempstr, ".ntfs[") && !webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
-								!webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7) do_delay=0;
-						}
-					}
-					else
-						cellFsClose(fd);
+					if(cellFsRead(fd, (void *)&tempstr, 512, &read_e) == CELL_FS_SUCCEEDED) tempstr[read_e]=0;
+					cellFsClose(fd);
 				}
 			}
+			else
+				tempstr[0]=0;
+		}
+
+		u8 retries1=0;
+		if(strlen(tempstr)>10 || strstr(tempstr, "/net") || strstr(tempstr, ".ntfs["))
+		{
+again1:
+			if(strstr(tempstr, "/dev_usb") && cellFsStat(tempstr, &buf)!=CELL_FS_SUCCEEDED)
+			{
+				sys_timer_sleep(1);
+				retries1++;
+				if(retries1<10) goto again1;
+			}
+			if(strstr(tempstr, "/net") || cellFsStat(tempstr, &buf)==CELL_FS_SUCCEEDED) do_delay=1;
+			else if(strstr(tempstr, ".ntfs[") && !webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
+												 !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7) do_delay=0;
 		}
 
 		if(do_delay)
@@ -2973,7 +2984,7 @@ again1:
 					sys_timer_sleep(20);
 				else
 					sys_timer_sleep(10);
-					*/
+				*/
 			}
 			else
 				if(strstr(tempstr, "/net") || strstr(tempstr, ".ntfs[")) sys_timer_sleep(10);
@@ -3775,40 +3786,36 @@ reconnect:
 #ifdef COBRA_ONLY
 		u8 do_delay=0;
 
-		sprintf(myxml, "/dev_hdd0/PS3ISO/AUTOBOOT.ISO");
-		if(cobra_mode && webman_config->autob && cellFsStat(myxml, &buf)==CELL_FS_SUCCEEDED)
-			do_delay=1;
-
+		if(cobra_mode && webman_config->autob)
+			strcpy(tempstr, (char *) webman_config->autoboot_path);
 		else
 		{
-			sprintf(myxml, WMTMP "/last_game.txt");
-			if(cobra_mode && webman_config->lastp && cellFsStat(myxml, &buf)==CELL_FS_SUCCEEDED)
+			sprintf(tempstr, WMTMP "/last_game.txt");
+			if(cobra_mode && webman_config->lastp && cellFsStat(tempstr, &buf)==CELL_FS_SUCCEEDED)
 			{
 				int fd=0;
-				if(cellFsOpen(myxml, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+				if(cellFsOpen(tempstr, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 				{
 					u64 read_e = 0;
-					if(cellFsRead(fd, (void *)myxml, 512, &read_e)==CELL_FS_SUCCEEDED)
-					{
-						cellFsClose(fd);
-						myxml[read_e]=0;
-						if(strlen(myxml)>10 || strstr(myxml, "/net") || strstr(myxml, ".ntfs["))
-						{
-							if(strstr(myxml, "/net") || cellFsStat(myxml, &buf)==CELL_FS_SUCCEEDED)
-							{
-								do_delay=1;
-								if(strstr(myxml, ".ntfs[") && !webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
-									!webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7) do_delay=0;
-								else
-								if(strstr(myxml, ".ntfs[") && !webman_config->delay) sys_timer_sleep(10);
-							}
-						}
-					}
+					if(cellFsRead(fd, (void *)tempstr, 512, &read_e)==CELL_FS_SUCCEEDED) tempstr[read_e]=0;
 					cellFsClose(fd);
 				}
 			}
+			else
+				tempstr[0]=0;
 		}
-		strcpy(tempstr, myxml);
+
+		if(strlen(tempstr)>10 || strstr(tempstr, "/net") || strstr(tempstr, ".ntfs["))
+		{
+			if(strstr(tempstr, "/net") || cellFsStat(tempstr, &buf)==CELL_FS_SUCCEEDED) do_delay=1;
+			else if(strstr(tempstr, ".ntfs["))
+			{
+                if(!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
+				   !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7) do_delay=0;
+				else if(!webman_config->delay) sys_timer_sleep(10);
+            }
+		}
+
 #endif
 		led(GREEN, ON);
 
@@ -4173,6 +4180,7 @@ again3:
 					if(strstr(param, "lastp")) webman_config->lastp=1;
 					if(strstr(param, "autob")) webman_config->autob=1;
 					if(strstr(param, "delay")) webman_config->delay=1;
+
 					if(strstr(param, "b=5"))   webman_config->bootd=5;
 					if(strstr(param, "b=9"))   webman_config->bootd=9;
 					if(strstr(param, "s=3"))   webman_config->boots=3;
@@ -4400,43 +4408,64 @@ again3:
 						char netp[7];
 						if(strstr(param, "neth0="))
 						{
-							for(u8 n=0;n<16;n++)
+							u8 n;
+							for(n=0;n<16;n++)
 							{
-								if(pos[n]!='&') {webman_config->neth0[n]=pos[n];webman_config->neth0[n+1]=0;}
+								if(pos[n]!='&') webman_config->neth0[n]=pos[n];
 								else break;
 							}
+							webman_config->neth0[n]=0;
 
 							pos=strstr(param, "netp0=") + 6;
 							if(pos!=NULL)
 							{
-								for(u8 n=0;n<6;n++)
+								for(n=0;n<6;n++)
 								{
-									if(pos[n]!='&') {netp[n]=pos[n]; netp[n+1]=0;}
+									if(pos[n]!='&') netp[n]=pos[n];
 									else break;
 								}
+								netp[n]=0;
 								webman_config->netp0=my_atoi(netp);
 							}
 						}
+
 						if(strstr(param, "netp1="))
 						{
+							u8 n;
 							pos=strstr(param, "neth1=") + 6;
-							for(u8 n=0;n<16;n++)
+							for(n=0;n<16;n++)
 							{
-								if(pos[n]!='&') {webman_config->neth1[n]=pos[n];webman_config->neth1[n+1]=0;}
+								if(pos[n]!='&') webman_config->neth1[n]=pos[n];
 								else break;
 							}
+							webman_config->neth1[n]=0;
 
 							pos=strstr(param, "netp1=") + 6;
 							if(pos!=NULL)
 							{
-								for(u8 n=0;n<6;n++)
+								for(n=0;n<6;n++)
 								{
-									if(pos[n]!='&') {netp[n]=pos[n]; netp[n+1]=0;}
+									if(pos[n]!='&') netp[n]=pos[n];
 									else break;
 								}
+								netp[n]=0;
 								webman_config->netp1=my_atoi(netp);
 							}
 						}
+
+						if(strstr(param, "autop="))
+						{
+							u8 n;
+							pos=strstr(param, "autop=") + 6;
+							for(n=0;n<255;n++)
+							{
+								if(pos[n]=='+') webman_config->autoboot_path[n]=' ';
+								else if(pos[n]!='&') webman_config->autoboot_path[n]=pos[n];
+								else break;
+							}
+							webman_config->autoboot_path[n]=0;
+						}
+						if(!strlen(webman_config->autoboot_path)) strcpy(webman_config->autoboot_path, AUTOBOOT_PATH);
 					}
 #endif
 				}
@@ -4662,8 +4691,14 @@ again3:
 								strcat(buffer, swap);
 								strcpy(templn, param+tlen);
 							}
-							sprintf(swap, "%s:</td><td></td><td></td></tr>", templn);
-							strcat(buffer, swap);
+							if(strcmp(param,"/") && strcmp(param,"/net0") && strcmp(param,"/net1"))
+							{
+								sprintf(swap, "<a href=\"/mount.ps3%s\">%s</a>", param, templn); strcat(buffer, swap);
+							}
+							else
+								strcat(buffer, param);
+
+                            strcat(buffer, ":</td><td></td><td></td></tr>");
 							tlen=0;
 
 #ifdef COBRA_ONLY
@@ -5087,8 +5122,8 @@ just_leave:
 					{
 						sprintf(templn, "<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
 										"<font face=\"Courier New\">"
-                                        "<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-                                        "<tr><td width=\"220\"><u>%s:</u><br>", STR_SCAN1); strcat(buffer, templn);
+										"<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
+										"<tr><td width=\"220\"><u>%s:</u><br>", STR_SCAN1); strcat(buffer, templn);
 
 						add_check_box("u0", "usb0", drives[1], NULL, (webman_config->usb0), buffer);
 						add_check_box("u1", "usb1", drives[2], NULL, (webman_config->usb1), buffer);
@@ -5099,7 +5134,7 @@ just_leave:
 
 						sprintf(templn, "<td nowrap><u>%s:</u><br>", STR_SCAN2); strcat(buffer, templn);
 
-						sprintf(templn, "<input name=\"p0\" type=\"checkbox\" value=\"pst\" %s/> PLAYSTATION\xC2\xAE\x33<br>", (!(webman_config->cmask & PS3))?(char*)"checked=\"checked\"" : (char*)" "); strcat(buffer, templn);
+						add_check_box("p0", "pst", "PLAYSTATION\xC2\xAE\x33"    , NULL     , !(webman_config->cmask & PS3), buffer);
 #ifdef COBRA_ONLY
 						add_check_box("p1", "ps2", "PLAYSTATION\xC2\xAE\x32"    , NULL     , !(webman_config->cmask & PS2), buffer);
 						add_check_box("p2", "ps1", "PLAYSTATION\xC2\xAE"        , NULL     , !(webman_config->cmask & PS1), buffer);
@@ -7647,6 +7682,7 @@ void reset_settings()
 	webman_config->vPSID2[0]=0;
 
 	webman_config->lang=0; //english
+	strcpy(webman_config->autoboot_path, AUTOBOOT_PATH);
 
 	int fdwm=0;
 	if(cellFsOpen(WMCONFIG, CELL_FS_O_RDONLY, &fdwm, NULL, 0) == CELL_FS_SUCCEEDED)
@@ -7660,6 +7696,8 @@ void reset_settings()
 	}
 	else
 		save_settings();
+
+	if(!strlen(webman_config->autoboot_path)) strcpy(webman_config->autoboot_path, AUTOBOOT_PATH);
 
 	if(webman_config->warn>1) webman_config->warn=0;
 	if(webman_config->minfan<MIN_FANSPEED) webman_config->minfan=MIN_FANSPEED;
@@ -7825,7 +7863,7 @@ relisten:
 			{
 				loading_html++;
 				#ifdef USE_DEBUG
-				ssend(debug_s, "*** Incomming connection... ");
+				ssend(debug_s, "*** Incoming connection... ");
 				#endif
 				sys_ppu_thread_t id;
 				sys_ppu_thread_create(&id, handleclient, (u64)conn_s, -0x1d8, 0x20000, 0, "wwwd");
