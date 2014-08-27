@@ -52,7 +52,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.21 MOD"						// webMAN version
+#define WM_VERSION			"1.30.22 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -2129,6 +2129,7 @@ void remove_cfw_syscalls()
 	u64 CEX=0x4345580000000000ULL;
 	u64 DEX=0x4445580000000000ULL;
 
+	if(peekq(0x80000000002ED860ULL)==CEX) {dex_mode=0; c_firmware=4.65f;}	else
 	if(peekq(0x80000000002ED850ULL)==CEX) {dex_mode=0; c_firmware=4.60f;}	else
 	if(peekq(0x80000000002EC5E0ULL)==CEX) {dex_mode=0; c_firmware=4.55f;}	else
 	if(peekq(0x80000000002E9D70ULL)==CEX) {dex_mode=0; c_firmware=4.53f;}	else
@@ -2151,10 +2152,10 @@ void remove_cfw_syscalls()
 	if(peekq(0x8000000000305410ULL)==DEX) {dex_mode=2; c_firmware=4.46f;}	else
 	if(peekq(0x8000000000309698ULL)==DEX) {dex_mode=2; c_firmware=4.50f;}	else
 	if(peekq(0x800000000030D6A8ULL)==DEX) {dex_mode=2; c_firmware=4.55f;}	else
-	if(peekq(0x80000000002ED860ULL)==CEX) {dex_mode=0; c_firmware=4.65f;}	else
 #endif
     c_firmware=0.00f;
 
+	if(c_firmware==4.65f && !dex_mode) syscall_table = SYSCALL_TABLE_465;	else
 	if(c_firmware==4.60f && !dex_mode) syscall_table = SYSCALL_TABLE_460;	else
 	if(c_firmware==4.55f && !dex_mode) syscall_table = SYSCALL_TABLE_455;	else
 	if(c_firmware==4.53f && !dex_mode) syscall_table = SYSCALL_TABLE_453;	else
@@ -2173,7 +2174,6 @@ void remove_cfw_syscalls()
     if(c_firmware==4.46f &&  dex_mode) syscall_table = SYSCALL_TABLE_446D;	else
 	if(c_firmware==4.50f &&  dex_mode) syscall_table = SYSCALL_TABLE_450D;	else
 	if(c_firmware==4.55f &&  dex_mode) syscall_table = SYSCALL_TABLE_455D;	else
-	if(c_firmware==4.65f && !dex_mode) syscall_table = SYSCALL_TABLE_465;	else
 #endif
 	syscall_table = find_syscall_table();
 	syscall_not_impl = peekq(syscall_table);
@@ -2861,7 +2861,7 @@ static void handleclient(u64 conn_s_p)
 				else
 				if((c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f) && !dex_mode) {
 					pokeq(0x8000000000474F34ULL  , newPSID[0]);
-                    pokeq(0x8000000000474F34ULL+8, newPSID[1]);
+					pokeq(0x8000000000474F34ULL+8, newPSID[1]);
 				}
 				else {
 					{system_call_1(872, (uint64_t) PSID);}
