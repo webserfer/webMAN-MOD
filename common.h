@@ -28,6 +28,7 @@
 #define HVSC_SYSCALL_ADDR_455		0x80000000001A7DA4ULL	// where above syscall is in lv2 4.55
 #define HVSC_SYSCALL_ADDR_455D		0x80000000001AD5E0ULL	// where above syscall is in lv2 4.55 DEX
 #define HVSC_SYSCALL_ADDR_460		0x80000000001A6A14ULL	// where above syscall is in lv2 4.60     <- peek( SYSCALL_TABLE_460 + HVSC_SYSCALL*8)
+#define HVSC_SYSCALL_ADDR_465		0x80000000001A6A1CULL	// where above syscall is in lv2 4.65     <- peek( SYSCALL_TABLE_460 + HVSC_SYSCALL*8)
 
 #define NEW_POKE_SYSCALL			813                  	// which syscall to overwrite with new poke
 #define NEW_POKE_SYSCALL_ADDR_341	0x80000000001BB93CULL	// where above syscall is in lv2 3.41
@@ -50,6 +51,7 @@
 #define NEW_POKE_SYSCALL_ADDR_455	0x80000000001A82CCULL	// where above syscall is in lv2 4.55
 #define NEW_POKE_SYSCALL_ADDR_455D	0x80000000001AD788ULL	// where above syscall is in lv2 4.55 DEX
 #define NEW_POKE_SYSCALL_ADDR_460	0x80000000001A6F3CULL	// where above syscall is in lv2 4.60     <- peek( SYSCALL_TABLE_460 + NEW_POKE_SYSCALL*8)
+#define NEW_POKE_SYSCALL_ADDR_465	0x80000000001A6F44ULL	// where above syscall is in lv2 4.65     <- peek( SYSCALL_TABLE_465 + NEW_POKE_SYSCALL*8)
 
 
 #define SYSCALL_TABLE_341			0x80000000002EB128ULL	// 3.41
@@ -72,6 +74,7 @@
 #define SYSCALL_TABLE_455			0x8000000000362680ULL	// 4.55
 #define SYSCALL_TABLE_455D			0x8000000000388480ULL	// 4.55 DEX
 #define SYSCALL_TABLE_460			0x8000000000363A18ULL	// 4.60
+#define SYSCALL_TABLE_465			0x8000000000363A18ULL	// 4.65
 
 #define SYSCALL_PTR(n)				( (SYSCALL_TABLE) + ( 8 * (n) ) )
 
@@ -84,6 +87,7 @@
 #define HV_START_OFFSET_430			0x370AA8				// 4.30 lv2 protection
 #define HV_START_OFFSET_440			0x370AA8				// 4.40 lv2 protection
 #define HV_START_OFFSET_460			0x377828				// 4.60 lv2 protection
+#define HV_START_OFFSET_465			0x377828				// 4.65 lv2 protection
 
 #define	HV_START_OFFSET2			0x16f000				// set lv2 access rights for sys_storage
 															// at address 0x16f3b8 (3.55)
@@ -102,6 +106,9 @@
 
 #define	HV_START_OFFSET2_460		0x186810				// set lv2 access rights for sys_storage
 															// at address 0x186810 (4.60)
+
+#define	HV_START_OFFSET2_465		0x186818				// set lv2 access rights for sys_storage
+															// at address 0x186818 (4.65)
 /*
 #define HTAB_BASE					0x800000000f000000ULL
 
