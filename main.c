@@ -34,6 +34,7 @@
 #include <time.h>
 #include <unistd.h>
 
+//#define ENGLISH_ONLY 1 // uncomment for english only version
 //#define USE_DEBUG 1
 //#define CCAPI 1		// uncomment for ccapi release
 #define COBRA_ONLY 1	// comment out for ccapi/non-cobra release
@@ -332,6 +333,147 @@ uint64_t IDPS[2] = {0,0};
 uint64_t PSID[2] = {0,0};
 int lang_pos, fh;
 
+#ifdef ENGLISH_ONLY
+
+#define STR_TRADBY	""
+
+#define STR_FILES	"Files"
+#define STR_GAMES	"Games"
+#define STR_SETUP	"Setup"
+#define STR_EJECT	"Eject"
+#define STR_INSERT	"Insert"
+#define STR_UNMOUNT	"Unmount"
+#define STR_COPY	"Copy Folder"
+#define STR_REFRESH	"Refresh"
+#define STR_SHUTDOWN	"Shutdown"
+#define STR_RESTART	"Restart"
+
+#define STR_BYTE	"b"
+#define STR_KILOBYTE	"KB"
+#define STR_MEGABYTE	"MB"
+#define STR_GIGABYTE	"GB"
+
+#define STR_COPYING	"Copying"
+#define STR_CPYDEST	"Destination"
+#define STR_CPYFINISH	"Copy Finished!"
+#define STR_CPYABORT	"Copy aborted!"
+
+#define STR_SCAN1	"Scan these devices"
+#define STR_SCAN2	"Scan for content"
+#define STR_PSPL	"Show PSP Launcher"
+#define STR_VIDLG	"Video"
+#define STR_LPG	"Load last-played game on startup"
+#define STR_AUTOB	"Check for /dev_hdd0/PS3ISO/AUTOBOOT.ISO on startup"
+#define STR_DELAYAB	"Delay loading of AUTOBOOT.ISO/last-game (Disc Auto-start)"
+#define STR_DEVBL	"Enable /dev_blind (writable /dev_flash) on startup"
+#define STR_CONTSCAN	"Disable content scan on startup"
+#define STR_USBPOLL	"Disable USB polling"
+#define STR_FTPSVC	"Disable FTP service"
+#define STR_COMBOS	"Disable all PAD shortcuts"
+#define STR_MMCOVERS	"Disable multiMAN covers"
+#define STR_ACCESS	"Disable remote access to FTP/WWW services"
+#define STR_NOSETUP	"Disable webMAN Setup entry in \"webMAN Games\""
+#define STR_NOSPOOF	"Disable firmware version spoofing"
+#define STR_NOGRP	"Disable grouping of content in \"webMAN Games\""
+#define STR_NOWMDN	"Disable startup notification of WebMAN on the XMB"
+#define STR_TITLEID	"Include the ID as part of the title of the game"
+#define STR_FANCTRL	"Enable dynamic fan control"
+#define STR_NOWARN	"Disable temperature warnings"
+#define STR_AUTOAT	"Auto at"
+#define STR_LOWEST	"Lowest"
+#define STR_FANSPEED	"fan speed"
+#define STR_MANUAL	"Manual"
+#define STR_PS2EMU	"PS2 Emulator"
+#define STR_LANGAMES	"Scan for LAN games/videos"
+#define STR_ANYUSB	"Wait for any USB device to be ready"
+#define STR_ADDUSB	"Wait additionally for each selected USB device to be ready"
+#define STR_SPOOFID	"Change idps and psid in lv2 memory at system startup"
+#define STR_DELCFWSYS	"Disable lv1&lv2 peek&poke syscalls (6,7,9,10,36) and delete history files at system startup"
+#define STR_MEMUSAGE	"Plugin memory usage"
+#define STR_PLANG	"Plugin language"
+#define STR_COMBOS2	"XMB/In-Game PAD SHORTCUTS"
+#define STR_FAILSAFE	"FAIL SAFE"
+#define STR_SHOWTEMP	"SHOW TEMP"
+#define STR_SHOWIDPS	"SHOW IDPS"
+#define STR_PREVGAME	"PREV GAME"
+#define STR_NEXTGAME	"NEXT GAME"
+#define STR_SHUTDOWN2	"SHUTDOWN "
+#define STR_RESTART2	"RESTART&nbsp; "
+#define STR_DELCFWSYS2	"DEL CFW SYSCALLS"
+#define STR_UNLOADWM	"UNLOAD WM"
+#define STR_FANCTRL2	"CTRL FAN"
+#define STR_FANCTRL4	"CTRL DYN FAN"
+#define STR_FANCTRL5	"CTRL MIN FAN"
+#define STR_UPDN	"&#8593;/&#8595;" //↑/↓
+#define STR_LFRG	"&#8592;/&#8594;" //←/→
+#define STR_SAVE	"Save"
+#define STR_SETTINGSUPD	"/restart.ps3\">here</a> to restart your PLAYSTATIONR3 system."
+#define STR_ERROR	"Error!"
+
+#define STR_MYGAMES	"webMAN Games"
+#define STR_LOADGAMES	"Load games with webMAN"
+
+#define STR_WMSETUP	"webMAN Setup"
+#define STR_WMSETUP2	"Setup webMAN options"
+
+#define STR_EJECTDISC	"Eject Disc"
+#define STR_UNMOUNTGAME	"Unmount current game"
+
+#define STR_WMSTART	"webMAN loaded!"
+#define STR_WMUNL	"webMAN unloaded!"
+#define STR_CFWSYSALRD	"CFW Syscalls already disabled"
+#define STR_CFWSYSRIP	"Removal History files & CFW Syscalls in progress..."
+#define STR_RMVCFWSYS	"History files & CFW Syscalls deleted OK!"
+#define STR_RMVCFWSYSF	"Failed to remove CFW Syscalls"
+
+#define STR_RMVWMCFG	"webMAN config reset in progress..."
+#define STR_RMVWMCFGOK	"Done! Restart within 3 seconds"
+
+#define STR_PS3FORMAT	"PS3 format games"
+#define STR_PS2FORMAT	"PS2 format games"
+#define STR_PS1FORMAT	"PSOne format games"
+#define STR_PSPFORMAT	"PSP\xE2\x84\xA2 format games"
+
+#define STR_VIDFORMAT	"Blu-ray\xE2\x84\xA2 and DVD"
+#define STR_VIDEO	"Video content"
+
+#define STR_LAUNCHPSP	"Launch PSP ISO mounted through webMAN or mmCM"
+
+#define STR_GAMEUM	"Game unmounted."
+
+#define STR_EJECTED	"Disc ejected."
+#define STR_LOADED	"Disc inserted."
+
+#define STR_GAMETOM	"Game to mount"
+#define STR_GAMELOADED	"/mount.ps3/unmount\">here</a> to unmount the game."
+#define STR_PSPLOADED	"/mount.ps3/unmount\">here</a> to unmount the game."
+#define STR_LOADED2	"loaded   "
+
+#define STR_MOVIETOM	"Movie to mount"
+#define STR_MOVIELOADED	"/mount.ps3/unmount\">here</a> to unmount the movie."
+
+#define STR_XMLRF	"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system now."
+
+#define STR_STORAGE	"System storage"
+#define STR_MEMORY	"Memory available"
+#define STR_MBFREE	"MB free"
+#define STR_KBFREE	"KB free"
+
+#define STR_FANCTRL3	"Fan control:"
+#define STR_ENABLED	"Enabled"
+#define STR_DISABLED	"Disabled"
+
+#define STR_FANCH0	"Fan setting changed:"
+#define STR_FANCH1	"MAX TEMP: "
+#define STR_FANCH2	"FAN SPEED: "
+#define STR_FANCH3	"MIN FAN SPEED: "
+
+#define STR_OVERHEAT	"System overheat warning!"
+#define STR_OVERHEAT2	"  OVERHEAT DANGER!\r\nFAN SPEED INCREASED!"
+
+#define STR_NOTFOUND	"Not found!"
+
+#else
 char STR_TRADBY[150]		= "";
 
 char STR_FILES[30]			= "Files";
@@ -471,6 +613,7 @@ char STR_OVERHEAT2[100]		= "  OVERHEAT DANGER!\r\nFAN SPEED INCREASED!";
 char STR_NOTFOUND[50]		= "Not found!";
 
 char COVERS_PATH[100]		= "";
+#endif
 
 int wwwd_start(uint64_t arg);
 int wwwd_stop(void);
@@ -1852,6 +1995,7 @@ uint64_t peek_lv1(uint64_t addr)
 	return (uint64_t) p1;
 }
 
+#ifndef ENGLISH_ONLY
 bool language(const char *file_str, char *default_str)
 {
 	uint64_t siz = 0;
@@ -2065,6 +2209,7 @@ void update_language()
 
 	if(fh) {cellFsClose(fh); lang_pos=fh=0;}
 }
+#endif
 
 uint64_t convertH(char *val)
 {
@@ -2546,11 +2691,13 @@ static void get_cover(char *icon, char *titleid)
 {
 	struct CellFsStat s;
 
+#ifndef ENGLISH_ONLY
 	if(covers_exist[0])
 	{
         sprintf(icon, "%s/%s.JPG", COVERS_PATH, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
         sprintf(icon, "%s/%s.PNG", COVERS_PATH, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 	}
+#endif
 
 	if(covers_exist[1])
 	{
@@ -2782,7 +2929,10 @@ static void handleclient(u64 conn_s_p)
 
 	if(conn_s_p==0xC0FEBABE || conn_s_p==0xC0FEBAB0)
 	{
+
+#ifndef ENGLISH_ONLY
 		update_language();
+#endif
 
 		if(conn_s_p==0xC0FEBABE && !(webman_config->wmdn) && strlen(STR_WMSTART)>0)
 		{
@@ -2794,7 +2944,9 @@ static void handleclient(u64 conn_s_p)
 		//reset_settings(webman_config);
 
 		//identify covers folders to be scanned
+#ifndef ENGLISH_ONLY
 													covers_exist[0]=(cellFsStat(COVERS_PATH, &buf)==CELL_FS_SUCCEEDED);
+#endif
 		sprintf(templn, "%s/covers", MM_ROOT_STD) ; covers_exist[1]=(cellFsStat(templn, &buf)==CELL_FS_SUCCEEDED);
 		sprintf(templn, "%s/covers", MM_ROOT_STL) ; covers_exist[2]=(cellFsStat(templn, &buf)==CELL_FS_SUCCEEDED);
 		sprintf(templn, "%s/covers", MM_ROOT_SSTL); covers_exist[3]=(cellFsStat(templn, &buf)==CELL_FS_SUCCEEDED);
@@ -4373,6 +4525,7 @@ again3:
 
 					webman_config->lang=0;
 
+#ifndef ENGLISH_ONLY
 					// Europe
 					if(strstr(param, "l=0"))   webman_config->lang=0;  // English
 					if(strstr(param, "l=1"))   webman_config->lang=1;  // French
@@ -4400,7 +4553,7 @@ again3:
 					if(strstr(param, "l=99"))  webman_config->lang=99;	// Unknown LANG_XX.TXT
 
 					update_language();
-
+#endif
 					webman_config->neth0[0]=0;
 					webman_config->neth1[0]=0;
 #ifdef COBRA_ONLY
@@ -5226,6 +5379,7 @@ just_leave:
 						add_radio_button("fp", "1", "fo_1", "Min (320KB)"     , ",  ", (webman_config->foot==1), buffer);
 						add_radio_button("fp", "2", "fo_2", "Max (1280KB)"    , NULL , (webman_config->foot==2), buffer);
 
+#ifndef ENGLISH_ONLY
 						sprintf(templn, "<br> %s: <select name=\"l\">", STR_PLANG); strcat(buffer, templn);
 
 						add_option_item("0" , "English"                                                 , (webman_config->lang==0) , buffer);
@@ -5250,7 +5404,9 @@ just_leave:
 						add_option_item("18", "\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E"					, (webman_config->lang==18), buffer);
 						add_option_item("99", "Unknown"													, (webman_config->lang==99), buffer);
 
-						sprintf(templn, "</select><hr color=\"#0099FF\"/><b><u> %s :</u></b><br><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap>", STR_COMBOS2); strcat(buffer, templn);
+						strcat(buffer, "</select>");
+#endif
+						sprintf(templn, "<hr color=\"#0099FF\"/><b><u> %s :</u></b><br><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap>", STR_COMBOS2); strcat(buffer, templn);
 
 						add_check_box("c0" , "failsaf", STR_FAILSAFE,   " : <b>SELECT+L3+L2+R2</b><br>"   , !(webman_config->combo & FAIL_SAFE), buffer);
 						add_check_box("c1" , "showtem", STR_SHOWTEMP,   " : <b>SELECT+R3</b><br>"         , !(webman_config->combo & SHOW_TEMP), buffer);

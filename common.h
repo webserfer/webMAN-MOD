@@ -131,6 +131,7 @@
 #define HTAB_LV2_START_455			(0x01000000ULL)
 #define HTAB_LV2_START_455D			(0x08000000ULL)
 #define HTAB_LV2_START_460			(0x01000000ULL)
+#define HTAB_LV2_START_465			(0x01000000ULL)
 */
 #define MAP_BASE (0x80000000007FAE00ULL)		// lv2 memory area to store path redirections table
 #define	MAP_ADDR (0xE8)							// address in lv2 to store MAP_BASE address (0x0000 ---> 0xFFFF)
