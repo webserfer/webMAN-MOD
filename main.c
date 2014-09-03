@@ -407,7 +407,7 @@ int lang_pos, fh;
 #define STR_UPDN	"&#8593;/&#8595;" //↑/↓
 #define STR_LFRG	"&#8592;/&#8594;" //←/→
 #define STR_SAVE	"Save"
-#define STR_SETTINGSUPD	"/restart.ps3\">here</a> to restart your PLAYSTATIONR3 system."
+#define STR_SETTINGSUPD	"Settings updated.<br><br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATIONR3 system."
 #define STR_ERROR	"Error!"
 
 #define STR_MYGAMES	"webMAN Games"
@@ -445,14 +445,14 @@ int lang_pos, fh;
 #define STR_LOADED	"Disc inserted."
 
 #define STR_GAMETOM	"Game to mount"
-#define STR_GAMELOADED	"/mount.ps3/unmount\">here</a> to unmount the game."
-#define STR_PSPLOADED	"/mount.ps3/unmount\">here</a> to unmount the game."
+#define STR_GAMELOADED	"Game loaded successfully. Start the game from the disc icon<br>or from <b>/app_home</b>&nbsp;XMB entry.<hr/>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game."
+#define STR_PSPLOADED	"Game loaded successfully. Start the game using <b>PSP Launcher</b>.<hr/>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game."
 #define STR_LOADED2	"loaded   "
 
 #define STR_MOVIETOM	"Movie to mount"
-#define STR_MOVIELOADED	"/mount.ps3/unmount\">here</a> to unmount the movie."
+#define STR_MOVIELOADED	"Movie loaded successfully. Start the movie from the disc icon<br>under the Video column.<hr/>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the movie."
 
-#define STR_XMLRF	"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system now."
+#define STR_XMLRF	"Game list refreshed (<a href=\"/dev_hdd0/xmlhost/game_plugin/mygames.xml\">mygames.xml</a>).<br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system now."
 
 #define STR_STORAGE	"System storage"
 #define STR_MEMORY	"Memory available"
