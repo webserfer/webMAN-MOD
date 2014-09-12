@@ -86,8 +86,10 @@
 #define HV_START_OFFSET_421			0x370A28				// 4.21 lv2 protection
 #define HV_START_OFFSET_430			0x370AA8				// 4.30 lv2 protection
 #define HV_START_OFFSET_440			0x370AA8				// 4.40 lv2 protection
-#define HV_START_OFFSET_460			0x377828				// 4.60 lv2 protection
-#define HV_START_OFFSET_465			0x377828				// 4.65 lv2 protection
+#define HV_START_OFFSET_450			0x370AA8				// 4.50 lv2 protection
+#define HV_START_OFFSET_455			0x370F28				// 4.55 lv2 protection
+#define HV_START_OFFSET_460			0x370F28				// 4.60 lv2 protection
+#define HV_START_OFFSET_465			0x370F28				// 4.65 lv2 protection
 
 #define	HV_START_OFFSET2			0x16f000				// set lv2 access rights for sys_storage
 															// at address 0x16f3b8 (3.55)

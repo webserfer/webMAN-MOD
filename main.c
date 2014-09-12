@@ -40,8 +40,8 @@
 //#define CCAPI 1		// uncomment for ccapi release
 #define COBRA_ONLY 1	// comment out for ccapi/non-cobra release
 
-//#define REX_ONLY 1			// shortcuts for REBUG REX CFWs / comment out for usual CFW
-//#define REX_COBRA_ONLY 1	// shortcuts for REX COBRA CFWs / comment out for usual COBRA CFW
+#define REX_ONLY 1			// shortcuts for REBUG REX CFWs / comment out for usual CFW
+#define REX_COBRA_ONLY 1	// shortcuts for REX COBRA CFWs / comment out for usual COBRA CFW
 
 #include "types.h"
 #include "common.h"
@@ -57,7 +57,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.22 MOD"						// webMAN version
+#define WM_VERSION			"1.30.23 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -8162,31 +8162,30 @@ static void wwwd_thread(uint64_t arg)
     dex_mode=0;
 	c_firmware=0.00f;
 
-			if(peekq(0x80000000002ED850ULL)==CEX) {c_firmware=4.60f;}
-	else	if(peekq(0x80000000002EC5E0ULL)==CEX) {c_firmware=4.55f;}
-	else	if(peekq(0x80000000002E9D70ULL)==CEX) {c_firmware=4.53f;}
-    else	if(peekq(0x800000000030AEA8ULL)==DEX) {c_firmware=4.53f; dex_mode=2;}
-	else	if(peekq(0x80000000002E9BE0ULL)==CEX) {c_firmware=4.50f;}
-	else	if(peekq(0x80000000002EA9B8ULL)==CEX) {c_firmware=4.46f;}
-	else	if(peekq(0x8000000000305410ULL)==DEX) {c_firmware=4.46f; dex_mode=2;}
-	else	if(peekq(0x80000000002D83D0ULL)==CEX) {c_firmware=3.55f;}
+	if(peekq(0x80000000002ED860ULL)==CEX) {c_firmware=4.65f;}				else
+	if(peekq(0x80000000002ED850ULL)==CEX) {c_firmware=4.60f;}				else
+	if(peekq(0x80000000002EC5E0ULL)==CEX) {c_firmware=4.55f;}				else
+	if(peekq(0x80000000002E9D70ULL)==CEX) {c_firmware=4.53f;}				else
+	if(peekq(0x800000000030AEA8ULL)==DEX) {c_firmware=4.53f; dex_mode=2;}	else
+	if(peekq(0x80000000002E9BE0ULL)==CEX) {c_firmware=4.50f;}				else
+	if(peekq(0x80000000002EA9B8ULL)==CEX) {c_firmware=4.46f;}				else
+	if(peekq(0x8000000000305410ULL)==DEX) {c_firmware=4.46f; dex_mode=2;}	else
+	if(peekq(0x80000000002E8610ULL)==CEX) {c_firmware=4.21f;}				else
+	if(peekq(0x8000000000302D88ULL)==DEX) {c_firmware=4.21f; dex_mode=2;}	else
+	if(peekq(0x80000000002D83D0ULL)==CEX) {c_firmware=3.55f;}				else
 #ifndef COBRA_ONLY
-	else	if(peekq(0x80000000002ED860ULL)==CEX) {c_firmware=4.65f;}
-	else	if(peekq(0x800000000030D6A8ULL)==DEX) {c_firmware=4.55f; dex_mode=2;}
-	else	if(peekq(0x8000000000309698ULL)==DEX) {c_firmware=4.50f; dex_mode=2;}
-	else	if(peekq(0x8000000000304EF0ULL)==DEX) {c_firmware=4.41f; dex_mode=2;}
-	else	if(peekq(0x80000000002EA498ULL)==CEX) {c_firmware=4.41f;}
-	else	if(peekq(0x80000000002EA488ULL)==CEX) {c_firmware=4.40f;}
-	else	if(peekq(0x80000000002E9F18ULL)==CEX) {c_firmware=4.31f;}
-	else	if(peekq(0x8000000000304630ULL)==DEX) {c_firmware=4.30f; dex_mode=2;}
-	else	if(peekq(0x80000000002E9F08ULL)==CEX) {c_firmware=4.30f;}
-	else	if(peekq(0x80000000002E8610ULL)==CEX) {c_firmware=4.21f;}
-	else	if(peekq(0x8000000000302D88ULL)==DEX) {c_firmware=4.21f; dex_mode=2;}
-	else	if(peekq(0x80000000002EFE20ULL)==DEX) {c_firmware=3.55f; dex_mode=2;}
-	else	if(peekq(0x80000000002CFF98ULL)==CEX) {c_firmware=3.41f;}
-	else	if(peekq(0x80000000002E79C8ULL)==DEX) {c_firmware=3.41f; dex_mode=2;}
+	if(peekq(0x800000000030D6A8ULL)==DEX) {c_firmware=4.55f; dex_mode=2;}	else
+	if(peekq(0x8000000000309698ULL)==DEX) {c_firmware=4.50f; dex_mode=2;}	else
+	if(peekq(0x8000000000304EF0ULL)==DEX) {c_firmware=4.41f; dex_mode=2;}	else
+	if(peekq(0x80000000002EA498ULL)==CEX) {c_firmware=4.41f;}				else
+	if(peekq(0x80000000002EA488ULL)==CEX) {c_firmware=4.40f;}				else
+	if(peekq(0x80000000002E9F18ULL)==CEX) {c_firmware=4.31f;}				else
+	if(peekq(0x8000000000304630ULL)==DEX) {c_firmware=4.30f; dex_mode=2;}	else
+	if(peekq(0x80000000002E9F08ULL)==CEX) {c_firmware=4.30f;}				else
+	if(peekq(0x80000000002EFE20ULL)==DEX) {c_firmware=3.55f; dex_mode=2;}	else
+	if(peekq(0x80000000002CFF98ULL)==CEX) {c_firmware=3.41f;}				else
+	if(peekq(0x80000000002E79C8ULL)==DEX) {c_firmware=3.41f; dex_mode=2;}
 #endif
-
 
 #ifdef COBRA_ONLY
 	cobra_lib_init();
@@ -8979,21 +8978,21 @@ patch:
 		else
 		if( (c_firmware==4.30f || c_firmware==4.31f ||
 			 c_firmware==4.40f || c_firmware==4.41f || c_firmware==4.46f ||
-			 c_firmware==4.50f || c_firmware==4.53f || c_firmware==4.55f) )
+			 c_firmware==4.50f || c_firmware==4.53f) )
 		{
 			poke_lv1(HV_START_OFFSET_430 +  0, 0x0000000000000001ULL);
 			poke_lv1(HV_START_OFFSET_430 +  8, 0xe0d251b556c59f05ULL);
 			poke_lv1(HV_START_OFFSET_430 + 16, 0xc232fcad552c80d7ULL);
 			poke_lv1(HV_START_OFFSET_430 + 24, 0x65140cd200000000ULL);
 		}
-        //else
-		//if(c_firmware==4.60f)
-		//{
-		//	poke_lv1(HV_START_OFFSET_460 +  0, 0x0000000000000001ULL);
-		//	poke_lv1(HV_START_OFFSET_460 +  8, 0xe0d251b556c59f05ULL);
-		//	poke_lv1(HV_START_OFFSET_460 + 16, 0xc232fcad552c80d7ULL);
-		//	poke_lv1(HV_START_OFFSET_460 + 24, 0x65140cd200000000ULL);
-		//}
+        else
+		if(c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f)
+		{
+			poke_lv1(HV_START_OFFSET_460 +  0, 0x0000000000000001ULL);
+			poke_lv1(HV_START_OFFSET_460 +  8, 0xe0d251b556c59f05ULL);
+			poke_lv1(HV_START_OFFSET_460 + 16, 0xc232fcad552c80d7ULL);
+			poke_lv1(HV_START_OFFSET_460 + 24, 0x65140cd200000000ULL);
+		}
 
 		if(do_eject) eject_insert(1, 1);
 
