@@ -39,9 +39,7 @@
 
 //#define CCAPI 1		// uncomment for ccapi release
 #define COBRA_ONLY 1	// comment out for ccapi/non-cobra release
-
 //#define REX_ONLY 1			// shortcuts for REBUG REX CFWs / comment out for usual CFW
-//#define REX_COBRA_ONLY 1	// shortcuts for REX COBRA CFWs / comment out for usual COBRA CFW
 
 #include "types.h"
 #include "common.h"
@@ -57,7 +55,7 @@ SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
 
-#define WM_VERSION			"1.30.23 MOD"						// webMAN version
+#define WM_VERSION			"1.30.24 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -293,10 +291,9 @@ typedef struct
 #define DISABLESH (1<<9)
 #define DISABLEFC (1<<10)
 #define MINDYNFAN (1<<11)
-#ifdef REX_ONLY
-#ifdef REX_COBRA_ONLY
 #define DISACOBRA (1<<12)
-#endif
+
+#ifdef REX_ONLY
 #define REBUGMODE (1<<13)
 #define NORMAMODE (1<<14)
 #define DEBUGMENU (1<<15)
@@ -418,10 +415,10 @@ int lang_pos, fh;
 #define STR_FANCTRL5	"CTRL MIN FAN"
 #define STR_UPDN	"&#8593;/&#8595;" //↑/↓
 #define STR_LFRG	"&#8592;/&#8594;" //←/→
-#ifdef REX_ONLY
-#ifdef REX_COBRA_ONLY
+#ifdef COBRA_ONLY
 #define STR_DISCOBRA	"COBRA TOGGLE"
 #endif
+#ifdef REX_ONLY
 #define STR_RBGMODE	"RBG MODE TOGGLE"
 #define STR_RBGNORM	"NORM MODE TOGGLE"
 #define STR_RBGMENU 	"MENU TOGGLE"
@@ -565,10 +562,10 @@ char STR_FANCTRL4[100]		= "CTRL DYN FAN";
 char STR_FANCTRL5[100]		= "CTRL MIN FAN";
 char STR_UPDN[20]			= "&#8593;/&#8595;"; //↑/↓
 char STR_LFRG[20]			= "&#8592;/&#8594;"; //←/→
-#ifdef REX_ONLY
-#ifdef REX_COBRA_ONLY
+#ifdef COBRA_ONLY
 char STR_DISCOBRA[100]		= "COBRA TOGGLE";
 #endif
+#ifdef REX_ONLY
 char STR_RBGMODE[100]		= "RBG MODE TOGGLE";
 char STR_RBGNORM[100]		= "NORM MODE TOGGLE";
 char STR_RBGMENU[100] 		= "MENU TOGGLE";
@@ -2165,10 +2162,10 @@ void update_language()
 		language("STR_FANCTRL5", STR_FANCTRL5);
 		language("STR_UPDN", STR_UPDN);
 		language("STR_LFRG", STR_LFRG);
-#ifdef REX_ONLY
-#ifdef REX_COBRA_ONLY
+#ifdef COBRA_ONLY
 		language("STR_DISCOBRA", STR_DISCOBRA);
 #endif
+#ifdef REX_ONLY
 		language("STR_RBGMODE", STR_RBGMODE);
 		language("STR_RBGNORM", STR_RBGNORM);
 		language("STR_RBGMENU", STR_RBGMENU);
@@ -4416,10 +4413,10 @@ again3:
 					if(!strstr(param, "dsbcfws")) webman_config->combo|=DISABLESH;
 					if(!strstr(param, "dsbcfan")) webman_config->combo|=DISABLEFC;
 					if(!strstr(param, "mincfan")) webman_config->combo|=MINDYNFAN;
-#ifdef REX_ONLY
-#ifdef REX_COBRA_ONLY
+#ifdef COBRA_ONLY
 					if(!strstr(param, "dsbcobr")) webman_config->combo|=DISACOBRA;
 #endif
+#ifdef REX_ONLY
 					if(!strstr(param, "rbgmode")) webman_config->combo|=REBUGMODE;
 					if(!strstr(param, "rbgnorm")) webman_config->combo|=NORMAMODE;
 					if(!strstr(param, "rbgmenu")) webman_config->combo|=DEBUGMENU;
@@ -5452,7 +5449,7 @@ just_leave:
 
 						strcat(buffer, "</select>");
 #endif
-						sprintf(templn, "<hr color=\"#0099FF\"/><b><u> %s :</u></b><br><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap>", STR_COMBOS2); strcat(buffer, templn);
+						sprintf(templn, "<hr color=\"#0099FF\"/><b><u> %s :</u></b><br><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap valign=top>", STR_COMBOS2); strcat(buffer, templn);
 
 						add_check_box("c0" , "failsaf", STR_FAILSAFE,   " : <b>SELECT+L3+L2+R2</b><br>"   , !(webman_config->combo & FAIL_SAFE), buffer);
 						add_check_box("c1" , "showtem", STR_SHOWTEMP,   " : <b>SELECT+R3</b><br>"         , !(webman_config->combo & SHOW_TEMP), buffer);
@@ -5472,16 +5469,16 @@ just_leave:
 						add_check_box("c9" , "manualf", STR_FANCTRL2,   " : <b>SELECT+"                   , !(webman_config->combo & MANUALFAN), buffer); sprintf(templn, "%s</b><br>", STR_UPDN); strcat(buffer, templn);
 						add_check_box("c10", "mincfan", STR_FANCTRL5,   " : <b>SELECT+"                   , !(webman_config->combo & MINDYNFAN), buffer); sprintf(templn, "%s</b><br>", STR_LFRG); strcat(buffer, templn);
 						add_check_box("c11", "dsbcfws", STR_DELCFWSYS2, " : <b>R2+&#8710;</b><br>"        , !(webman_config->combo & DISABLESH), buffer);
-#ifdef REX_ONLY
-#ifdef REX_COBRA_ONLY
+#ifdef COBRA_ONLY
 						add_check_box("c12", "dsbcobr", STR_DISCOBRA,	" : <b>L3+L2+&#8710;</b><br>"     , !(webman_config->combo & DISACOBRA), buffer);
 #endif
+#ifdef REX_ONLY
 						add_check_box("c13", "rbgmode", STR_RBGMODE, 	" : <b>L3+L2+&#11787;</b><br>"    , !(webman_config->combo & REBUGMODE), buffer);
 						add_check_box("c14", "rbgnorm", STR_RBGNORM, 	" : <b>L3+L2+O</b><br>"           , !(webman_config->combo & NORMAMODE), buffer);
-						add_check_box("c15", "rbgmenu", STR_RBGMENU, 	" : <b>L3+L2+X</b></td></tr></table>",!(webman_config->combo & DEBUGMENU), buffer);
+						add_check_box("c15", "rbgmenu", STR_RBGMENU, 	" : <b>L3+L2+X</b>",!(webman_config->combo & DEBUGMENU), buffer);
 #endif
 
-						sprintf(templn, "<hr color=\"#FF0000\"/><input name=\"save\" type=\"submit\" value=\" %s \"/></form>", STR_SAVE); strcat(buffer, templn);
+						sprintf(templn, "</td></tr></table><hr color=\"#FF0000\"/><input name=\"save\" type=\"submit\" value=\" %s \"/></form>", STR_SAVE); strcat(buffer, templn);
 						strcat(buffer, "<hr color=\"#FF0000\"/><a href=\"http://www.deanbg.com/prepNTFS.pkg\">prepNTFS - Prepare NTFS drives for webMAN access</a><br>"
 									   "<a href=\"http://store.brewology.com/ahomebrew.php?brewid=257\">webMAN-MOD - Latest version of webMAN-MOD on Brewology</a><br>");
 
@@ -7165,6 +7162,17 @@ static uint64_t peek_chunk(uint64_t start, uint64_t size, uint8_t* buf) // read 
 	show_msg((char*)"Memory dump completed!");
 */
 
+void enable_dev_blind(char *msg)
+{
+	struct CellFsStat s;
+
+	if(cellFsStat("/dev_blind", &s)!=CELL_FS_SUCCEEDED)
+	{system_call_8(837, (u64)(char*)"CELL_FS_IOS:BUILTIN_FLSH1", (u64)(char*)"CELL_FS_FAT", (u64)(char*)"/dev_blind", 0, 0, 0, 0, 0);}
+
+	show_msg((char*) msg);
+	sys_timer_sleep(2);
+}
+
 static void poll_thread(uint64_t poll)
 {
 	u8 to=0;
@@ -7283,18 +7291,27 @@ static void poll_thread(uint64_t poll)
 		}
 
 /*
-FAIL SAFE : SELECT+L3+L2+R2
-RESET SAFE: SELECT+R3+L2+R2
-SHOW TEMP : SELECT+R3
-PREV GAME : SELECT+L1
-NEXT GAME : SELECT+R1
-SHUTDOWN  : L3+R2+X
-RESTART   : L3+R2+O
-FAN CNTRL : L3+R2+START
-UNLOAD WM : L3+R2+R3
-SYSCALLS  : R2+∆
-SHOW IDPS : R2+O
+FAIL SAFE    : SELECT+L3+L2+R2
+RESET SAFE   : SELECT+R3+L2+R2
+SHOW TEMP    : SELECT+R3
+PREV GAME    : SELECT+L1
+NEXT GAME    : SELECT+R1
+SHUTDOWN     : L3+R2+X
+RESTART      : L3+R2+O
+FAN CNTRL    : L3+R2+START
+UNLOAD WM    : L3+R2+R3
+SYSCALLS     : R2+∆
+SHOW IDPS    : R2+O
+COBRA TOGGLE : L3+L2+∆
+
+SWITCH PS2EMU       : SELECT+L2+R2
+REBUG  Mode Switcher: L3+L2+🔳
+Normal Mode Switcher: L3+L2+O
+DEBUG Menu Switcher : L3+L2+X
 */
+		struct CellFsStat s;
+		bool reboot = false;
+
 		for(u8 n=0;n<10;n++)
 		{
 			if(!webman_config->nopad)
@@ -7343,10 +7360,7 @@ SHOW IDPS : R2+O
 							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2) // SELECT+L2+R2
 							&& (c_firmware==4.53f || c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f) )
 						{
-								struct CellFsStat s;
-								{system_call_8(837, (u64)(char*)"CELL_FS_IOS:BUILTIN_FLSH1", (u64)(char*)"CELL_FS_FAT", (u64)(char*)"/dev_blind", 0, 0, 0, 0, 0);}
-								show_msg((char*)"Swapping ps2emu activated!");
-								sys_timer_sleep(2);
+								enable_dev_blind("Swapping ps2emu activated!");
 
 								if(cellFsStat((char*)"/dev_blind/ps2emu/ps2_netemu.self.sp", &s)==CELL_FS_SUCCEEDED)
 								{
@@ -7374,14 +7388,8 @@ SHOW IDPS : R2+O
 									cellFsRename("/dev_blind/ps2emu/ps2_emu.self", "/dev_blind/ps2emu/ps2_emu.self.sp");
 									cellFsRename("/dev_blind/ps2emu/ps2_emu.tmp", "/dev_blind/ps2emu/ps2_emu.self");
                                 }
-									sys_timer_sleep(2);
-									show_msg((char*)"Swapping is done! Reboot now");
-									sys_timer_sleep(2);
-									{system_call_3(838, (u64)(char*)"/dev_blind", 0, 1);}
-									cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
-									working=0;
-									{system_call_4(379,0x200,0,0,0);}
-									sys_ppu_thread_exit(0);
+
+								reboot=true;
 						}
 #endif
 						else
@@ -7654,89 +7662,72 @@ SHOW IDPS : R2+O
 							sys_timer_sleep(2);
 						}
 					}
-#ifdef REX_ONLY
-#ifdef REX_COBRA_ONLY
 					else
 					if((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_L3) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2))
 					{
-#ifdef REX_COBRA_ONLY
+#ifdef COBRA_ONLY
 						if(!(webman_config->combo & DISACOBRA)
 							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_TRIANGLE))
-						{ // R3+L3+↑ COBRA Toggle
-							show_msg((char*)"COBRA Toggle activated!");
-							sys_timer_sleep(3);
-							struct CellFsStat s;
-                            bool reboot = false;
-							{system_call_3(838, (u64)(char*)"/dev_blind", 0, 1);}
-							sys_timer_sleep(1);
-							{system_call_8(837, (u64)(char*)"CELL_FS_IOS:BUILTIN_FLSH1", (u64)(char*)"CELL_FS_FAT", (u64)(char*)"/dev_rebug", 0, 0, 0, 0, 0);}
-							sys_timer_sleep(1);
-							if( (cellFsStat((char*)"/dev_flash/rebug/cobra/stage2.cex", &s)==CELL_FS_SUCCEEDED) &&
-								(cellFsStat((char*)"/dev_flash/rebug/cobra/stage2.dex", &s)==CELL_FS_SUCCEEDED))
+						{ // L3+L2+∆ COBRA Toggle
+							enable_dev_blind("COBRA Toggle activated!");
+#ifdef REX_ONLY
+							if( (cellFsStat((char*)"/dev_blind/rebug/cobra/stage2.cex", &s)==CELL_FS_SUCCEEDED) &&
+								(cellFsStat((char*)"/dev_blind/rebug/cobra/stage2.dex", &s)==CELL_FS_SUCCEEDED))
 							{
 								show_msg((char*)"REBUG COBRA active!\r\nDeactivating COBRA...");
 
-								cellFsRename("/dev_rebug/rebug/cobra/stage2.cex", "/dev_rebug/rebug/cobra/stage2.cex.bak");
-								cellFsRename("/dev_rebug/rebug/cobra/stage2.dex", "/dev_rebug/rebug/cobra/stage2.dex.bak");
+								cellFsRename("/dev_blind/rebug/cobra/stage2.cex", "/dev_blind/rebug/cobra/stage2.cex.bak");
+								cellFsRename("/dev_blind/rebug/cobra/stage2.dex", "/dev_blind/rebug/cobra/stage2.dex.bak");
 								reboot=true;
 							}
-							else if((cellFsStat((char*)"/dev_flash/rebug/cobra/stage2.cex.bak", &s)==CELL_FS_SUCCEEDED) &&
-									(cellFsStat((char*)"/dev_flash/rebug/cobra/stage2.dex.bak", &s)==CELL_FS_SUCCEEDED))
+							else if((cellFsStat((char*)"/dev_blind/rebug/cobra/stage2.cex.bak", &s)==CELL_FS_SUCCEEDED) &&
+									(cellFsStat((char*)"/dev_blind/rebug/cobra/stage2.dex.bak", &s)==CELL_FS_SUCCEEDED))
 							{
 								show_msg((char*)"REBUG COBRA inactive!\r\nActivating COBRA...");
 
-								cellFsRename("/dev_rebug/rebug/cobra/stage2.cex.bak", "/dev_rebug/rebug/cobra/stage2.cex");
-								cellFsRename("/dev_rebug/rebug/cobra/stage2.dex.bak", "/dev_rebug/rebug/cobra/stage2.dex");
+								cellFsRename("/dev_blind/rebug/cobra/stage2.cex.bak", "/dev_blind/rebug/cobra/stage2.cex");
+								cellFsRename("/dev_blind/rebug/cobra/stage2.dex.bak", "/dev_blind/rebug/cobra/stage2.dex");
 								reboot=true;
 							}
-							if(reboot)
+#else
+							if(cellFsStat((char*)"/dev_blind/sys/stage2.bin", &s)==CELL_FS_SUCCEEDED)
 							{
-								sys_timer_sleep(1);
-								// reboot
-								show_msg((char*)"Toggle successful! Reboot now...");
-								sys_timer_sleep(3);
-								{system_call_3(838, (u64)(char*)"/dev_rebug", 0, 1);}
-								{system_call_3(392, 0x1004, 0x4, 0x6);}
-								cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
-								working=0;
-								{system_call_4(379,0x1200,0,0,0);}
-								sys_ppu_thread_exit(0);
+								show_msg((char*)"REBUG COBRA active!\r\nDeactivating COBRA...");
+
+								cellFsRename("/dev_blind/sys/stage2.bin", "/dev_blind/sys/stage2_disabled.bin");
+								reboot=true;
 							}
-						}
-						else
+							else if(cellFsStat((char*)"/dev_blind/sys/stage2_disabled.bin", &s)==CELL_FS_SUCCEEDED)
+							{
+								show_msg((char*)"REBUG COBRA inactive!\r\nActivating COBRA...");
+
+								cellFsRename("/dev_blind/sys/stage2_disabled.bin", "/dev_blind/sys/stage2.bin");
+								reboot=true;
+							}
 #endif
+						}
+#endif
+#ifdef REX_ONLY
 						if(!(webman_config->combo & REBUGMODE)
 							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_SQUARE))
-						{ // R3+L3+← REBUG Mode Switcher
-							show_msg((char*)"REBUG Mode Switcher activated!");
-							sys_timer_sleep(3);
-							struct CellFsStat s;
-							{system_call_3(838, (u64)(char*)"/dev_blind", 0, 1);}
-							{system_call_8(837, (u64)(char*)"CELL_FS_IOS:BUILTIN_FLSH1", (u64)(char*)"CELL_FS_FAT", (u64)(char*)"/dev_rebug", 0, 0, 0, 0, 0);}
+						{ // L3+L2+🔳 REBUG Mode Switcher
+							enable_dev_blind("REBUG Mode Switcher activated!");
+
 							if(cellFsStat((char*)"/dev_flash/vsh/module/vsh.self.swp", &s)==CELL_FS_SUCCEEDED)
 							{
 								show_msg((char*)"Normal Mode detected!\r\nSwitch to REBUG Mode Debug XMB...");
 								sys_timer_sleep(3);
 
-								cellFsRename("/dev_rebug/vsh/etc/index.dat", "/dev_rebug/vsh/etc/index.dat.nrm");
-								cellFsRename("/dev_rebug/vsh/etc/index.dat.swp", "/dev_rebug/vsh/etc/index.dat");
+								cellFsRename("/dev_blind/vsh/etc/index.dat", "/dev_blind/vsh/etc/index.dat.nrm");
+								cellFsRename("/dev_blind/vsh/etc/index.dat.swp", "/dev_blind/vsh/etc/index.dat");
 
-								cellFsRename("/dev_rebug/vsh/etc/version.txt", "/dev_rebug/vsh/etc/version.txt.nrm");
-								cellFsRename("/dev_rebug/vsh/etc/version.txt.swp", "/dev_rebug/vsh/etc/version.txt");
+								cellFsRename("/dev_blind/vsh/etc/version.txt", "/dev_blind/vsh/etc/version.txt.nrm");
+								cellFsRename("/dev_blind/vsh/etc/version.txt.swp", "/dev_blind/vsh/etc/version.txt");
 
-								cellFsRename("/dev_rebug/vsh/module/vsh.self", "/dev_rebug/vsh/module/vsh.self.nrm");
-								cellFsRename("/dev_rebug/vsh/module/vsh.self.swp", "/dev_rebug/vsh/module/vsh.self");
+								cellFsRename("/dev_blind/vsh/module/vsh.self", "/dev_blind/vsh/module/vsh.self.nrm");
+								cellFsRename("/dev_blind/vsh/module/vsh.self.swp", "/dev_blind/vsh/module/vsh.self");
 
-								sys_timer_sleep(1);
-								// reboot
-								show_msg((char*)"Switching successful! Reboot now...");
-								sys_timer_sleep(2);
-								{system_call_3(838, (u64)(char*)"/dev_rebug", 0, 1);}
-								{system_call_3(392, 0x1004, 0x4, 0x6);}
-								cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
-								working=0;
-								{system_call_4(379,0x200,0,0,0);}
-								sys_ppu_thread_exit(0);
+								reboot=true;
 							}
 							else
 							if((cellFsStat((char*)"/dev_flash/vsh/module/vsh.self.nrm", &s)==CELL_FS_SUCCEEDED)
@@ -7745,19 +7736,10 @@ SHOW IDPS : R2+O
 								show_msg((char*)"REBUG Mode Debug XMB detected!\r\nSwitch to Retail XMB...");
 								sys_timer_sleep(3);
 
-								cellFsRename("/dev_rebug/vsh/module/vsh.self", "/dev_rebug/vsh/module/vsh.self.dexsp");
-								cellFsRename("/dev_rebug/vsh/module/vsh.self.cexsp", "/dev_rebug/vsh/module/vsh.self");
+								cellFsRename("/dev_blind/vsh/module/vsh.self", "/dev_blind/vsh/module/vsh.self.dexsp");
+								cellFsRename("/dev_blind/vsh/module/vsh.self.cexsp", "/dev_blind/vsh/module/vsh.self");
 
-								sys_timer_sleep(1);
-								// reboot
-								show_msg((char*)"Switching successful! Reboot now...");
-								sys_timer_sleep(3);
-								{system_call_3(838, (u64)(char*)"/dev_rebug", 0, 1);}
-								{system_call_3(392, 0x1004, 0x4, 0x6);}
-								cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
-								working=0;
-								{system_call_4(379,0x200,0,0,0);}
-								sys_ppu_thread_exit(0);
+								reboot=true;
 							}
 							else
 							if(cellFsStat((char*)"/dev_flash/vsh/module/vsh.self.dexsp", &s)==CELL_FS_SUCCEEDED)
@@ -7765,125 +7747,107 @@ SHOW IDPS : R2+O
 								show_msg((char*)"REBUG Mode Retail XMB detected!\r\nSwitch to Debug XMB...");
 								sys_timer_sleep(3);
 
-								cellFsRename("/dev_rebug/vsh/module/vsh.self", "/dev_rebug/vsh/module/vsh.self.cexsp");
-								cellFsRename("/dev_rebug/vsh/module/vsh.self.dexsp", "/dev_rebug/vsh/module/vsh.self");
+								cellFsRename("/dev_blind/vsh/module/vsh.self", "/dev_blind/vsh/module/vsh.self.cexsp");
+								cellFsRename("/dev_blind/vsh/module/vsh.self.dexsp", "/dev_blind/vsh/module/vsh.self");
 
-								sys_timer_sleep(1);
-								// reboot
-								show_msg((char*)"Switching successful! Reboot now...");
-								sys_timer_sleep(3);
-								{system_call_3(838, (u64)(char*)"/dev_rebug", 0, 1);}
-								{system_call_3(392, 0x1004, 0x4, 0x6);}
-								cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
-								working=0;
-								{system_call_4(379,0x200,0,0,0);}
-								sys_ppu_thread_exit(0);
+								reboot=true;
 							}
 						}
 						else
 						if(!(webman_config->combo & NORMAMODE)
 							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_CIRCLE))
-						{ // R3+L3+← Normal Mode Switcher
-							show_msg((char*)"Normal Mode Switcher activated!");
-							sys_timer_sleep(3);
-							struct CellFsStat s;
-							{system_call_3(838, (u64)(char*)"/dev_blind", 0, 1);}
-							{system_call_8(837, (u64)(char*)"CELL_FS_IOS:BUILTIN_FLSH1", (u64)(char*)"CELL_FS_FAT", (u64)(char*)"/dev_rebug", 0, 0, 0, 0, 0);}
+						{ // L3+L2+O Normal Mode Switcher
+							enable_dev_blind("Normal Mode Switcher activated!");
+
 							if((cellFsStat((char*)"/dev_flash/vsh/module/vsh.self.nrm", &s)==CELL_FS_SUCCEEDED)
 							&& (cellFsStat("/dev_flash/vsh/module/vsh.self.cexsp", &s)==CELL_FS_SUCCEEDED))
 							{
 								show_msg((char*)"REBUG Mode Debug XMB detected!\r\nSwitch to Normal Mode...");
 
-								cellFsRename("/dev_rebug/vsh/etc/index.dat", "/dev_rebug/vsh/etc/index.dat.swp");
-								cellFsRename("/dev_rebug/vsh/etc/index.dat.nrm", "/dev_rebug/vsh/etc/index.dat");
+								cellFsRename("/dev_blind/vsh/etc/index.dat", "/dev_blind/vsh/etc/index.dat.swp");
+								cellFsRename("/dev_blind/vsh/etc/index.dat.nrm", "/dev_blind/vsh/etc/index.dat");
 
-								cellFsRename("/dev_rebug/vsh/etc/version.txt", "/dev_rebug/vsh/etc/version.txt.swp");
-								cellFsRename("/dev_rebug/vsh/etc/version.txt.nrm", "/dev_rebug/vsh/etc/version.txt");
+								cellFsRename("/dev_blind/vsh/etc/version.txt", "/dev_blind/vsh/etc/version.txt.swp");
+								cellFsRename("/dev_blind/vsh/etc/version.txt.nrm", "/dev_blind/vsh/etc/version.txt");
 
-								cellFsRename("/dev_rebug/vsh/module/vsh.self", "/dev_rebug/vsh/module/vsh.self.swp");
-								cellFsRename("/dev_rebug/vsh/module/vsh.self.nrm", "/dev_rebug/vsh/module/vsh.self");
+								cellFsRename("/dev_blind/vsh/module/vsh.self", "/dev_blind/vsh/module/vsh.self.swp");
+								cellFsRename("/dev_blind/vsh/module/vsh.self.nrm", "/dev_blind/vsh/module/vsh.self");
 
-								sys_timer_sleep(1);
-								// reboot
-								show_msg((char*)"Switching successful! Reboot now...");
-								sys_timer_sleep(3);
-								{system_call_3(838, (u64)(char*)"/dev_rebug", 0, 1);}
-								{system_call_3(392, 0x1004, 0x4, 0x6);}
-								cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
-								working=0;
-								{system_call_4(379,0x200,0,0,0);}
-								sys_ppu_thread_exit(0);
+								reboot=true;
 							}
 							else
 							if(cellFsStat((char*)"/dev_flash/vsh/module/vsh.self.dexsp", &s)==CELL_FS_SUCCEEDED)
 							{
 								show_msg((char*)"REBUG Mode Retail XMB detected!\r\nSwitch to Normal Mode...");
 
-								cellFsRename("/dev_rebug/vsh/etc/index.dat", "/dev_rebug/vsh/etc/index.dat.swp");
-								cellFsRename("/dev_rebug/vsh/etc/index.dat.nrm", "/dev_rebug/vsh/etc/index.dat");
+								cellFsRename("/dev_blind/vsh/etc/index.dat", "/dev_blind/vsh/etc/index.dat.swp");
+								cellFsRename("/dev_blind/vsh/etc/index.dat.nrm", "/dev_blind/vsh/etc/index.dat");
 
-								cellFsRename("/dev_rebug/vsh/etc/version.txt", "/dev_rebug/vsh/etc/version.txt.swp");
-								cellFsRename("/dev_rebug/vsh/etc/version.txt.nrm", "/dev_rebug/vsh/etc/version.txt");
+								cellFsRename("/dev_blind/vsh/etc/version.txt", "/dev_blind/vsh/etc/version.txt.swp");
+								cellFsRename("/dev_blind/vsh/etc/version.txt.nrm", "/dev_blind/vsh/etc/version.txt");
 
-								cellFsRename("/dev_rebug/vsh/module/vsh.self.dexsp", "/dev_rebug/vsh/module/vsh.self.swp");
-								cellFsRename("/dev_rebug/vsh/module/vsh.self", "/dev_rebug/vsh/module/vsh.self.cexsp");
-								cellFsRename("/dev_rebug/vsh/module/vsh.self.nrm", "/dev_rebug/vsh/module/vsh.self");
+								cellFsRename("/dev_blind/vsh/module/vsh.self.dexsp", "/dev_blind/vsh/module/vsh.self.swp");
+								cellFsRename("/dev_blind/vsh/module/vsh.self", "/dev_blind/vsh/module/vsh.self.cexsp");
+								cellFsRename("/dev_blind/vsh/module/vsh.self.nrm", "/dev_blind/vsh/module/vsh.self");
 
-								sys_timer_sleep(1);
-								// reboot
-								show_msg((char*)"Switching successful! Reboot now...");
-								sys_timer_sleep(3);
-								{system_call_3(838, (u64)(char*)"/dev_rebug", 0, 1);}
-								system_call_3(392, 0x1004, 0x4, 0x6);
-								cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
-								working=0;
-								{system_call_4(379,0x200,0,0,0);}
-								sys_ppu_thread_exit(0);
+								reboot=true;
 							}
 							else
 							if(cellFsStat((char*)"/dev_flash/vsh/module/vsh.self.swp", &s)==CELL_FS_SUCCEEDED)
 							{
 								show_msg((char*)"Normal Mode detected!\r\nNo need to switch!");
 								sys_timer_sleep(3);
-								{system_call_3(838, (u64)(char*)"/dev_rebug", 0, 1);}
+								{system_call_3(838, (u64)(char*)"/dev_blind", 0, 1);}
 								break;
 							}
 						}
 						else
 						if(!(webman_config->combo & DEBUGMENU)
 							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_CROSS))
-						{ // R3+L3+↓ DEBUG Menu Switcher
-							show_msg((char*)"Debug Menu Switcher activated!");
-							sys_timer_sleep(3);
-							struct CellFsStat s;
-							{system_call_3(838, (u64)(char*)"/dev_blind", 0, 1);}
-							{system_call_8(837, (u64)(char*)"CELL_FS_IOS:BUILTIN_FLSH1", (u64)(char*)"CELL_FS_FAT", (u64)(char*)"/dev_rebug", 0, 0, 0, 0, 0);}
+						{ // L3+L2+X DEBUG Menu Switcher
+							enable_dev_blind("Debug Menu Switcher activated!");
+
 							if(cellFsStat((char*)"/dev_flash/vsh/module/sysconf_plugin.sprx.dex", &s)==CELL_FS_SUCCEEDED)
 							{
 								show_msg((char*)"CEX QA Menu is active!\r\nSwitch to DEX Debug Menu...");
 
-								cellFsRename("/dev_rebug/vsh/module/sysconf_plugin.sprx", "/dev_rebug/vsh/module/sysconf_plugin.sprx.cex");
-								cellFsRename("/dev_rebug/vsh/module/sysconf_plugin.sprx.dex", "/dev_rebug/vsh/module/sysconf_plugin.sprx");
+								cellFsRename("/dev_blind/vsh/module/sysconf_plugin.sprx", "/dev_blind/vsh/module/sysconf_plugin.sprx.cex");
+								cellFsRename("/dev_blind/vsh/module/sysconf_plugin.sprx.dex", "/dev_blind/vsh/module/sysconf_plugin.sprx");
 							}
 							else
 							if(cellFsStat((char*)"/dev_flash/vsh/module/sysconf_plugin.sprx.cex", &s)==CELL_FS_SUCCEEDED)
 							{
 								show_msg((char*)"DEX Debug Menu is active!\r\nSwitch to CEX QA Menu...");
 
-								cellFsRename("/dev_rebug/vsh/module/sysconf_plugin.sprx", "/dev_rebug/vsh/module/sysconf_plugin.sprx.dex");
-								cellFsRename("/dev_rebug/vsh/module/sysconf_plugin.sprx.cex", "/dev_rebug/vsh/module/sysconf_plugin.sprx");
+								cellFsRename("/dev_blind/vsh/module/sysconf_plugin.sprx", "/dev_blind/vsh/module/sysconf_plugin.sprx.dex");
+								cellFsRename("/dev_blind/vsh/module/sysconf_plugin.sprx.cex", "/dev_blind/vsh/module/sysconf_plugin.sprx");
 							}
 							sys_timer_sleep(1);
-							{system_call_3(838, (u64)(char*)"/dev_rebug", 0, 1);}
+							{system_call_3(838, (u64)(char*)"/dev_blind", 0, 1);}
 						}
+#endif
 					}
-#endif
-#endif
 				}
+
+				if(reboot)
+				{
+					sys_timer_sleep(1);
+					// reboot
+					show_msg((char*)"Switching successful! Reboot now...");
+					sys_timer_sleep(3);
+					{system_call_3(838, (u64)(char*)"/dev_blind", 0, 1);}
+					{system_call_3(392, 0x1004, 0x4, 0x6);}
+					cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
+					working=0;
+					{system_call_4(379,0x1200,0,0,0);}
+					sys_ppu_thread_exit(0);
+				}
+
 			}
 			//sys_timer_sleep(step);
 			sys_timer_usleep(300000);
 		}
+
 		to++;
 		if(to==20)
 		{
@@ -7929,6 +7893,7 @@ SHOW IDPS : R2+O
 		}
 		sec+=step;
 	}
+
 	sys_ppu_thread_exit(0);
 }
 
