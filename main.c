@@ -40,8 +40,8 @@
 //#define CCAPI 1		// uncomment for ccapi release
 #define COBRA_ONLY 1	// comment out for ccapi/non-cobra release
 
-#define REX_ONLY 1			// shortcuts for REBUG REX CFWs / comment out for usual CFW
-#define REX_COBRA_ONLY 1	// shortcuts for REX COBRA CFWs / comment out for usual COBRA CFW
+//#define REX_ONLY 1			// shortcuts for REBUG REX CFWs / comment out for usual CFW
+//#define REX_COBRA_ONLY 1	// shortcuts for REX COBRA CFWs / comment out for usual COBRA CFW
 
 #include "types.h"
 #include "common.h"
@@ -2361,7 +2361,8 @@ void remove_cfw_syscalls()
 
 	if(!dex_mode)
 	{
-		if(c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f) {
+		if(c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f)
+		{
 			IDPS[0] = peekq(0x8000000000474F1CULL  );
 			IDPS[1] = peekq(0x8000000000474F1CULL+8);
 			PSID[0] = peekq(0x8000000000474F34ULL  );
@@ -3063,13 +3064,15 @@ static void handleclient(u64 conn_s_p)
 			}
 		}
 
-		if(webman_config->sidps) {
+		if(webman_config->sidps)
+		{
 			uint64_t j, newIDPS[2] = {0,0};
 
 			newIDPS[0] = convertH(webman_config->vIDPS1);
 			newIDPS[1] = convertH(webman_config->vIDPS2);
 
-			if(newIDPS[0] != 0 && newIDPS[1] != 0) {
+			if(newIDPS[0] != 0 && newIDPS[1] != 0)
+			{
 				if(c_firmware==4.55f && dex_mode) {
 					pokeq(0x8000000000407930ULL  , newIDPS[0]);
 					pokeq(0x8000000000407930ULL+8, newIDPS[1]);
@@ -3395,7 +3398,7 @@ reconnect:
 				if(!webman_config->usb6 && strstr(param, drives[5])) continue;
 				if(!webman_config->usb7 && strstr(param, drives[6])) continue;
 
-				if( (webman_config->cmask & PS3) && (f1< 3 || f1==10)) continue;
+				if( (webman_config->cmask & PS3) && (f1<3 || f1==10)) continue;
 				if( (webman_config->cmask & BLU) && f1==3) continue;
 				if( (webman_config->cmask & DVD) && f1==4) continue;
 				if( (webman_config->cmask & PS2) && f1==5) continue;
@@ -4719,33 +4722,32 @@ again3:
 							if(c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f)
 							{
 								backup[5]=peekq(0x8000000000009E38ULL);
-								lv2poke32(0x8000000000009E38ULL, 0x38600001); // sys 409 get_fan_policy
+								lv2poke32(0x8000000000009E38ULL, 0x38600001); // sys 409 get_fan_policy  4.55/4.60/4.65
 								sys_sm_get_fan_policy(0, &st, &mode, &fan_speed, &unknown);
 								pokeq(0x8000000000009E38ULL, backup[5]);
 							}
-							else
+							else if(c_firmware>=4.21f && c_firmware<=4.53f)
 							{
 								backup[5]=peekq(0x8000000000009E28ULL);
-								lv2poke32(0x8000000000009E28ULL, 0x38600001); // sys 409 get_fan_policy
+								lv2poke32(0x8000000000009E28ULL, 0x38600001); // sys 409 get_fan_policy  4.21/4.30/4.31/4.40/4.41/4.46/4.50/4.53
 								sys_sm_get_fan_policy(0, &st, &mode, &fan_speed, &unknown);
 								pokeq(0x8000000000009E28ULL, backup[5]);
 							}
 						}
 						else // DEX
-						if(c_firmware==4.53f)
+						if(c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f)
 						{
-							backup[5]=peekq(0x8000000000009EA8ULL);
-							lv2poke32(0x8000000000009EA8ULL, 0x38600001); // sys 409 get_fan_policy
-							sys_sm_get_fan_policy(0, &st, &mode, &fan_speed, &unknown);
-							pokeq(0x8000000000009EA8ULL, backup[5]);
+								backup[5]=peekq(0x8000000000009EB8ULL);
+								lv2poke32(0x8000000000009EB8ULL, 0x38600001); // sys 409 get_fan_policy
+								sys_sm_get_fan_policy(0, &st, &mode, &fan_speed, &unknown);
+								pokeq(0x8000000000009EB8ULL, backup[5]);
 						}
-						else
-						if(c_firmware==4.55f)
+						else if(c_firmware>=4.21f && c_firmware<=4.53f)
 						{
-							backup[5]=peekq(0x8000000000009EB8ULL);
-							lv2poke32(0x8000000000009EB8ULL, 0x38600001); // sys 409 get_fan_policy
-							sys_sm_get_fan_policy(0, &st, &mode, &fan_speed, &unknown);
-							pokeq(0x8000000000009EB8ULL, backup[5]);
+								backup[5]=peekq(0x8000000000009EA8ULL);
+								lv2poke32(0x8000000000009EA8ULL, 0x38600001); // sys 409 get_fan_policy  4.21/4.30/4.31/4.40/4.41/4.46/4.50/4.53
+								sys_sm_get_fan_policy(0, &st, &mode, &fan_speed, &unknown);
+								pokeq(0x8000000000009EA8ULL, backup[5]);
 						}
 					}
 
@@ -7400,25 +7402,24 @@ SHOW IDPS : R2+O
 									if(c_firmware==4.55f || c_firmware==4.60f  || c_firmware==4.65f)
 									{
 										backup[5]=peekq(0x8000000000009E38ULL);
-										lv2poke32(0x8000000000009E38ULL, 0x38600001); // sys 409 get_fan_policy
+										lv2poke32(0x8000000000009E38ULL, 0x38600001); // sys 409 get_fan_policy  4.55/4.60/4.65
 									}
-									else
+									else if(c_firmware>=4.21f && c_firmware<=4.53f)
 									{
-									backup[5]=peekq(0x8000000000009E28ULL);
-									lv2poke32(0x8000000000009E28ULL, 0x38600001); // sys 409 get_fan_policy
+										backup[5]=peekq(0x8000000000009E28ULL);
+										lv2poke32(0x8000000000009E28ULL, 0x38600001); // sys 409 get_fan_policy  4.21/4.30/4.31/4.40/4.41/4.46/4.50/4.53
 									}
 								}
 								else // DEX
-								if(c_firmware==4.53f)
+								if(c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f)
 								{
-									backup[5]=peekq(0x8000000000009EA8ULL);
-									lv2poke32(0x8000000000009EA8ULL, 0x38600001); // sys 409 get_fan_policy
+										backup[5]=peekq(0x8000000000009EB8ULL);
+										lv2poke32(0x8000000000009EB8ULL, 0x38600001); // sys 409 get_fan_policy  4.55/4.60/4.65
 								}
-								else
-								if(c_firmware==4.55f)
+								else if(c_firmware>=4.21f && c_firmware<=4.53f)
 								{
-									backup[5]=peekq(0x8000000000009EB8ULL);
-									lv2poke32(0x8000000000009EB8ULL, 0x38600001); // sys 409 get_fan_policy
+										backup[5]=peekq(0x8000000000009EA8ULL);
+										lv2poke32(0x8000000000009EA8ULL, 0x38600001); // sys 409 get_fan_policy  4.21/4.30/4.31/4.40/4.41/4.46/4.50/4.53
 								}
 							}
 
@@ -7429,20 +7430,15 @@ SHOW IDPS : R2+O
 								if(!dex_mode)
 								{
 									if(c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f)
-										pokeq(0x8000000000009E38ULL, backup[5]);
-									else
-										pokeq(0x8000000000009E28ULL, backup[5]);
+										pokeq(0x8000000000009E38ULL, backup[5]);  // sys 409 get_fan_policy  4.55/4.60/4.65
+									else if(c_firmware>=4.21f && c_firmware<=4.53f)
+										pokeq(0x8000000000009E28ULL, backup[5]);  // sys 409 get_fan_policy  4.21/4.30/4.31/4.40/4.41/4.46/4.50/4.53
 								}
 								else // DEX
-								if(c_firmware==4.53f)
-								{
-									pokeq(0x8000000000009EA8ULL, backup[5]); // sys 409 get_fan_policy
-								}
-								else
-								if(c_firmware==4.55f)
-								{
-									pokeq(0x8000000000009EB8ULL, backup[5]); // sys 409 get_fan_policy
-								}
+								if(c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f)
+										pokeq(0x8000000000009EB8ULL, backup[5]); // sys 409 get_fan_policy  4.55/4.60/4.65
+								else if(c_firmware>=4.21f && c_firmware<=4.53f)
+										pokeq(0x8000000000009EA8ULL, backup[5]); // sys 409 get_fan_policy  4.21/4.30/4.31/4.40/4.41/4.46/4.50/4.53
 							}
 							_meminfo meminfo;
 							{system_call_1(352, (uint64_t) &meminfo);}
@@ -7953,25 +7949,24 @@ void restore_fan(u8 settemp)
 			if(c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f)
 			{
 				pokeq(0x800000000000A334ULL, backup[4]);  // sys 389 set_fan_policy
-				pokeq(0x8000000000009E38ULL, backup[5]);  // sys 409 get_fan_policy
+				pokeq(0x8000000000009E38ULL, backup[5]);  // sys 409 get_fan_policy  4.55/4.60/4.65
 			}
-			else
+			else if(c_firmware>=4.21f && c_firmware<=4.53f)
 			{
 				pokeq(0x800000000000A324ULL, backup[4]);  // sys 389 set_fan_policy
-				pokeq(0x8000000000009E28ULL, backup[5]);  // sys 409 get_fan_policy
+				pokeq(0x8000000000009E28ULL, backup[5]);  // sys 409 get_fan_policy  4.21/4.30/4.31/4.40/4.41/4.46/4.50/4.53
 			}
 		}
         else // DEX
-		if(c_firmware==4.53f)
-		{
-			pokeq(0x800000000000A3A4ULL, backup[4]);  // sys 389 set_fan_policy
-			pokeq(0x8000000000009EA8ULL, backup[5]);  // sys 409 get_fan_policy
-		}
-		else
-		if(c_firmware==4.55f)
+		if(c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f)
 		{
 			pokeq(0x800000000000A3B4ULL, backup[4]);  // sys 389 set_fan_policy
-			pokeq(0x8000000000009EB8ULL, backup[5]);  // sys 409 get_fan_policy
+			pokeq(0x8000000000009EB8ULL, backup[5]);  // sys 409 get_fan_policy  4.55/4.60/4.65
+		}
+		else if(c_firmware>=4.21f && c_firmware<=4.53f)
+		{
+			pokeq(0x800000000000A3A4ULL, backup[4]);  // sys 389 set_fan_policy
+			pokeq(0x8000000000009EA8ULL, backup[5]);  // sys 409 get_fan_policy  4.21/4.30/4.31/4.40/4.41/4.46/4.50/4.53
 		}
 		backup[0]=0;
 	}
@@ -7996,32 +7991,31 @@ void fan_control(u8 temp0, u8 initial)
 					{
 						backup[4]=peekq(0x800000000000A334ULL);
 						backup[5]=peekq(0x8000000000009E38ULL);
-						lv2poke32(0x8000000000009E38ULL, 0x38600001); // sys 409 get_fan_policy
+						lv2poke32(0x8000000000009E38ULL, 0x38600001); // sys 409 get_fan_policy  4.55/4.60/4.65
 						lv2poke32(0x800000000000A334ULL, 0x38600001); // sys 389 set_fan_policy
 					}
-					else
+					else if(c_firmware>=4.21f && c_firmware<=4.53f)
 					{
 						backup[4]=peekq(0x800000000000A324ULL);
 						backup[5]=peekq(0x8000000000009E28ULL);
-						lv2poke32(0x8000000000009E28ULL, 0x38600001); // sys 409 get_fan_policy
+						lv2poke32(0x8000000000009E28ULL, 0x38600001); // sys 409 get_fan_policy  4.21/4.30/4.31/4.40/4.41/4.46/4.50/4.53
 						lv2poke32(0x800000000000A324ULL, 0x38600001); // sys 389 set_fan_policy
 					}
 				}
 				else // DEX
-				if(c_firmware==4.53f)
-				{
-						backup[4]=peekq(0x800000000000A3A4ULL);
-						backup[5]=peekq(0x8000000000009EA8ULL);
-						lv2poke32(0x8000000000009EA8ULL, 0x38600001); // sys 409 get_fan_policy
-						lv2poke32(0x800000000000A3A4ULL, 0x38600001); // sys 389 set_fan_policy
-				}
-				else
-				if(c_firmware==4.55f)
+				if(c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f)
 				{
 						backup[4]=peekq(0x800000000000A3B4ULL);
 						backup[5]=peekq(0x8000000000009EB8ULL);
-						lv2poke32(0x8000000000009EB8ULL, 0x38600001); // sys 409 get_fan_policy
+						lv2poke32(0x8000000000009EB8ULL, 0x38600001); // sys 409 get_fan_policy  4.55/4.60/4.65
 						lv2poke32(0x800000000000A3B4ULL, 0x38600001); // sys 389 set_fan_policy
+				}
+				else if(c_firmware>=4.21f && c_firmware<=4.53f)
+				{
+						backup[4]=peekq(0x800000000000A3A4ULL);
+						backup[5]=peekq(0x8000000000009EA8ULL);
+						lv2poke32(0x8000000000009EA8ULL, 0x38600001); // sys 409 get_fan_policy  4.21/4.30/4.31/4.40/4.41/4.46/4.50/4.53
+						lv2poke32(0x800000000000A3A4ULL, 0x38600001); // sys 389 set_fan_policy
 				}
 
 			    sys_sm_set_fan_policy(0, 2, 0x33);
