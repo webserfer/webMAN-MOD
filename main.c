@@ -62,7 +62,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define REBUG_COBRA_PATH	"/dev_blind/rebug/cobra/"
 #define SYS_COBRA_PATH		"/dev_blind/sys/"
 
-#define WM_VERSION			"1.30.24 MOD"						// webMAN version
+#define WM_VERSION			"1.30.25 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -2896,32 +2896,39 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 	}
 }
 
+static int get_cover_from_name(char *icon, char *name, char *titleid)
+{
+	if(webman_config->nocov) return;
+
+	if(titleid[0]==0 && (strstr(name, "-[") || strstr(name, " [B") || strstr(name, " [N")))
+	{
+		if(strstr(name, "-["))
+			strncpy(titleid, name, 9);
+		else if(strstr(name, " [B"))
+			strncpy(titleid, strstr(name, " [B") + 2, 9);
+		else
+			strncpy(titleid, strstr(name, " [N") + 2, 9);
+	}
+
+	if(titleid[0]) {get_cover(icon, titleid); return 0;}
+	return -1;
+}
+
 static void get_default_icon(char *icon, char *param, char *file, int isdir, int ns, int abort_connection)
 {
 	struct CellFsStat s;
 
 	// continue using cover or default icon0.png
-	if(icon[0] && cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	if(icon[0]!=0 && cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 
 	// get icon from folder && copy remote icon
 	get_iso_icon(icon, param, file, isdir, ns, abort_connection);
 
-	if(icon[0] && cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	if(icon[0]!=0 && cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 
 	// get cover if the filename contains a title id
-	if(!webman_config->nocov && (strstr(file, " [B") || strstr(file, " [N")))
-	{
-		//use title in filename
-		char titleid[10];
-		if(strstr(file, " [B"))
-		    snprintf(titleid, 9, "%s", strstr(file,  " [B") + 2);
-		else
-		    snprintf(titleid, 9, "%s", strstr(file,  " [N") + 2);
-
-		get_cover(icon, titleid);
-
-		if(icon[0]) return;
-	}
+	char titleid[10];
+	if(get_cover_from_name(icon, file, titleid)==0) return;
 
 	//use the cached PNG from wmtmp if available
 	sprintf(icon, "%s/%s", WMTMP, file);
@@ -3315,7 +3322,7 @@ again1:
 				cellRtcGetCurrentTick(&pTick);
 
 				if(f1==5  && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
-				if(f1==10 && f0>0)  break;    // video
+				if(f1==10) {if(f0>6) break; else strcpy(paths[10], f1==0 ? "video" : "GAMES_DUP");}
 				if(f0==9 && f1>6)   break;    // ntfs
 				if(f0==7 && (!webman_config->netd0 || f1>6 || !cobra_mode)) break;
 				if(f0==8 && (!webman_config->netd1 || f1>6 || !cobra_mode)) break;
@@ -3511,7 +3518,6 @@ reconnect:
 									{
 										parse_param_sfo(mem, tempID, templn);
 
-										icon[0]=0;
 										if(tempID[0] && !webman_config->nocov) get_cover(icon, tempID);
 									}
 								}
@@ -3532,7 +3538,7 @@ reconnect:
 											 "<Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/net%i%s/%s?random=%i</String></Pair>"
 											 "<Pair key=\"info\"><String>/net%i%s</String></Pair>"
 											 "</Table>",
-								key, icon, templn, (f0-7), param, data[v3_entry].name, (int)pTick.tick, (f0-7), param);
+									key, icon, templn, (f0-7), param, data[v3_entry].name, (int)pTick.tick, (f0-7), param);
 
 							v3_entry++;
 
@@ -3665,11 +3671,11 @@ reconnect:
 											}
 											cellFsClose(fs);
 										}
+										icon[0]=0;
 									}
 								}
 		//title_foundx:
-								icon[0]=0;
-								if(tempID[0] && !webman_config->nocov) get_cover(icon, tempID);
+								get_cover_from_name(icon, entry.d_name, tempID);
 
 								if(is_iso)
 								{
@@ -4798,9 +4804,9 @@ again3:
 															"CPU: %i°F (MAX: %i°F)<br>"
 															"RSX: %i°F<hr>MEM: %iKB<hr>"
 															"FAN SPEED: 0x%X (%i%%)<hr>"
-															"PSID LV2 : %llX%llX<hr>"
-															"IDPS EID0: %llX%llX<br>"
-															"IDPS LV2 : %llX%llX</b>"
+															"PSID LV2 : %016llX%016llX<hr>"
+															"IDPS EID0: %016llX%016llX<br>"
+															"IDPS LV2 : %016llX%016llX</b>"
 									"</font><hr>",
 									t1, max_temp, t2,
 									t1f, (int)(1.8f*(float)max_temp+32.f),
@@ -5792,7 +5798,7 @@ just_leave:
 									cellRtcGetCurrentTick(&pTick);
 
 									if(f1==5  && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
-									if(f1==10 && f0>0)  break;    // video
+                                    if(f1==10) {if(f0>6) break; else strcpy(paths[10], f1==0 ? "video" : "GAMES_DUP");}
 									if(f0==9 && f1>6)   break;    // ntfs
 									if(f0==7 && (!webman_config->netd0 || f1>6 || !cobra_mode)) break;
 									if(f0==8 && (!webman_config->netd1 || f1>6 || !cobra_mode)) break;
@@ -5948,7 +5954,6 @@ just_leave:
 													{
 														parse_param_sfo(mem, tempID, templn);
 
-														icon[0]=0;
 														if(tempID[0] && !webman_config->nocov) get_cover(icon, tempID);
 													}
 												}
@@ -5957,6 +5962,8 @@ just_leave:
 											}
 											else
 												strcpy(templn, data[v3_entry].name);
+
+											get_cover_from_name(icon, data[v3_entry].name, tempID);
 
 											if(templn[strlen(templn)-4]=='.') templn[strlen(templn)-4]=0;
 
@@ -5985,8 +5992,8 @@ just_leave:
 													strstr(param, WMTMP))
 												&&
 												(
-				  								  (strstr(entry.d_name, ".ISO") || strstr(entry.d_name, ".iso") ||
-				  								    (strstr(param, "/PSX") && (strstr(entry.d_name, ".CUE") || strstr(entry.d_name, ".cue")))
+				  								  ((strstr(entry.d_name, ".iso") || strstr(entry.d_name, ".ISO")) ||
+                                                   (strstr(param, "/PSX") && (strstr(entry.d_name, ".cue") || strstr(entry.d_name, ".CUE")))
 												  )
 												&&
 												  ((entry.d_name[strlen(entry.d_name)-1]=='0' && entry.d_name[strlen(entry.d_name)-2]=='.') || entry.d_name[strlen(entry.d_name)-1]=='o' || entry.d_name[strlen(entry.d_name)-1]=='O' || entry.d_name[strlen(entry.d_name)-1]=='e' || entry.d_name[strlen(entry.d_name)-1]=='E')
@@ -6050,6 +6057,7 @@ just_leave:
 																	}
 																	cellFsClose(fs);
 																}
+																icon[0]=0;
 																if(templn[strlen(templn)-2]=='.') templn[strlen(templn)-2]=0;
 																if(templn[strlen(templn)-4]=='.') templn[strlen(templn)-4]=0;
 															}
@@ -6085,18 +6093,12 @@ just_leave:
 													}
 												}
 
+												get_cover_from_name(icon, entry.d_name, tempID);
+
+												if(!is_iso && icon[0]==0) sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry.d_name);
+
 												if(templn[strlen(templn)-2]=='.') templn[strlen(templn)-2]=0;
 												if(templn[strlen(templn)-4]=='.') templn[strlen(templn)-4]=0;
-
-												if(!is_iso) sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry.d_name);
-
-												if(tempID[0])
-												{
-													icon[0]=0;
-													if(!webman_config->nocov) get_cover(icon, tempID);
-
-													if(!is_iso && icon[0]==0) sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry.d_name);
-												}
 
 												if(icon[0]==0)
 												{
@@ -7665,7 +7667,7 @@ DEBUG Menu Switcher : L3+L2+X
 								PSID[1] = peekq(0x8000000000474F34ULL+8);
 							}
 
-                            sprintf(tmp, "IDPS EID0 : %llX%llX\r\nIDPS LV2  : %llX%llX\r\nPSID LV2 : %llX%llX", eid0_idps[0], eid0_idps[1], IDPS[0], IDPS[1], PSID[0], PSID[1]);
+                            sprintf(tmp, "IDPS EID0 : %016llX%016llX\r\nIDPS LV2  : %016llX%016llX\r\nPSID LV2 : %016llX%016llX", eid0_idps[0], eid0_idps[1], IDPS[0], IDPS[1], PSID[0], PSID[1]);
 							show_msg((char*)tmp);
 							sys_timer_sleep(2);
 						}
