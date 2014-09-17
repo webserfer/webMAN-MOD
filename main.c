@@ -62,7 +62,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define REBUG_COBRA_PATH	"/dev_blind/rebug/cobra/"
 #define SYS_COBRA_PATH		"/dev_blind/sys/"
 
-#define WM_VERSION			"1.30.25 MOD"						// webMAN version
+#define WM_VERSION			"1.30.26 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -2898,7 +2898,7 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 
 static int get_cover_from_name(char *icon, char *name, char *titleid)
 {
-	if(webman_config->nocov) return;
+	if(webman_config->nocov) return -1;
 
 	if(titleid[0]==0 && (strstr(name, "-[") || strstr(name, " [B") || strstr(name, " [N")))
 	{
@@ -3457,11 +3457,10 @@ reconnect:
 					{
 						if(key>1020) break;
 						cellRtcGetCurrentTick(&pTick);
+						icon[0]=0;
 #ifdef COBRA_ONLY
 						if(is_net)
 						{
-							icon[0]=0;
-
 							if(!data[v3_entry].is_directory)
 							{
 								if(!strstr(data[v3_entry].name, ".ISO") && !strstr(data[v3_entry].name, ".iso") && !strstr(data[v3_entry].name, ".BIN") && !strstr(data[v3_entry].name, ".bin")) {v3_entry++; continue;}
@@ -7371,31 +7370,46 @@ DEBUG Menu Switcher : L3+L2+X
 						{
 								enable_dev_blind("Swapping ps2emu activated!");
 
-								if(cellFsStat((char*)PS2_EMU_PATH "ps2_netemu.self.sp", &s)==CELL_FS_SUCCEEDED)
+								if(cellFsStat((char*)PS2_EMU_PATH "ps2_netemu.self.swap", &s)==CELL_FS_SUCCEEDED)
 								{
 									show_msg((char*)"Original ps2emu is detected!\r\nSwitch to custom emu...");
 
-									cellFsRename(PS2_EMU_PATH "ps2_netemu.self", PS2_EMU_PATH "ps2_netemu.tmp");
+									cellFsRename(PS2_EMU_PATH "ps2_netemu.self.self", PS2_EMU_PATH "ps2_netemu.self.tmp");
+									cellFsRename(PS2_EMU_PATH "ps2_netemu.self.swap", PS2_EMU_PATH "ps2_netemu.self");
+								}
+								else if(cellFsStat((char*)PS2_EMU_PATH "ps2_netemu.self.sp", &s)==CELL_FS_SUCCEEDED)
+								{
+									show_msg((char*)"Original ps2emu is detected!\r\nSwitch to custom emu...");
+
+									cellFsRename(PS2_EMU_PATH "ps2_netemu.self"   , PS2_EMU_PATH "ps2_netemu.tmp");
 									cellFsRename(PS2_EMU_PATH "ps2_netemu.self.sp", PS2_EMU_PATH "ps2_netemu.self");
 
-									cellFsRename(PS2_EMU_PATH "ps2_gxemu.self", PS2_EMU_PATH "ps2_gxemu.tmp");
-									cellFsRename(PS2_EMU_PATH "ps2_gxemu.self.sp", PS2_EMU_PATH "ps2_gxemu.self");
+									cellFsRename(PS2_EMU_PATH "ps2_gxemu.self"    , PS2_EMU_PATH "ps2_gxemu.tmp");
+									cellFsRename(PS2_EMU_PATH "ps2_gxemu.self.sp" , PS2_EMU_PATH "ps2_gxemu.self");
 
-									cellFsRename(PS2_EMU_PATH "ps2_emu.self", PS2_EMU_PATH "ps2_emu.tmp");
-									cellFsRename(PS2_EMU_PATH "ps2_emu.self.sp", PS2_EMU_PATH "ps2_emu.self");
+									cellFsRename(PS2_EMU_PATH "ps2_emu.self"      , PS2_EMU_PATH "ps2_emu.tmp");
+									cellFsRename(PS2_EMU_PATH "ps2_emu.self.sp"   , PS2_EMU_PATH "ps2_emu.self");
 								}
 								else if(cellFsStat(PS2_EMU_PATH "ps2_netemu.tmp", &s)==CELL_FS_SUCCEEDED)
 								{
 									show_msg((char*)"Custom ps2emu is detected!\r\nSwitch to original emu...");
 
-									cellFsRename(PS2_EMU_PATH "ps2_netemu.self", PS2_EMU_PATH "ps2_netemu.self.sp");
-									cellFsRename(PS2_EMU_PATH "ps2_netemu.tmp", PS2_EMU_PATH "ps2_netemu.self");
+									if(c_firmware==4.65f)
+									{
+										cellFsRename(PS2_EMU_PATH "ps2_netemu.self", PS2_EMU_PATH "ps2_netemu.self.swap");
+										cellFsRename(PS2_EMU_PATH "ps2_netemu.tmp" , PS2_EMU_PATH "ps2_netemu.self");
+									}
+									else
+									{
+										cellFsRename(PS2_EMU_PATH "ps2_netemu.self", PS2_EMU_PATH "ps2_netemu.self.sp");
+										cellFsRename(PS2_EMU_PATH "ps2_netemu.tmp" , PS2_EMU_PATH "ps2_netemu.self");
 
-									cellFsRename(PS2_EMU_PATH "ps2_gxemu.self", PS2_EMU_PATH "ps2_gxemu.self.sp");
-									cellFsRename(PS2_EMU_PATH "ps2_gxemu.tmp", PS2_EMU_PATH "ps2_gxemu.self");
+										cellFsRename(PS2_EMU_PATH "ps2_gxemu.self" , PS2_EMU_PATH "ps2_gxemu.self.sp");
+										cellFsRename(PS2_EMU_PATH "ps2_gxemu.tmp"  , PS2_EMU_PATH "ps2_gxemu.self");
 
-									cellFsRename(PS2_EMU_PATH "ps2_emu.self", PS2_EMU_PATH "ps2_emu.self.sp");
-									cellFsRename(PS2_EMU_PATH "ps2_emu.tmp", PS2_EMU_PATH "ps2_emu.self");
+										cellFsRename(PS2_EMU_PATH "ps2_emu.self"   , PS2_EMU_PATH "ps2_emu.self.sp");
+										cellFsRename(PS2_EMU_PATH "ps2_emu.tmp"    , PS2_EMU_PATH "ps2_emu.self");
+									}
                                 }
 
 								reboot=true;
