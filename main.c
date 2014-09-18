@@ -62,7 +62,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define REBUG_COBRA_PATH	"/dev_blind/rebug/cobra/"
 #define SYS_COBRA_PATH		"/dev_blind/sys/"
 
-#define WM_VERSION			"1.30.26 MOD"						// webMAN version
+#define WM_VERSION			"1.30.27 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -679,12 +679,13 @@ void show_msg(char* msg);
 
 //int (*_cellGcmIoOffsetToAddress)(uint32_t, void**) = NULL;
 int (*vshtask_notify)(int, const char *) = NULL;
-/*
+
 int (*vshmain_is_ss_enabled)() = NULL;
 int (*set_SSHT_)(int) = NULL;
-int (*BgmPlaybackEnable)(int,void *) = NULL;
+//int (*BgmPlaybackEnable)(int,void *) = NULL;
 int opd[2] = {0,0};
-*/
+
+
 void * getNIDfunc(const char * vsh_module, uint32_t fnid);
 
 
@@ -3322,7 +3323,7 @@ again1:
 				cellRtcGetCurrentTick(&pTick);
 
 				if(f1==5  && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
-				if(f1==10) {if(f0>6) break; else strcpy(paths[10], f1==0 ? "video" : "GAMES_DUP");}
+				if(f1==10 && f0>0) {if(f0>6) break; else strcpy(paths[10], f1==0 ? "video" : "GAMES_DUP");}
 				if(f0==9 && f1>6)   break;    // ntfs
 				if(f0==7 && (!webman_config->netd0 || f1>6 || !cobra_mode)) break;
 				if(f0==8 && (!webman_config->netd1 || f1>6 || !cobra_mode)) break;
@@ -5495,21 +5496,6 @@ just_leave:
 									   "<a href=\"http://store.brewology.com/ahomebrew.php?brewid=257\">webMAN-MOD - Latest version of webMAN-MOD on Brewology</a><br>");
 
 /*
-	//vshmain_is_ss_enabled	= (void*)((int)getNIDfunc("vshmain", 0x981D7E9F));
-	BgmPlaybackEnable		= (void*)((int)getNIDfunc("vshmain", 0xEDAB5E5E));
-	if(BgmPlaybackEnable)
-	{
-		//set_SSHT_ = (uint32_t*)&opd;
-		//memcpy(set_SSHT_, vshmain_is_ss_enabled, 8);
-		//opd[0] -= 0x2C; // Sub before vshmain_981D7E9F sets Screenshot Flag
-		//set_SSHT_(1);	// enable screenshot
-
-		int * arg2;
-		BgmPlaybackEnable(0, &arg2);
-		show_msg((char*)"BGM enabled");
-	}
-
-
 						#define VSH_GCM_OBJ			0x70A8A8 // 4.53cex
 						//#define VSH_GCM_OBJ		0x71A5F8 // 4.46dex
 
@@ -5797,7 +5783,7 @@ just_leave:
 									cellRtcGetCurrentTick(&pTick);
 
 									if(f1==5  && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
-                                    if(f1==10) {if(f0>6) break; else strcpy(paths[10], f1==0 ? "video" : "GAMES_DUP");}
+									if(f1==10 && f0>0) {if(f0>6) break; else strcpy(paths[10], f1==0 ? "video" : "GAMES_DUP");}
 									if(f0==9 && f1>6)   break;    // ntfs
 									if(f0==7 && (!webman_config->netd0 || f1>6 || !cobra_mode)) break;
 									if(f0==8 && (!webman_config->netd1 || f1>6 || !cobra_mode)) break;
@@ -7376,6 +7362,12 @@ DEBUG Menu Switcher : L3+L2+X
 
 									cellFsRename(PS2_EMU_PATH "ps2_netemu.self.self", PS2_EMU_PATH "ps2_netemu.self.tmp");
 									cellFsRename(PS2_EMU_PATH "ps2_netemu.self.swap", PS2_EMU_PATH "ps2_netemu.self");
+
+									cellFsRename(PS2_EMU_PATH "ps2_gxemu.self"      , PS2_EMU_PATH "ps2_gxemu.tmp");
+									cellFsRename(PS2_EMU_PATH "ps2_gxemu.self.swap" , PS2_EMU_PATH "ps2_gxemu.self");
+
+									cellFsRename(PS2_EMU_PATH "ps2_emu.self"        , PS2_EMU_PATH "ps2_emu.tmp");
+									cellFsRename(PS2_EMU_PATH "ps2_emu.self.swap"   , PS2_EMU_PATH "ps2_emu.self");
 								}
 								else if(cellFsStat((char*)PS2_EMU_PATH "ps2_netemu.self.sp", &s)==CELL_FS_SUCCEEDED)
 								{
@@ -7398,6 +7390,12 @@ DEBUG Menu Switcher : L3+L2+X
 									{
 										cellFsRename(PS2_EMU_PATH "ps2_netemu.self", PS2_EMU_PATH "ps2_netemu.self.swap");
 										cellFsRename(PS2_EMU_PATH "ps2_netemu.tmp" , PS2_EMU_PATH "ps2_netemu.self");
+
+										cellFsRename(PS2_EMU_PATH "ps2_gxemu.self" , PS2_EMU_PATH "ps2_gxemu.self.swap");
+										cellFsRename(PS2_EMU_PATH "ps2_gxemu.tmp"  , PS2_EMU_PATH "ps2_gxemu.self");
+
+										cellFsRename(PS2_EMU_PATH "ps2_emu.self"   , PS2_EMU_PATH "ps2_emu.self.swap");
+										cellFsRename(PS2_EMU_PATH "ps2_emu.tmp"    , PS2_EMU_PATH "ps2_emu.self");
 									}
 									else
 									{
@@ -7653,6 +7651,22 @@ DEBUG Menu Switcher : L3+L2+X
 						else
 						if(!(webman_config->combo & SHOW_IDPS) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_CIRCLE) ) // R2+O Show IDPS EID0+LV2
 						{
+							vshmain_is_ss_enabled	= (void*)((int)getNIDfunc("vshmain", 0x981D7E9F));
+							//BgmPlaybackEnable		= (void*)((int)getNIDfunc("vshmain", 0xEDAB5E5E));
+							//BgmPlaybackEnable		+= (16*2); // its actually not the OPD vshmain_EDAB5E5E, but 16 opds afterwards
+							if(vshmain_is_ss_enabled()==0)
+							{
+								set_SSHT_ = (uint32_t*)&opd;
+								memcpy(set_SSHT_, vshmain_is_ss_enabled, 8);
+								opd[0] -= 0x2C; // Sub before vshmain_981D7E9F sets Screenshot Flag
+								set_SSHT_(1);	// enable screenshot
+
+								//int * arg2;
+								//BgmPlaybackEnable(0, &arg2);
+								show_msg((char*)"Screenshot enabled");
+								sys_timer_sleep(2);
+							}
+
 							uint64_t eid0_idps[2], buffer[0x40], start_sector;
 							uint32_t read;
 							sys_device_handle_t source;
@@ -7681,7 +7695,10 @@ DEBUG Menu Switcher : L3+L2+X
 								PSID[1] = peekq(0x8000000000474F34ULL+8);
 							}
 
-                            sprintf(tmp, "IDPS EID0 : %016llX%016llX\r\nIDPS LV2  : %016llX%016llX\r\nPSID LV2 : %016llX%016llX", eid0_idps[0], eid0_idps[1], IDPS[0], IDPS[1], PSID[0], PSID[1]);
+							#define SEP "\n                  "
+                            sprintf(tmp, "IDPS EID0 : %016llX" SEP
+                                         "%016llX\nIDPS LV2  : %016llX" SEP
+                                         "%016llX\r\nPSID LV2 : %016llX" SEP "%016llX", eid0_idps[0], eid0_idps[1], IDPS[0], IDPS[1], PSID[0], PSID[1]);
 							show_msg((char*)tmp);
 							sys_timer_sleep(2);
 						}
@@ -9318,6 +9335,10 @@ patch:
 			pokeq(0x80000000002A1054ULL, 0x386000014E800020ULL); // fix 0x80010017 error   Original: 0xFBC1FFF0EBC225B0ULL
 			pokeq(0x8000000000055C58ULL, 0x386000004E800020ULL); // fix 0x8001002B error   Original: 0xF821FE917C0802A6ULL
 
+			// Booting of game discs and backups speed increased
+			lv2poke32(0x8000000000058DA0ULL, 0x38600001);
+			lv2poke32(0x800000000005A96CULL, 0x38600000);
+
 			sc_600=0x340630; //0x363A18 + 600*8 = 00364CD8 -> 80 00 00 00 00 34 06 30
 			sc_604=0x340798; //0x363A18 + 604*8 = 00364CF8 -> 80 00 00 00 00 34 07 98
 			sc_142=0x306478; //0x363A18 + 142*8 = 00363E88 -> 80 00 00 00 00 30 64 78
@@ -9337,6 +9358,10 @@ patch:
 
 			pokeq(0x80000000002A1060ULL, 0x386000014E800020ULL); // fix 0x80010017 error   Original: 0xFBC1FFF0EBC225B0ULL
 			pokeq(0x8000000000055C5CULL, 0x386000004E800020ULL); // fix 0x8001002B error   Original: 0xF821FE917C0802A6ULL
+
+			// Booting of game discs and backups speed increased
+			lv2poke32(0x8000000000058DA4ULL, 0x38600001);
+			lv2poke32(0x800000000005A970ULL, 0x38600000);
 
 			sc_600=0x340640; //0x363A18 + 600*8 = 00364CD8 -> 80 00 00 00 00 34 06 40
 			sc_604=0x3407A8; //0x363A18 + 604*8 = 00364CF8 -> 80 00 00 00 00 34 07 A8
