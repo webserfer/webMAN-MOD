@@ -62,7 +62,11 @@ SYS_MODULE_STOP(wwwd_stop);
 #define REBUG_COBRA_PATH	"/dev_blind/rebug/cobra/"
 #define SYS_COBRA_PATH		"/dev_blind/sys/"
 
-#define WM_VERSION			"1.30.27 MOD"						// webMAN version
+#define PS2_CLASSIC_PLACEHOLDER  "/dev_hdd0/game/PS2U10000/USRDIR"
+#define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
+#define PS2_CLASSIC_ISO_ICON     "/dev_hdd0/game/PS2U10000/ICON0.PNG"
+
+#define WM_VERSION			"1.30.28 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -283,7 +287,7 @@ typedef struct
 	uint8_t tid;
 	uint8_t wmdn;
     char autoboot_path[256];
-
+	uint8_t ps2l;
 } __attribute__((packed)) WebmanCfg;
 
 #define FAIL_SAFE (1<<0)
@@ -377,6 +381,7 @@ int lang_pos, fh;
 #define STR_SCAN1	"Scan these devices"
 #define STR_SCAN2	"Scan for content"
 #define STR_PSPL	"Show PSP Launcher"
+#define STR_PS2L	"Show PS2 Classic Launcher"
 #define STR_VIDLG	"Video"
 #define STR_LPG	"Load last-played game on startup"
 #define STR_AUTOB	"Check for /dev_hdd0/PS3ISO/AUTOBOOT.ISO on startup"
@@ -462,6 +467,7 @@ int lang_pos, fh;
 #define STR_VIDEO	"Video content"
 
 #define STR_LAUNCHPSP	"Launch PSP ISO mounted through webMAN or mmCM"
+#define STR_LAUNCHPS2	"Launch PS2 Classic"
 
 #define STR_GAMEUM	"Game unmounted."
 
@@ -470,7 +476,8 @@ int lang_pos, fh;
 
 #define STR_GAMETOM	"Game to mount"
 #define STR_GAMELOADED	"Game loaded successfully. Start the game from the disc icon<br>or from <b>/app_home</b>&nbsp;XMB entry.<hr/>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game."
-#define STR_PSPLOADED	"Game loaded successfully. Start the game using <b>PSP Launcher</b>.<hr/>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game."
+#define STR_PSPLOADED	"Game loaded successfully. Start the game using <b>PSP Launcher</b>.<hr/>"
+#define STR_PS2LOADED	"Game loaded successfully. Start the game using <b>PS2 Classic Launcher</b>.<hr/>"
 #define STR_LOADED2	"loaded   "
 
 #define STR_MOVIETOM	"Movie to mount"
@@ -524,6 +531,7 @@ char STR_CPYABORT[50]		= "Copy aborted!";
 char STR_SCAN1[100]			= "Scan these devices";
 char STR_SCAN2[100]			= "Scan for content";
 char STR_PSPL[100]			= "Show PSP Launcher";
+char STR_PS2L[100]			= "Show PS2 Classic Launcher";
 char STR_VIDLG[30]			= "Video";
 char STR_LPG[100]			= "Load last-played game on startup";
 char STR_AUTOB[150]			= "Check for /dev_hdd0/PS3ISO/AUTOBOOT.ISO on startup";
@@ -609,6 +617,7 @@ char STR_VIDFORMAT[50]		= "Blu-ray\xE2\x84\xA2 and DVD";
 char STR_VIDEO[50]			= "Video content";
 
 char STR_LAUNCHPSP[100]		= "Launch PSP ISO mounted through webMAN or mmCM";
+char STR_LAUNCHPS2[100]		= "Launch PS2 Classic";
 
 char STR_GAMEUM[50]			= "Game unmounted.";
 
@@ -617,7 +626,8 @@ char STR_LOADED[50]			= "Disc inserted.";
 
 char STR_GAMETOM[50]		= "Game to mount";
 char STR_GAMELOADED[250]	= "Game loaded successfully. Start the game from the disc icon<br>or from <b>/app_home</b>&nbsp;XMB entry.<hr/>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game.";
-char STR_PSPLOADED[230]		= "Game loaded successfully. Start the game using <b>PSP Launcher</b>.<hr/>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game.";
+char STR_PSPLOADED[230]		= "Game loaded successfully. Start the game using <b>PSP Launcher</b>.<hr/>";
+char STR_PS2LOADED[230]		= "Game loaded successfully. Start the game using <b>PS2 Classic Launcher</b>.<hr/>";
 char STR_LOADED2[50]		= "loaded   ";
 
 char STR_MOVIETOM[50]		= "Movie to mount";
@@ -807,6 +817,12 @@ static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
 	return (int)p1;
 }
 
+static inline int sysLv2FsLink(const char *oldpath,const char *newpath)
+{
+	system_call_2(810,(u64)oldpath,(u64)newpath);
+	return_to_user_prog(int);
+}
+
 /*
 static u32 in_cobra(u32 *mode)
 {
@@ -847,6 +863,13 @@ int filecopy(char *file1, char *file2, uint64_t maxbytes)
     uint64_t chunk_size=64*1024; //64K
 
 	if(cellFsStat(file1, &buf)!=CELL_FS_SUCCEEDED) return ret;
+
+	if(strncmp(file1, drives[0], 9)!=NULL && strncmp(file2, drives[0], 9)!=NULL)
+	{
+		if(strcmp(file1, file2)==0) return ret;
+		cellFsUnlink(file2);
+		return sysLv2FsLink(file1, file2);
+	}
 
 	if(cellFsOpen((char*)file1, CELL_FS_O_RDONLY, &fd1, 0, 0)==CELL_FS_SUCCEEDED)
 	{
@@ -2125,6 +2148,7 @@ void update_language()
 		language("STR_SCAN1", STR_SCAN1);
 		language("STR_SCAN2", STR_SCAN2);
 		language("STR_PSPL", STR_PSPL);
+		language("STR_PS2L", STR_PS2L);
 		language("STR_VIDLG", STR_VIDLG	);
 		language("STR_LPG", STR_LPG);
 		language("STR_AUTOB", STR_AUTOB);
@@ -2210,6 +2234,7 @@ void update_language()
 		language("STR_VIDEO", STR_VIDEO);
 
 		language("STR_LAUNCHPSP", STR_LAUNCHPSP);
+		language("STR_LAUNCHPS2", STR_LAUNCHPS2);
 
 		language("STR_GAMEUM", STR_GAMEUM);
 
@@ -2219,6 +2244,7 @@ void update_language()
 		language("STR_GAMETOM", STR_GAMETOM);
 		language("STR_GAMELOADED", STR_GAMELOADED);
 		language("STR_PSPLOADED", STR_PSPLOADED);
+		language("STR_PS2LOADED", STR_PS2LOADED);
 		language("STR_LOADED2", STR_LOADED2);
 
 		language("STR_MOVIETOM", STR_MOVIETOM);
@@ -2939,7 +2965,7 @@ static void get_default_icon(char *icon, char *param, char *file, int isdir, int
 	if(icon[0] && cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 
     //show the default icon by type
-	if(strstr(param, "/PS2ISO"))
+	if(strstr(param, "/PS2ISO") || strstr(param, ".BIN.ENC"))
 		strcpy(icon, wm_icons[7]);
 	else if(strstr(param, "/PSX") || strstr(file, ".ntfs[PSX"))
 		strcpy(icon, wm_icons[6]);
@@ -3286,17 +3312,28 @@ again1:
 			if(!(webman_config->cmask & PS3)) strcpy(myxml_ps3, "<View id=\"seg_mygames_ps3_items\"><Attributes>");
 #ifdef COBRA_ONLY
 			{
-				if(!(webman_config->cmask & PS2)) strcpy(myxml_ps2, "<View id=\"seg_mygames_ps2_items\"><Attributes>");
+				if(!(webman_config->cmask & PS2)) {
+					strcpy(myxml_ps2, "<View id=\"seg_mygames_ps2_items\"><Attributes>");
+					if(webman_config->ps2l && cobra_mode && cellFsStat((char*)"/dev_hdd0/game/PS2U10000", &buf)==CELL_FS_SUCCEEDED) {
+						sprintf(templn, "<Table key=\"ps2_classic_launcher\">"
+										"<Pair key=\"icon\"><String>/dev_hdd0/game/PS2U10000/ICON0.PNG</String></Pair>"
+										"<Pair key=\"icon_notation\"><String>WNT_XmbItemBrowser</String></Pair>"
+										"<Pair key=\"title\"><String>PS2 Classic Launcher</String></Pair>"
+										"<Pair key=\"info\"><String>%s</String></Pair>"
+										"</Table>", STR_LAUNCHPS2);
+						strcat(myxml_ps2, templn);
+					}
+				}
 				if(!(webman_config->cmask & PS1)) strcpy(myxml_psx, "<View id=\"seg_mygames_psx_items\"><Attributes>");
 				if(!(webman_config->cmask & PSP)) {
 					strcpy(myxml_psp, "<View id=\"seg_mygames_psp_items\"><Attributes>");
 					if(webman_config->pspl && cobra_mode && cellFsStat((char*)"/dev_hdd0/game/PSPC66820", &buf)==CELL_FS_SUCCEEDED) {
 						sprintf(templn, "<Table key=\"cobra_psp_launcher\">"
-                                        "<Pair key=\"icon\"><String>/dev_hdd0/game/PSPC66820/ICON0.PNG</String></Pair>"
-                                        "<Pair key=\"icon_notation\"><String>WNT_XmbItemBrowser</String></Pair>"
-                                        "<Pair key=\"title\"><String>PSP Launcher</String></Pair>"
-                                        "<Pair key=\"info\"><String>%s</String></Pair>"
-                                        "</Table>", STR_LAUNCHPSP);
+										"<Pair key=\"icon\"><String>/dev_hdd0/game/PSPC66820/ICON0.PNG</String></Pair>"
+										"<Pair key=\"icon_notation\"><String>WNT_XmbItemBrowser</String></Pair>"
+										"<Pair key=\"title\"><String>PSP Launcher</String></Pair>"
+										"<Pair key=\"info\"><String>%s</String></Pair>"
+										"</Table>", STR_LAUNCHPSP);
 						strcat(myxml_psp, templn);
 					}
 				}
@@ -3323,7 +3360,8 @@ again1:
 				cellRtcGetCurrentTick(&pTick);
 
 				if(f1==5  && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
-				if(f1==10 && f0>0) {if(f0>6) break; else strcpy(paths[10], f1==0 ? "video" : "GAMES_DUP");}
+				//if(f1==10 && f0>0) {if(f0>6) break; else strcpy(paths[10], f1==0 ? "video" : "GAMES_DUP");}
+				if(f1==10) {if(f0<7) strcpy(paths[10], f0==0 ? "video" : "GAMES_DUP"); else break;}
 				if(f0==9 && f1>6)   break;    // ntfs
 				if(f0==7 && (!webman_config->netd0 || f1>6 || !cobra_mode)) break;
 				if(f0==8 && (!webman_config->netd1 || f1>6 || !cobra_mode)) break;
@@ -3568,19 +3606,29 @@ reconnect:
 						else
 #endif
 						{
-							sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.d_name);
-							is_iso=((strstr(param, "/PS3ISO") || strstr(param, "/PS2ISO") ||
-									 strstr(param, "/PSPISO") || strstr(param, "/ISO")||
-									 strstr(param, "/PSX") || strstr(param, "/DVDISO") || strstr(param, "/BDISO") ||
-									 strstr(param, WMTMP))
+							int flen = strlen(entry.d_name);
+							char tmp_param[20];
+							strncpy(tmp_param, param, 20);
+
+							is_iso = (flen > 4) && (
+								   ((strstr(tmp_param, "/PS3ISO") || strstr(tmp_param, "/PS2ISO") ||
+									 strstr(tmp_param, "/PSPISO") || strstr(tmp_param, "/ISO")||
+									 strstr(tmp_param, "/PSX") || strstr(tmp_param, "/DVDISO") || strstr(tmp_param, "/BDISO") ||
+									 strstr(tmp_param, WMTMP))
 								&&
 								(
-								  (strstr(entry.d_name, ".ISO") || strstr(entry.d_name, ".iso") ||
-									(strstr(param, "/PSX") && (strstr(entry.d_name, ".CUE") || strstr(entry.d_name, ".cue")))
-								  )
+									((strstr(entry.d_name + flen - 4, ".ISO") || strstr(entry.d_name + flen - 4, ".iso")) ||
+									 (!(webman_config->cmask & PS2) && strstr(entry.d_name + flen - 8, ".BIN.ENC")) ||
+									 (strstr(tmp_param, "/PSX") && (strstr(entry.d_name + flen - 4, ".CUE") || strstr(entry.d_name + flen - 4, ".cue")))
+									)
 								&&
-								  ((entry.d_name[strlen(entry.d_name)-1]=='0' && entry.d_name[strlen(entry.d_name)-2]=='.') || entry.d_name[strlen(entry.d_name)-1]=='o' || entry.d_name[strlen(entry.d_name)-1]=='O' || entry.d_name[strlen(entry.d_name)-1]=='e' || entry.d_name[strlen(entry.d_name)-1]=='E')
-								)) || strstr(entry.d_name, ".ntfs[");
+								  ((entry.d_name[flen-1]=='0' && entry.d_name[flen-2]=='.') ||
+									entry.d_name[flen-1]=='o' || entry.d_name[flen-1]=='O' ||
+									entry.d_name[flen-1]=='e' || entry.d_name[flen-1]=='E' ||
+									entry.d_name[flen-1]=='C')
+								)) || strstr(entry.d_name, ".ntfs["));
+
+							if(!is_iso) sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.d_name);
 
 							if(is_iso || cellFsStat(templn, &buf)==CELL_FS_SUCCEEDED)
 							{
@@ -3682,22 +3730,27 @@ reconnect:
 									if(icon[0]==0 || cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
 									{
 										sprintf(icon, "%s/%s", param, entry.d_name);
-										if(strstr(icon, "ntfs[PS3ISO]") || strstr(icon, "ntfs[DVDISO]") || strstr(icon, "ntfs[PSXISO]")) icon[strlen(icon)-13]=0;
-										if(strstr(icon, "ntfs[BDISO]")) icon[strlen(icon)-12]=0;
-										if(icon[strlen(icon)-4]=='.')
+
+										flen = strlen(icon);
+										if(flen > 13 && (strstr(icon, "ntfs[PS3ISO]") || strstr(icon, "ntfs[DVDISO]") || strstr(icon, "ntfs[PSXISO]"))) {flen -= 13; icon[flen]=0;} else
+										if(flen > 12 && strstr(icon, "ntfs[BDISO]")) {flen -= 12; icon[flen]=0;}
+
+										if(flen > 4 && icon[flen-4]=='.')
 										{
-											icon[strlen(icon)-3]='p'; icon[strlen(icon)-2]='n'; icon[strlen(icon)-1]='g';
+											icon[flen-3]='p'; icon[flen-2]='n'; icon[flen-1]='g';
 											if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
-												{icon[strlen(icon)-3]='P'; icon[strlen(icon)-2]='N'; icon[strlen(icon)-1]='G';}
+											{
+												icon[flen-3]='P'; icon[flen-2]='N'; icon[flen-1]='G';
+											}
 										}
 										else
-										if(icon[strlen(icon)-2]=='.')
+										if(flen > 5 && icon[flen-2]=='.')
 										{
-											icon[strlen(icon)-5]='p'; icon[strlen(icon)-4]='n'; icon[strlen(icon)-3]='g';  icon[strlen(icon)-2]=0;
+											icon[flen-5]='p'; icon[flen-4]='n'; icon[flen-3]='g'; flen -= 2; icon[flen]=0;
 										}
 
 										if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
-											{icon[strlen(icon)-3]='j'; icon[strlen(icon)-2]='p'; icon[strlen(icon)-1]='g';}
+											{icon[flen-3]='j'; icon[flen-2]='p'; icon[flen-1]='g';}
 									}
 								}
 								else if(icon[0]==0 || cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
@@ -3760,8 +3813,8 @@ reconnect:
 			if(!(webman_config->cmask & PS3)) strcat(myxml_ps3, "</Attributes><Items>");
 #ifdef COBRA_ONLY
 			{
-				if(!(webman_config->cmask & PS2)) strcat(myxml_ps2, "</Attributes><Items>");
-				if(!(webman_config->cmask & PS1)) strcat(myxml_psx, "</Attributes><Items>");
+				if(!(webman_config->cmask & PS2)) {strcat(myxml_ps2, "</Attributes><Items>"); if(webman_config->ps2l && cellFsStat((char*)PS2_CLASSIC_PLACEHOLDER, &buf)==CELL_FS_SUCCEEDED) strcat(myxml_ps2, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"ps2_classic_launcher\" attr=\"ps2_classic_launcher\" src=\"xcb://localhost/query?limit=1&cond=Ae+Game:Game.titleId PS2U10000\"/>");}
+				if(!(webman_config->cmask & PS1)) {strcat(myxml_psx, "</Attributes><Items>");}
 				if(!(webman_config->cmask & PSP)) {strcat(myxml_psp, "</Attributes><Items>"); if(webman_config->pspl && cobra_mode && cellFsStat((char*)"/dev_hdd0/game/PSPC66820", &buf)==CELL_FS_SUCCEEDED) strcat(myxml_psp, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"cobra_psp_launcher\" attr=\"cobra_psp_launcher\" src=\"xcb://localhost/query?limit=1&cond=Ae+Game:Game.titleId PSPC66820\"/>");}
 				if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU)) strcat(myxml_dvd, "</Attributes><Items>");
 			}
@@ -4412,6 +4465,7 @@ again3:
 					if(!strstr(param, "dvd")) webman_config->cmask|=DVD;
 
 					if(strstr(param, "psl")) webman_config->pspl=1;
+					if(strstr(param, "p2l")) webman_config->ps2l=1;
 
 					webman_config->combo=0;
 					if(!strstr(param, "failsaf")) webman_config->combo|=FAIL_SAFE;
@@ -5067,7 +5121,9 @@ again3:
 									else {sprintf(sf, "%s", STR_GIGABYTE); sz>>=30;}
 
 									if((buf.st_mode & S_IFDIR) != 0)
+									{
 										sprintf(fsize, "<a href=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
+									}
 									else
 										sprintf(fsize, "%llu %s", sz, sf);
 									snprintf(ename, 6, "%s    ", entry.d_name);
@@ -5347,7 +5403,8 @@ just_leave:
 
 						add_check_box("p0", "pst", "PLAYSTATION\xC2\xAE\x33"    , NULL     , !(webman_config->cmask & PS3), buffer);
 #ifdef COBRA_ONLY
-						add_check_box("p1", "ps2", "PLAYSTATION\xC2\xAE\x32"    , NULL     , !(webman_config->cmask & PS2), buffer);
+						add_check_box("p1", "ps2", "PLAYSTATION\xC2\xAE\x32"    , " ("     , !(webman_config->cmask & PS2), buffer);
+                        add_check_box("p7", "p2l", STR_PS2L                     , ")<br>"  ,  (webman_config->ps2l)       , buffer);
 						add_check_box("p2", "ps1", "PLAYSTATION\xC2\xAE"        , NULL     , !(webman_config->cmask & PS1), buffer);
                         add_check_box("p3", "psp", "PLAYSTATION\xC2\xAEPORTABLE", " ("     , !(webman_config->cmask & PSP), buffer);
                         add_check_box("p6", "psl", STR_PSPL                     , ")<br>"  ,  (webman_config->pspl)       , buffer);
@@ -5643,6 +5700,8 @@ just_leave:
 													tempstr,
 													STR_CPYDEST, target, target);
 								}
+								else if(strstr(param, ".BIN.ENC"))
+									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, tempstr, STR_PS2LOADED);
 								else if(strstr(param, "/PSPISO") || strstr(param, "/ISO"))
 									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, tempstr, STR_PSPLOADED);
 								else if(strstr(param, "/BDISO") || strstr(param, "/DVDISO") || strstr(param, ".ntfs[BDISO]") || strstr(param, ".ntfs[DVDISO]"))
@@ -5783,7 +5842,8 @@ just_leave:
 									cellRtcGetCurrentTick(&pTick);
 
 									if(f1==5  && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
-									if(f1==10 && f0>0) {if(f0>6) break; else strcpy(paths[10], f1==0 ? "video" : "GAMES_DUP");}
+									//if(f1==10 && f0>0) {if(f0>6) break; else strcpy(paths[10], f1==0 ? "video" : "GAMES_DUP");}
+									if(f1==10) {if(f0<7) strcpy(paths[10], f0==0 ? "video" : "GAMES_DUP"); else break;}
 									if(f0==9 && f1>6)   break;    // ntfs
 									if(f0==7 && (!webman_config->netd0 || f1>6 || !cobra_mode)) break;
 									if(f0==8 && (!webman_config->netd1 || f1>6 || !cobra_mode)) break;
@@ -5969,20 +6029,29 @@ just_leave:
 										else
 #endif
 										{
-											sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.d_name);
+											int flen = strlen(entry.d_name);
+											char tmp_param[20];
+											strncpy(tmp_param, param, 20);
 
-											is_iso=((strstr(param, "/PS3ISO") || strstr(param, "/PS2ISO") ||
-													strstr(param, "/PSPISO") || strstr(param, "/ISO")||
-													strstr(param, "/PSX") || strstr(param, "/DVDISO") || strstr(param, "/BDISO") ||
-													strstr(param, WMTMP))
+											is_iso = (flen > 4) && (
+													 ((strstr(tmp_param, "/PS3ISO") || strstr(tmp_param, "/PS2ISO") ||
+													   strstr(tmp_param, "/PSPISO") || strstr(tmp_param, "/ISO")||
+													   strstr(tmp_param, "/PSX") || strstr(tmp_param, "/DVDISO") || strstr(tmp_param, "/BDISO") ||
+													   strstr(tmp_param, WMTMP))
 												&&
 												(
-				  								  ((strstr(entry.d_name, ".iso") || strstr(entry.d_name, ".ISO")) ||
-                                                   (strstr(param, "/PSX") && (strstr(entry.d_name, ".cue") || strstr(entry.d_name, ".CUE")))
+												  ((strstr(entry.d_name + flen - 4, ".iso") || strstr(entry.d_name + flen - 4, ".ISO")) ||
+												   (!(webman_config->cmask & PS2) && flen > 8 && strstr(entry.d_name + flen - 8, ".BIN.ENC")) ||
+												   (strstr(tmp_param, "/PSX") && (strstr(entry.d_name + flen - 4, ".cue") || strstr(entry.d_name + flen - 4, ".CUE")))
 												  )
 												&&
-												  ((entry.d_name[strlen(entry.d_name)-1]=='0' && entry.d_name[strlen(entry.d_name)-2]=='.') || entry.d_name[strlen(entry.d_name)-1]=='o' || entry.d_name[strlen(entry.d_name)-1]=='O' || entry.d_name[strlen(entry.d_name)-1]=='e' || entry.d_name[strlen(entry.d_name)-1]=='E')
-												)) || strstr(entry.d_name, ".ntfs[");
+												  ((entry.d_name[flen-1]=='0' && entry.d_name[flen-2]=='.') ||
+													entry.d_name[flen-1]=='o' || entry.d_name[flen-1]=='O' ||
+													entry.d_name[flen-1]=='e' || entry.d_name[flen-1]=='E' ||
+													entry.d_name[flen-1]=='C')
+												)) || strstr(entry.d_name, ".ntfs["));
+
+											if(!is_iso) sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.d_name);
 
 											if(is_iso || cellFsStat(templn, &buf)==CELL_FS_SUCCEEDED)
 											{
@@ -6088,24 +6157,26 @@ just_leave:
 												if(icon[0]==0)
 												{
 													sprintf(icon, "%s/%s", param, entry.d_name);
-													if(strstr(icon, "ntfs[PS3ISO]") || strstr(icon, "ntfs[DVDISO]") || strstr(icon, "ntfs[PSXISO]")) icon[strlen(icon)-13]=0;
-													if(strstr(icon, "ntfs[BDISO]")) icon[strlen(icon)-12]=0;
-													if(icon[strlen(icon)-4]=='.')
+													flen = strlen(icon);
+													if(flen > 13 && (strstr(icon, "ntfs[PS3ISO]") || strstr(icon, "ntfs[DVDISO]") || strstr(icon, "ntfs[PSXISO]"))) {flen -= 13; icon[flen]=0;} else
+													if(flen > 12 && strstr(icon, "ntfs[BDISO]")) {flen -= 12; icon[flen]=0;}
+
+													if(flen > 4 && icon[flen-4]=='.')
 													{
-														icon[strlen(icon)-3]='p'; icon[strlen(icon)-2]='n'; icon[strlen(icon)-1]='g';
+														icon[flen-3]='p'; icon[flen-2]='n'; icon[flen-1]='g';
 														if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
 														{
-															icon[strlen(icon)-3]='P'; icon[strlen(icon)-2]='N'; icon[strlen(icon)-1]='G';
+															icon[flen-3]='P'; icon[flen-2]='N'; icon[flen-1]='G';
 														}
 													}
 													else
-													if(icon[strlen(icon)-2]=='.')
+													if(flen > 5 && icon[flen-2]=='.')
 													{
-														icon[strlen(icon)-5]='p'; icon[strlen(icon)-4]='n'; icon[strlen(icon)-3]='g';  icon[strlen(icon)-2]=0;
+														icon[flen-5]='p'; icon[flen-4]='n'; icon[flen-3]='g'; flen -= 2; icon[flen]=0;
 													}
 
 													if(cellFsStat(icon, &buf)!=CELL_FS_SUCCEEDED)
-														{icon[strlen(icon)-3]='j'; icon[strlen(icon)-2]='p'; icon[strlen(icon)-1]='g';}
+														{icon[flen-3]='j'; icon[flen-2]='p'; icon[flen-1]='g';}
 												}
 
 												get_default_icon(icon, param, entry.d_name, 0, ns, abort_connection);
@@ -7724,7 +7795,7 @@ DEBUG Menu Switcher : L3+L2+X
 							else if((cellFsStat((char*) REBUG_COBRA_PATH "stage2.cex.bak", &s)==CELL_FS_SUCCEEDED) &&
 									(cellFsStat((char*) REBUG_COBRA_PATH "stage2.dex.bak", &s)==CELL_FS_SUCCEEDED))
 							{
-								show_msg((char*)"REBUG COBRA inactive!\r\nActivating COBRA...");
+								show_msg((char*)"REBUG COBRA is inactive!\r\nActivating COBRA...");
 
 								cellFsRename(REBUG_COBRA_PATH "stage2.cex.bak", REBUG_COBRA_PATH "stage2.cex");
 								cellFsRename(REBUG_COBRA_PATH "stage2.dex.bak", REBUG_COBRA_PATH "stage2.dex");
@@ -7733,14 +7804,14 @@ DEBUG Menu Switcher : L3+L2+X
 #else
 							if(cellFsStat((char*)SYS_COBRA_PATH "stage2.bin", &s)==CELL_FS_SUCCEEDED)
 							{
-								show_msg((char*)"REBUG COBRA active!\r\nDeactivating COBRA...");
+								show_msg((char*)"COBRA is active!\r\nDeactivating COBRA...");
 
 								cellFsRename(SYS_COBRA_PATH "stage2.bin", SYS_COBRA_PATH "stage2_disabled.bin");
 								reboot=true;
 							}
 							else if(cellFsStat((char*)SYS_COBRA_PATH "stage2_disabled.bin", &s)==CELL_FS_SUCCEEDED)
 							{
-								show_msg((char*)"REBUG COBRA inactive!\r\nActivating COBRA...");
+								show_msg((char*)"COBRA is inactive!\r\nActivating COBRA...");
 
 								cellFsRename(SYS_COBRA_PATH "stage2_disabled.bin", SYS_COBRA_PATH "stage2.bin");
 								reboot=true;
@@ -8116,6 +8187,7 @@ void reset_settings()
 	webman_config->foot=1;
 	webman_config->nospoof=1;
 	webman_config->pspl=1;
+	webman_config->ps2l=1;
 
 	webman_config->sidps=0;
 	webman_config->spsid=0;
@@ -8501,6 +8573,49 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 
 	char _path[512];
 	strcpy(_path, _path0);
+
+	// Launch PS2 Classic
+	if(strstr(_path, ".BIN.ENC"))
+	{
+		struct CellFsStat s;
+		char temp[512];
+
+		if(cellFsStat(PS2_CLASSIC_PLACEHOLDER, &s)==CELL_FS_SUCCEEDED)
+		{
+			sprintf(temp, "PS2 Classic\n%s", strrchr(_path, '/') + 1);
+			copy_in_progress=true;
+			show_msg(temp);
+
+			cellFsUnlink(PS2_CLASSIC_ISO_PATH);
+			if(filecopy(_path, (char*)PS2_CLASSIC_ISO_PATH, COPY_WHOLE_FILE) == 0)
+			{
+				if(cellFsStat(PS2_CLASSIC_ISO_ICON ".bak", &s)!=CELL_FS_SUCCEEDED)
+					filecopy((char*)PS2_CLASSIC_ISO_ICON, (char*)(PS2_CLASSIC_ISO_ICON ".bak"), COPY_WHOLE_FILE);
+
+				sprintf(temp, "%s.png", _path);
+				if(cellFsStat(temp, &s)!=CELL_FS_SUCCEEDED) sprintf(temp, "%s.PNG", _path);
+
+				cellFsUnlink(PS2_CLASSIC_ISO_ICON);
+				if(cellFsStat(temp, &s)==CELL_FS_SUCCEEDED)
+					filecopy(temp, (char*)PS2_CLASSIC_ISO_ICON, COPY_WHOLE_FILE);
+				else
+					filecopy((char*)(PS2_CLASSIC_ISO_ICON ".bak"), (char*)PS2_CLASSIC_ISO_ICON, COPY_WHOLE_FILE);
+
+				sprintf(temp, "\"%s\" %s", strrchr(_path, '/') + 1, STR_LOADED2);
+			}
+			else
+				sprintf(temp, STR_ERROR);
+			show_msg(temp);
+			copy_in_progress=false;
+		}
+		else
+		{
+			sprintf(temp, "PS2 Classic Placeholder %s", STR_NOTFOUND);
+			show_msg(temp);
+		}
+
+		return;
+	}
 
 #ifdef COBRA_ONLY
 	//if(cobra_mode)
