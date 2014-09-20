@@ -66,7 +66,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
 #define PS2_CLASSIC_ISO_ICON     "/dev_hdd0/game/PS2U10000/ICON0.PNG"
 
-#define WM_VERSION			"1.30.28 MOD"						// webMAN version
+#define WM_VERSION			"1.30.29 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -2721,10 +2721,11 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title)
 
 	str=(mem[0x8]+(mem[0x9]<<8));
 	pos=(mem[0xc]+(mem[0xd]<<8));
+	memset(titleID, 0, 16);
 
 	while(str<4090)
 	{
-		if(mem[str]==0) break;
+		if(!mem[str]) break;
 
 		if(!strncmp((char *) &mem[str], "TITLE_ID", 8))
 		{
@@ -2747,7 +2748,7 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title)
 		indx+=16;
 	}
 
-	if(webman_config->tid && strlen(titleID)==9)
+	if(webman_config->tid && strlen(titleID)==9 && (titleID[0]=='B' || titleID[0]=='N'))
 	{
 		strcat(title, " [");
 		strcat(title, titleID);
@@ -2899,14 +2900,14 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 		if(file_size &&	open_remote_file_2(ns, tempstr,	&abort_connection)>0 &&	!abort_connection)
 		{
 			int fdw;
-			if(cellFsOpen(icon,	CELL_FS_O_CREAT|CELL_FS_O_RDWR|CELL_FS_O_TRUNC,	&fdw, NULL,	0)==CELL_FS_SUCCEEDED)
+			if(cellFsOpen(icon, CELL_FS_O_CREAT|CELL_FS_O_RDWR|CELL_FS_O_TRUNC,	&fdw, NULL, 0)==CELL_FS_SUCCEEDED)
 			{
-				int	boff=0;
-                int bytes_read=0;
+				int boff=0;
+				int bytes_read=0;
 
 				while(boff<file_size)
 				{
-					bytes_read = read_remote_file(ns, (char*)tempstr, boff,	3072, &abort_connection);
+					bytes_read = read_remote_file(ns, (char*)tempstr, boff, 3072, &abort_connection);
 					if(bytes_read)
 						cellFsWrite(fdw, (char*)tempstr, bytes_read, NULL);
 					boff+=bytes_read;
@@ -2943,10 +2944,14 @@ static int get_cover_from_name(char *icon, char *name, char *titleid)
 
 static void get_default_icon(char *icon, char *param, char *file, int isdir, int ns, int abort_connection)
 {
+	char titleid[10];
 	struct CellFsStat s;
 
 	// continue using cover or default icon0.png
 	if(icon[0]!=0 && cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+
+	memset(titleid, 0, 10);
+	if(!webman_config->nocov && get_cover_from_name(icon, file, titleid)==0) return;
 
 	// get icon from folder && copy remote icon
 	get_iso_icon(icon, param, file, isdir, ns, abort_connection);
@@ -2954,7 +2959,6 @@ static void get_default_icon(char *icon, char *param, char *file, int isdir, int
 	if(icon[0]!=0 && cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 
 	// get cover if the filename contains a title id
-	char titleid[10];
 	if(get_cover_from_name(icon, file, titleid)==0) return;
 
 	//use the cached PNG from wmtmp if available
@@ -3496,7 +3500,7 @@ reconnect:
 					{
 						if(key>1020) break;
 						cellRtcGetCurrentTick(&pTick);
-						icon[0]=0;
+						icon[0]=tempID[0]=0;
 #ifdef COBRA_ONLY
 						if(is_net)
 						{
@@ -3617,15 +3621,11 @@ reconnect:
 									 strstr(tmp_param, WMTMP))
 								&&
 								(
-									((strstr(entry.d_name + flen - 4, ".ISO") || strstr(entry.d_name + flen - 4, ".iso")) ||
-									 (!(webman_config->cmask & PS2) && strstr(entry.d_name + flen - 8, ".BIN.ENC")) ||
+									((strstr(entry.d_name + flen - 4, ".iso") || strstr(entry.d_name + flen - 4, ".ISO")) ||
+								     (flen > 7 && (strstr(entry.d_name + flen - 6, ".iso.0") || strstr(entry.d_name + flen - 6, ".ISO.0"))) ||
+									 (!(webman_config->cmask & PS2) && flen > 8 && strstr(entry.d_name + flen - 8, ".BIN.ENC")) ||
 									 (strstr(tmp_param, "/PSX") && (strstr(entry.d_name + flen - 4, ".CUE") || strstr(entry.d_name + flen - 4, ".cue")))
 									)
-								&&
-								  ((entry.d_name[flen-1]=='0' && entry.d_name[flen-2]=='.') ||
-									entry.d_name[flen-1]=='o' || entry.d_name[flen-1]=='O' ||
-									entry.d_name[flen-1]=='e' || entry.d_name[flen-1]=='E' ||
-									entry.d_name[flen-1]=='C')
 								)) || strstr(entry.d_name, ".ntfs["));
 
 							if(!is_iso) sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.d_name);
@@ -3648,7 +3648,6 @@ reconnect:
 								}
 								else
 								{
-									tempID[0]=0;
 									if((strstr(param, "/PS3ISO") && f0<9) || (f0==9 && f1==2 && strstr(entry.d_name, "ntfs[PS3ISO]")))
 									{
 										sprintf(templn, WMTMP "/%s", entry.d_name);
@@ -6038,25 +6037,20 @@ just_leave:
 													   strstr(tmp_param, "/PSPISO") || strstr(tmp_param, "/ISO")||
 													   strstr(tmp_param, "/PSX") || strstr(tmp_param, "/DVDISO") || strstr(tmp_param, "/BDISO") ||
 													   strstr(tmp_param, WMTMP))
-												&&
-												(
-												  ((strstr(entry.d_name + flen - 4, ".iso") || strstr(entry.d_name + flen - 4, ".ISO")) ||
-												   (!(webman_config->cmask & PS2) && flen > 8 && strstr(entry.d_name + flen - 8, ".BIN.ENC")) ||
-												   (strstr(tmp_param, "/PSX") && (strstr(entry.d_name + flen - 4, ".cue") || strstr(entry.d_name + flen - 4, ".CUE")))
-												  )
-												&&
-												  ((entry.d_name[flen-1]=='0' && entry.d_name[flen-2]=='.') ||
-													entry.d_name[flen-1]=='o' || entry.d_name[flen-1]=='O' ||
-													entry.d_name[flen-1]=='e' || entry.d_name[flen-1]=='E' ||
-													entry.d_name[flen-1]=='C')
-												)) || strstr(entry.d_name, ".ntfs["));
+													&&
+													(
+													  ((strstr(entry.d_name + flen - 4, ".ISO") || strstr(entry.d_name + flen - 4, ".iso")) ||
+													   (flen > 7 && (strstr(entry.d_name + flen - 6, ".iso.0") || strstr(entry.d_name + flen - 6, ".ISO.0"))) ||
+													   (!(webman_config->cmask & PS2) && flen > 8 && strstr(entry.d_name + flen - 8, ".BIN.ENC")) ||
+													   (strstr(tmp_param, "/PSX") && (strstr(entry.d_name + flen - 4, ".cue") || strstr(entry.d_name + flen - 4, ".CUE")))
+													  )
+													)) || strstr(entry.d_name, ".ntfs["));
 
 											if(!is_iso) sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.d_name);
 
 											if(is_iso || cellFsStat(templn, &buf)==CELL_FS_SUCCEEDED)
 											{
-												icon[0]=0;
-												tempID[0]=0;
+												icon[0]=tempID[0]=0;
 
 												if(is_iso)
 												{
@@ -6120,7 +6114,7 @@ just_leave:
 													else
 													{
 														if(f0==9)
-														{
+														{   //ntfs
 															if(f1< 2 || f1>6) continue;
 															if(f1==2 && !strstr(entry.d_name, "ntfs[PS3ISO]")) continue;
 															if(f1==3 && !strstr(entry.d_name, "ntfs[BDISO]")) continue;
@@ -7786,7 +7780,7 @@ DEBUG Menu Switcher : L3+L2+X
 							if( (cellFsStat((char*) REBUG_COBRA_PATH "stage2.cex", &s)==CELL_FS_SUCCEEDED) &&
 								(cellFsStat((char*) REBUG_COBRA_PATH "stage2.dex", &s)==CELL_FS_SUCCEEDED))
 							{
-								show_msg((char*)"REBUG COBRA active!\r\nDeactivating COBRA...");
+								show_msg((char*)"REBUG COBRA is active!\r\nDeactivating COBRA...");
 
 								cellFsRename(REBUG_COBRA_PATH "stage2.cex", REBUG_COBRA_PATH "stage2.cex.bak");
 								cellFsRename(REBUG_COBRA_PATH "stage2.dex", REBUG_COBRA_PATH "stage2.dex.bak");
