@@ -5016,11 +5016,18 @@ again3:
 
 											if(data[n].is_directory)
 												sprintf(fsize, "<a href=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
+#ifdef COBRA_ONLY
+											else if(strstr(data[n].name, ".iso") || strstr(data[n].name, ".ISO") || strstr(data[n].name, ".cue") || strstr(data[n].name, ".CUE") || strstr(data[n].name, ".ntfs["))
+												sprintf(fsize, "<a href=\"/mount.ps3%s\">%llu %s</a>", templn, sz, sf);
+#endif
 											else
 												sprintf(fsize, "%llu %s", sz, sf);
 											snprintf(ename, 6, "%s    ", data[n].name);
 
-											sprintf(tempstr, "%c%c%c%c%c%c<tr><td><a%shref=\"%s\">%s</a></td><td align=right>&nbsp; %s &nbsp;</td><td>%02i-%s-%04i %02i:%02i</td></tr>", //<td> %s%s%s%s%s%s%s%s%s</td>
+											sprintf(tempstr, "%c%c%c%c%c%c<tr>"
+                                                             "<td><a%shref=\"%s\">%s</a></td>"
+                                                             "<td align=right>&nbsp; %s &nbsp;</td>"
+                                                             "<td>%02i-%s-%04i %02i:%02i</td></tr>",
 											(data[n].is_directory) ? '0' : '1',
 											ename[0], ename[1], ename[2], ename[3], ename[4],
 											((data[n].is_directory) != 0) ? " class=\"f\" " : " ",
@@ -5120,9 +5127,11 @@ again3:
 									else {sprintf(sf, "%s", STR_GIGABYTE); sz>>=30;}
 
 									if((buf.st_mode & S_IFDIR) != 0)
-									{
 										sprintf(fsize, "<a href=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
-									}
+#ifdef COBRA_ONLY
+									else if(strstr(entry.d_name, ".iso") || strstr(entry.d_name, ".ISO") || strstr(entry.d_name, ".cue") || strstr(entry.d_name, ".CUE") || strstr(entry.d_name, ".ntfs["))
+										sprintf(fsize, "<a href=\"/mount.ps3%s\">%llu %s</a>", templn, sz, sf);
+#endif
 									else
 										sprintf(fsize, "%llu %s", sz, sf);
 									snprintf(ename, 6, "%s    ", entry.d_name);
@@ -5130,7 +5139,7 @@ again3:
 									sprintf(tempstr, "%c%c%c%c%c%c<tr>"
                                                      "<td><a%shref=\"%s\">%s</a></td>"
                                                      "<td align=right>&nbsp; %s &nbsp;</td>"
-                                                     "<td>%02i-%s-%04i %02i:%02i</td></tr>", //<td> %s%s%s%s%s%s%s%s%s</td>
+                                                     "<td>%02i-%s-%04i %02i:%02i</td></tr>",
 									((buf.st_mode & S_IFDIR) != 0) ? '0' : '1',
 									ename[0], ename[1], ename[2], ename[3], ename[4],
 									((buf.st_mode & S_IFDIR) != 0) ? " class=\"f\" " : " ",

@@ -24,6 +24,7 @@ STR_CPYABORT		[Αντιγραφή ματαιώθηκε!]
 STR_SCAN1		[Σάρωση των συσκευών]
 STR_SCAN2		[Σάρωση περιεχομένου]
 STR_PSPL		[Εμφάνιση του PSP Launcher]
+STR_PS2L		[Εμφάνιση του PS2 Classic Launcher]
 STR_VIDLG		[Βίντεο]
 STR_LPG			[Επαναφόρτωση τελευταίου παιχνιδιού]
 STR_AUTOB		[Ψαξε το /dev_hdd0/PS3ISO/AUTOBOOT.ISO κατα την εκκίνηση]
@@ -101,6 +102,7 @@ STR_VIDFORMAT	[Blu-ray™ και DVD]
 STR_VIDEO		[Περιεχόμενο του vídeo]
 
 STR_LAUNCHPSP	[Εκκίνηση ενός ISO του PSP τοποθετημένο μεσω webMAN ή mmCM]
+STR_LAUNCHPS2	[Εκκίνηση ενός PS2 Classic]
 
 STR_GAMEUM		[Αποπροσάρτηση του παιχνιδιού.]
 
@@ -109,7 +111,8 @@ STR_LOADED		[Εισαγωγή δισκου.]
 
 STR_GAMETOM		[Το παιχνίδι φόρτωσε.]
 STR_GAMELOADED	[Το παιχνίδι φόρτωσε.Ξεκινήστε το από το εικονίδιο του δίσκου<br>η απο το <b>/app_home</b> στο XMB<hr/>Πατήστε <a href="/mount.ps3/unmount">εδώ</a> για αφαίρεση.]
-STR_PSPLOADED	[Το παιχνίδι είναι έτοιμο .Ξεκινήστε το απο το <b>PSP Launcher</b>.<hr/>Πατήστε <a href="/mount.ps3/unmount">εδώ</a> για αφαίρεση.]
+STR_PSPLOADED	[Το παιχνίδι είναι έτοιμο .Ξεκινήστε το απο το <b>PSP Launcher</b>.<hr/>]
+STR_PS2LOADED	[Το παιχνίδι είναι έτοιμο .Ξεκινήστε το απο το <b>PS2 Classic Launcher</b>.<hr/>]
 STR_LOADED2		[Φορτώθηκε με επιτυχία]
 
 STR_MOVIETOM	[Η ταινία τοποθετήθηκε!]

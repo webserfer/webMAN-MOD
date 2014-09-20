@@ -24,6 +24,7 @@ STR_CPYABORT		[Copy aborted!]
 STR_SCAN1			[ﺓﺰﻬﺟﺄﻟا ﻩﺬﻫ ﺺﺤﻓ]
 STR_SCAN2			[ىﻮﺘﺤﻤﻟا ﺺﺤﻓ]
 STR_PSPL			[PSP ﻞﻐﺸﻣ ﺽﺮﻋ]
+STR_PS2L			[PS2 Classic Launcher ﻞﻐﺸﻣ ﺽﺮﻋ]
 STR_VIDLG			[ﻮﻳﺪﻴﻓ]
 STR_LPG				[ﺯﺎﻬﺠﻟا ﻞﻴﻐﺸﺗ ﺀﺪﺑ ﺪﻨﻋ ﺔﻠﻐﺸﻣ ﺔﺒﻌﻟ ﺮﺧا ﻞﻴﻐﺸﺗ ﺀﺎﻘﺑا]
 STR_AUTOB			[ﺯﺎﻬﺠﻟا ﻞﻴﻐﺸﺗ ﺀﺪﺑ ﺪﻨﻋ /dev_hdd0/PS3ISO/AUTOBOOT.ISO ﺺﺤﻓ]
@@ -101,6 +102,7 @@ STR_VIDFORMAT		[ﻱﺪﻴﻔﻳﺪﻟاﻭ ﻱاﺭﻮﻠﺒﻟا]
 STR_VIDEO			[ﻮﻳﺪﻴﻓ ىﻮﺘﺤﻣ]
 
 STR_LAUNCHPSP		[ﻥﺎﻣ ﻲﺘﻟﻮﻤﻟا ﻭا ﻥﺎﻣ ﺐﻳﻮﻟا ﻝﺎﻠﺧ ﻦﻣ ﺔﻠﻐﺸﻤﻟا PSP ISO ﺔﺒﻌﻟ ﺭﺎﻴﺘﺧا]
+STR_LAUNCHPS2		[PSP Classic ﺔﺒﻌﻟ ﺭﺎﻴﺘﺧا]
 
 STR_GAMEUM			[ﺔﺒﻌﻠﻟا ﻞﻴﻐﺸﺗ ئﺎﻐﻟا ﻢﺗ]
 
@@ -110,6 +112,7 @@ STR_LOADED			[ﺹﺮﻘﻟا ﻝﺎﺧﺩا ﻢﺗ]
 STR_GAMETOM			[ﺔﺒﻌﻠﻟا ﻞﻴﻐﺸﺗ]
 STR_GAMELOADED		[ﺔﺒﻌﻠﻟا ﻞﻴﻐﺸﺗ ﺀﺎﻐﻟﺎﻟ<a href=/mount.ps3/unmount> ﺎﻨﻫ </a> ﻂﻐﺿا <hr/>XMB ﺪﻨﻋ<b>/app_home</b>ﻦﻣ ﻭا<br>ﺹﺮﻘﻟا ﺔﻧﻮﻘﻳا ﻦﻣ ﺔﺒﻌﻠﻟا ﻞﻐﺷ ﺔﺒﻌﻠﻟا ﻞﻴﻐﺸﺗ ﻢﺗ]
 STR_PSPLOADED		[ﺔﺒﻌﻠﻟا ﻞﻴﻐﺸﺗ ﺀﺎﻐﻟﺎﻟ<a href=/mount.ps3/unmount> ﺎﻨﻫ </a> ﻂﻐﺿا <b><hr/>PSP ﻞﻐﺸﻣ</b> ﻡاﺪﺨﺘﺳﺎﺑ ﺔﺒﻌﻠﻟا ﻞﻐﺷ ﺔﺒﻌﻠﻟا ﻞﻴﻐﺸﺗ ﻢﺗ]
+STR_PS2LOADED		[ﺔﺒﻌﻠﻟا ﻞﻴﻐﺸﺗ ﺀﺎﻐﻟﺎﻟ<a href=/mount.ps3/unmount> ﺎﻨﻫ </a> ﻂﻐﺿا <b><hr/>PS2 Classic ﻞﻐﺸﻣ</b> ﻡاﺪﺨﺘﺳﺎﺑ ﺔﺒﻌﻠﻟا ﻞﻐﺷ ﺔﺒﻌﻠﻟا ﻞﻴﻐﺸﺗ ﻢﺗ]
 STR_LOADED2			[ﻞﻐﺸﻣ]
 
 STR_MOVIETOM		[ﻢﻠﻔﻟا ﻞﻴﻐﺸﺗ]

@@ -24,6 +24,7 @@ STR_CPYABORT		[Copy aborted!]
 STR_SCAN1			[扫描设备]
 STR_SCAN2			[扫描内容]
 STR_PSPL			[显示PSP启动器]
+STR_PS2L			[显示PS2启动器]
 STR_VIDLG			[视频]
 STR_LPG				[启动时加载上一次玩过的游戏]
 STR_AUTOB			[启动时检查 /dev_hdd0/PS3ISO/AUTOBOOT.ISO]
@@ -101,6 +102,7 @@ STR_VIDFORMAT		[Blu-ray™ 与 DVD]
 STR_VIDEO			[视频内容]
 
 STR_LAUNCHPSP		[通过 webMAN 或者 mmCM 启动已挂载的 PSP ISO]
+STR_LAUNCHPS2		[启动已挂载的 PS2 Classic]
 
 STR_GAMEUM			[游戏已卸载.]
 
@@ -110,6 +112,7 @@ STR_LOADED			[光碟已插入.]
 STR_GAMETOM			[游戏加载]
 STR_GAMELOADED		[游戏加载成功. 从光碟图标开始游戏<br>或者从 <b>/app_home</b>XMB 进入.<hr/>点击 <a href=/mount.ps3/unmount>此处</a> 卸载游戏.]
 STR_PSPLOADED		[游戏加载成功. 使用 <b>PSP 启动器</b>开始游戏.<hr/>点击 <a href=/mount.ps3/unmount>此处</a> 卸载游戏.]
+STR_PS2LOADED		[游戏加载成功. 使用 <b>PS2 启动器</b>开始游戏.<hr/>点击 <a href=/mount.ps3/unmount>此处</a> 卸载游戏.]
 STR_LOADED2			[已加载]
 
 STR_MOVIETOM		[影片加载]

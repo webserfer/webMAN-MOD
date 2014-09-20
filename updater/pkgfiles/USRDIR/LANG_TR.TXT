@@ -24,6 +24,7 @@ STR_CPYABORT		[Copy aborted!]
 STR_SCAN1			[Bu cihazlari tara]
 STR_SCAN2			[Taranacak içerik]
 STR_PSPL			[PSP Baslaticiyi Göster]
+STR_PS2L			[PS2 Baslaticiyi Göster]
 STR_VIDLG			[Video]
 STR_LPG				[Baslangiçta son-oynanan oyunu yükle]
 STR_AUTOB			[Baslangiçta /dev_hdd0/PS3ISO/AUTOBOOT.ISO kontrolü yap]
@@ -101,6 +102,7 @@ STR_VIDFORMAT		[Blu-ray™ ve DVD]
 STR_VIDEO			[Video içerigi]
 
 STR_LAUNCHPSP		[webMAN veya mmCM ile baglanan PSP ISOsunu çalistir]
+STR_LAUNCHPS2		[PS2 Classic sunu çalistir]
 
 STR_GAMEUM			[Oyun çözüldü.]
 
@@ -109,7 +111,8 @@ STR_LOADED			[Disc takildi.]
 
 STR_GAMETOM			[Baglanacak oyun]
 STR_GAMELOADED		[Oyun basariyla yüklendi. Oyunu disk simgesinden<br>veya <b>/app_home</b> XMB girisinden baslatin.<hr/>Oyunu çözmek için <a href="/mount.ps3/unmount">buraya</a> tiklayin.]
-STR_PSPLOADED		[Oyun basariyla yüklendi. Oyunu <b>PSP Launcher</b> kullanarak baslatin.<hr/>Oyunu çözmek için <a href="/mount.ps3/unmount">buraya</a> tiklayin.]
+STR_PSPLOADED		[Oyun basariyla yüklendi. Oyunu <b>PSP Launcher</b> kullanarak baslatin.<hr/>]
+STR_PS2LOADED		[Oyun basariyla yüklendi. Oyunu <b>PS2 Classic Launcher</b> kullanarak baslatin.<hr/>]
 STR_LOADED2			[yüklendi]
 
 STR_MOVIETOM		[Baglanacak film]

@@ -24,6 +24,7 @@ STR_CPYABORT		[Kopiraj prekinuto!]
 STR_SCAN1		[Pretrazi uredaje]
 STR_SCAN2		[Pretrazi sadrzaj]
 STR_PSPL		[Prikazi PSP Launcher]
+STR_PS2L		[Prikazi PS2 Classic Launcher]
 STR_VIDLG		[Video]
 STR_LPG			[Prilikom pokretanja konzole ucitaj posljednju igru koju ste igrali]
 STR_AUTOB		[Provjeri /dev_hdd0/PS3ISO/AUTOBOOT.ISO prilikom pokretanja konzole]
@@ -101,6 +102,7 @@ STR_VIDFORMAT	[Blu-ray i DVD]
 STR_VIDEO		[Video sadrzaj]
 
 STR_LAUNCHPSP	[Pokreni PSP ISO, ucitan putem webMANa ili mmCM]
+STR_LAUNCHPS2	[Pokreni PS2 Classic]
 
 STR_GAMEUM		[Igra vise nije ucitana.]
 
@@ -109,7 +111,8 @@ STR_LOADED		[Disk umetnut.]
 
 STR_GAMETOM		[Ucitaj igru]
 STR_GAMELOADED	[Igra je uspjesno ucitana. Pokrenite igru putem disk ikone<br>ili putem<b>/app_home</b> u odjeljku GAMES<hr/>Kliknite <a href="/mount.ps3/unmount">ovdje</a> da izbacite igru.]
-STR_PSPLOADED	[Igra je uspjesno ucitana. Pokrenite igru koristenjem <b>PSP Launchera</b>.<hr/>Klikni <a href="/mount.ps3/unmount">ovdje</a> da izbacite igru.]
+STR_PSPLOADED	[Igra je uspjesno ucitana. Pokrenite igru koristenjem <b>PSP Launchera</b>.<hr/>]
+STR_PS2LOADED	[Igra je uspjesno ucitana. Pokrenite igru koristenjem <b>PS2 Classic Launchera</b>.<hr/>]
 STR_LOADED2		[ucitana]
 
 STR_MOVIETOM	[Ucitaj film]

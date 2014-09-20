@@ -24,6 +24,7 @@ STR_CPYABORT		[Kopieren abgebrochen!]
 STR_SCAN1		[Suche Geräte in]
 STR_SCAN2		[Suche Inhalte für]
 STR_PSPL		[PSP Launcher anzeigen]
+STR_PS2L		[PS2 Classic Launcher anzeigen]
 STR_VIDLG		[Video]
 STR_LPG			[Lade letztes gespieltes Spiel beim Starten]
 STR_AUTOB		[Startet /dev_hdd0/PS3ISO/AUTOBOOT.ISO beim Starten]
@@ -101,6 +102,7 @@ STR_VIDFORMAT	[Blu-ray™ und DVD]
 STR_VIDEO		[Video Inhalte]
 
 STR_LAUNCHPSP	[PSP ISO Spiele über webMAN oder mmCM Starten]
+STR_LAUNCHPS2	[PS2 Classic Spiele]
 
 STR_GAMEUM		[Spiel verlassen]
 
@@ -109,7 +111,8 @@ STR_LOADED		[Disk eingezogen]
 
 STR_GAMETOM		[Spiel Starten]
 STR_GAMELOADED	[Spiel erfolgreich geladen.Starte das Spiel über das Disk-Symbol<br>oder von<b>/app_home</b> XMB-Eintrag<hr/>Klicke <a href="/mount.ps3/unmount">hier</a> zum verlassen des Spiels]
-STR_PSPLOADED	[Spiel erfolgreich geladen.Starte das Spiel über den <b>PSP Launcher</b>.<hr/>Klicke <a href="/mount.ps3/unmount">hier</a> zum verlassen des Spiels]
+STR_PSPLOADED	[Spiel erfolgreich geladen.Starte das Spiel über den <b>PSP Launcher</b>.<hr/>]
+STR_PS2LOADED	[Spiel erfolgreich geladen.Starte das Spiel über den <b>PS2 Classic Launcher</b>.<hr/>]
 STR_LOADED2		[geladen]
 
 STR_MOVIETOM	[Film Starten]

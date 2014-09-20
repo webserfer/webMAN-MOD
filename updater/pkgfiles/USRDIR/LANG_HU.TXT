@@ -24,6 +24,7 @@ STR_CPYABORT		[A másolás megszakadt!]
 STR_SCAN1			[Keresés ezeken a meghajtókon]
 STR_SCAN2			[Tartalom keresése]
 STR_PSPL			[PSP Launcher mutatása]
+STR_PS2L			[PS2 Classic Launcher mutatása]
 STR_VIDLG			[Video]
 STR_LPG				[Indulásnál az utolsó játszott játék betöltése]
 STR_AUTOB			[/dev_hdd0/PS3ISO/AUTOBOOT.ISO tartalom keresése a rendszer indulásnál]
@@ -101,6 +102,7 @@ STR_VIDFORMAT		[Blu-ray™ és DVD]
 STR_VIDEO			[Video tartalom]
 
 STR_LAUNCHPSP		[Beillesztett PSP ISO indítása webMAN-en vagy mmCM-en keresztül]
+STR_LAUNCHPS2		[Beillesztett PS2 Classic]
 
 STR_GAMEUM			[Játék leválasztva.]
 
@@ -109,7 +111,8 @@ STR_LOADED			[Lemez behelyezve.]
 
 STR_GAMETOM			[Beilleszthető játék]
 STR_GAMELOADED		[A játék sikeresen betöltődött. Indítsd a játékot a lemez ikonról<br>vagy az <b>/app_home-ról</b> az XMB-ben.<hr/>Klikkelj <a href=/mount.ps3/unmount>ide</a> a játék leválasztásához.]
-STR_PSPLOADED		[A játék sikeresen betöltődött. A játék indításához használd a <b>PSP Launcher-t</b>.<hr/>Klikkelj <a href=/mount.ps3/unmount[>ide</a> a játék leválasztásához.]
+STR_PSPLOADED		[A játék sikeresen betöltődött. A játék indításához használd a <b>PSP Launcher-t</b>.<hr/>]
+STR_PS2LOADED		[A játék sikeresen betöltődött. A játék indításához használd a <b>PS2 Classic Launcher-t</b>.<hr/>]
 STR_LOADED2			[betöltve]
 
 STR_MOVIETOM		[Beillesztehető film]

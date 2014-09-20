@@ -24,6 +24,7 @@ STR_CPYABORT		[Kopiowanie przerwane!]
 STR_SCAN1					[Skanuj urządzenia]
 STR_SCAN2					[Skanuj zawartość]
 STR_PSPL					[Pokaż PSP Launcher]
+STR_PS2L					[Pokaż PS2 Classic Launcher]
 STR_VIDLG					[Wideo]
 STR_LPG						[Załaduj ostatnio uruchamianą grę przy starcie systemu]
 STR_AUTOB					[Wyszukaj /dev_hdd0/PS3ISO/AUTOBOOT.ISO przy starcie systemu]
@@ -101,6 +102,7 @@ STR_VIDFORMAT		[Blu-ray™ i DVD]
 STR_VIDEO				[Zawartość wideo]
 
 STR_LAUNCHPSP		[Uruchom PSP ISO za pomocą webMANa lub mmCM]
+STR_LAUNCHPS2		[Uruchom PS2 Classic]
 
 STR_GAMEUM			[Gra odmontowana]
 
@@ -109,7 +111,8 @@ STR_LOADED			[Dysk załadowany]
 
 STR_GAMETOM				[Gra do zamontowania]
 STR_GAMELOADED		[Gra załadowana pomyślnie. Uruchom grę z ikony dysku<br>lub <b>/app_home</b>&nbsp;w menu XMB.<hr/>Kliknij <a href=/mount.ps3/unmount>tutaj</a>, aby odmontować grę.]
-STR_PSPLOADED			[Gra załadowana pomyślnie. Uruchom grę używając <b>PSP Launcher'a</b>.<hr/>Kliknij <a href=/mount.ps3/unmount[>tutaj</a>, aby odmontować grę.]
+STR_PSPLOADED			[Gra załadowana pomyślnie. Uruchom grę używając <b>PSP Launcher'a</b>.<hr/>]
+STR_PS2LOADED			[Gra załadowana pomyślnie. Uruchom grę używając <b>PS2 Classic Launcher'a</b>.<hr/>]
 STR_LOADED2				[- załadowano]
 
 STR_MOVIETOM			[Film do zamontowania]

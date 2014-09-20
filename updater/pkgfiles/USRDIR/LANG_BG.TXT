@@ -24,6 +24,7 @@ STR_CPYABORT		[Копирането прекратено!]
 STR_SCAN1			[Сканирай тези устройства]
 STR_SCAN2			[Сканирай за съдържание]
 STR_PSPL			[Покажи PSP Launcher]
+STR_PS2L			[Покажи PS2 Classic Launcher]
 STR_VIDLG			[Видео]
 STR_LPG				[Зареди последно играна игра при стартиране]
 STR_AUTOB			[Провери за /dev_hdd0/PS3ISO/AUTOBOOT.ISO при стартиране]
@@ -101,6 +102,7 @@ STR_VIDFORMAT		[Blu-ray™ или DVD]
 STR_VIDEO			[Видео съдържание]
 
 STR_LAUNCHPSP		[Зареди PSP ISO монтиран чрез webMAN или mmCM]
+STR_LAUNCHPS2		[Зареди PS2 Classic]
 
 STR_GAMEUM			[Играта е демонтирана.]
 
@@ -109,7 +111,8 @@ STR_LOADED			[Дискът е вкаран.]
                 	
 STR_GAMETOM			[Игра за монтиране]
 STR_GAMELOADED		[Играта е заредена успешно. Пуснете играта от иконката с диска<br>или от <b>/app_home</b>&nbsp;XMB вход.<hr/>Натиснете <a href="/mount.ps3/unmount">тук</a> , за да демонтирате играта.]
-STR_PSPLOADED		[Играта е заредена успешно. Пуснете играта чрез <b>PSP Launcher</b>.<hr/>Натиснете <a href="/mount.ps3/unmount">тук</a> , за да демонтирате играта.]
+STR_PSPLOADED		[Играта е заредена успешно. Пуснете играта чрез <b>PSP Launcher</b>.<hr/>]
+STR_PS2LOADED		[Играта е заредена успешно. Пуснете играта чрез <b>PS2 Classic Launcher</b>.<hr/>]
 STR_LOADED2			[заредена   ]
                 	
 STR_MOVIETOM		[Филм за монтиране]

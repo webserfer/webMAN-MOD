@@ -24,6 +24,7 @@ STR_CPYABORT		[Copy aborted!]
 STR_SCAN1		[使用するデバイスの選択]
 STR_SCAN2		[使用するコンテンツの選択]
 STR_PSPL		[PSPランチャーの表示]
+STR_PS2L		[PS2ランチャーの表示]
 STR_VIDLG		[ビデオ]
 STR_LPG			[起動時に前回のゲームをマウントする]
 STR_AUTOB		[/dev_hdd0/PS3ISO/AUTOBOOT.ISOを起動時にマウントする]
@@ -101,6 +102,7 @@ STR_VIDFORMAT	[Blu-ray™ / DVD]
 STR_VIDEO		[ビデオ]
 
 STR_LAUNCHPSP	[マウントしているPSPゲームの起動]
+STR_LAUNCHPS2	[PS2 Classicゲームの起動]
 
 STR_GAMEUM		[ゲームをマウント解除しました]
 
@@ -109,7 +111,8 @@ STR_LOADED		[ディスクを挿入しました]
 
 STR_GAMETOM		[ゲームのマウント]
 STR_GAMELOADED	[ゲームをマウントしました。<br>XMBの<b>ディスクアイコンか"/app_home"から起動してください (<a href=\"/mount.ps3/unmount\">マウント解除</a>)。]
-STR_PSPLOADED	[ゲームをマウントしました。<br><b>PSPランチャー</b>から起動してください (<a href=\"/mount.ps3/unmount\">マウント解除</a>)。]
+STR_PSPLOADED	[ゲームをマウントしました。<br><b>PSPランチャー</b>から起動してください。]
+STR_PS2LOADED	[ゲームをマウントしました。<br><b>PS2ランチャー</b>から起動してください。]
 STR_LOADED2		[を、マウントしました]
 
 STR_MOVIETOM	[ムービーのマウント]

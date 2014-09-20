@@ -24,6 +24,7 @@ STR_CPYABORT		[Copy afgebroken!]
 STR_SCAN1		[Scan deze apparaten]
 STR_SCAN2		[Scan voor inhoud]
 STR_PSPL		[Toon de PSP Launcher]
+STR_PS2L		[Toon de PS2 Classic Launcher]
 STR_VIDLG		[Video]
 STR_LPG			[Laadt laatst gespeeld spel na herstart]
 STR_AUTOB		[Controleer /dev_hdd0/PS3ISO/AUTOBOOTISO bij opstarten]
@@ -101,6 +102,7 @@ STR_VIDFORMAT	[Blu-ray™ en DVD]
 STR_VIDEO		[Video inhoud]
 
 STR_LAUNCHPSP	[Laadt PSP ISO gemount door webMAN of mmCM]
+STR_LAUNCHPS2	[Laadt PS2 Classic]
 
 STR_GAMEUM		[Spel ontkoppeld.]
 
@@ -109,7 +111,8 @@ STR_LOADED		[Disk geladen.]
 
 STR_GAMETOM		[Spel starten]
 STR_GAMELOADED	[Spel succesvol geladen Start het spel vanaf de disk icoon<br>of vanaf <b>/app_home</b> XMB optie<hr/>Klik <a href=/mountps3/unmount>hier</a> om het spel te ontkoppelen.]
-STR_PSPLOADED	[Spel succesvol geladen Start het spel dmv <b>PSP Launcher</b><hr/>Klik <a href=/mountps3/unmount>hier</a> om het spel te ontkoppelen.]
+STR_PSPLOADED	[Spel succesvol geladen Start het spel dmv <b>PSP Launcher</b><hr/>]
+STR_PS2LOADED	[Spel succesvol geladen Start het spel dmv <b>PS2 Classic Launcher</b><hr/>]
 STR_LOADED2		[loaded]
 
 STR_MOVIETOM	[Film starten]

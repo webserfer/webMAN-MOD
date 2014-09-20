@@ -24,6 +24,7 @@ STR_CPYABORT	[Copia abortada!]
 STR_SCAN1			[Escanear estos dispositivos]
 STR_SCAN2			[Escanear contenido]
 STR_PSPL			[Mostrar PSP Launcher]
+STR_PS2L			[Mostrar PS2 Classic Launcher]
 STR_VIDLG			[Vídeo]
 STR_LPG				[Cargar último juego al iniciar]
 STR_AUTOB			[Comprobar /dev_hdd0/PS3ISO/AUTOBOOT.ISO al iniciar]
@@ -101,6 +102,7 @@ STR_VIDFORMAT		[Blu-ray™ y DVD]
 STR_VIDEO				[Contenido de vídeo]
 
 STR_LAUNCHPSP		[Lanza ISO PSP montada a través de webMAN o mmCM]
+STR_LAUNCHPS2		[Lanza PS2 Classic]
 
 STR_GAMEUM			[Juego desmontado]
 
@@ -109,7 +111,8 @@ STR_LOADED			[Disco insertado]
 
 STR_GAMETOM			[Juego a montar]
 STR_GAMELOADED	[Juego cargado satisfactoriamente. Arranca el juego desde el icono del disco<br>o desde la entrada <b>/app_home</b> del XMB.<hr/>Click <a href="/mount.ps3/unmount">aquí</a> para desmontar el juego]
-STR_PSPLOADED		[Juego cargado satisfactoriamente. Arranca el juego usando el <b>PSP Launcher</b>.<hr/>Click <a href="/mount.ps3/unmount">aquí</a> para desmontar el juego]
+STR_PSPLOADED		[Juego cargado satisfactoriamente. Arranca el juego usando el <b>PSP Launcher</b>.<hr/>]
+STR_PS2LOADED		[Juego cargado satisfactoriamente. Arranca el juego usando el <b>PS2 Classic Launcher</b>.<hr/>]
 STR_LOADED2			[Cargado]
 
 STR_MOVIETOM		[Película a montar]
