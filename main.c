@@ -7434,7 +7434,7 @@ DEBUG Menu Switcher : L3+L2+X
 								{
 									show_msg((char*)"Original ps2emu is detected!\r\nSwitch to custom emu...");
 
-									cellFsRename(PS2_EMU_PATH "ps2_netemu.self.self", PS2_EMU_PATH "ps2_netemu.self.tmp");
+									cellFsRename(PS2_EMU_PATH "ps2_netemu.self"     , PS2_EMU_PATH "ps2_netemu.self.tmp");
 									cellFsRename(PS2_EMU_PATH "ps2_netemu.self.swap", PS2_EMU_PATH "ps2_netemu.self");
 
 									cellFsRename(PS2_EMU_PATH "ps2_gxemu.self"      , PS2_EMU_PATH "ps2_gxemu.tmp");
