@@ -5017,7 +5017,7 @@ again3:
 											if(data[n].is_directory)
 												sprintf(fsize, "<a href=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
 #ifdef COBRA_ONLY
-											else if(strstr(data[n].name, ".iso") || strstr(data[n].name, ".ISO") || strstr(data[n].name, ".cue") || strstr(data[n].name, ".CUE") || strstr(data[n].name, ".ntfs["))
+											else if( strstr(data[n].name, ".iso") || strstr(data[n].name, ".ISO") || strstr(data[n].name, ".cue") || strstr(data[n].name, ".CUE") || strstr(data[n].name, ".ntfs[") || (strstr(data[n].name, ".BIN.ENC") && strstr(data[n].name, ".ENC.")==NULL) )
 												sprintf(fsize, "<a href=\"/mount.ps3%s\">%llu %s</a>", templn, sz, sf);
 #endif
 											else
@@ -5129,7 +5129,7 @@ again3:
 									if((buf.st_mode & S_IFDIR) != 0)
 										sprintf(fsize, "<a href=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
 #ifdef COBRA_ONLY
-									else if(strstr(entry.d_name, ".iso") || strstr(entry.d_name, ".ISO") || strstr(entry.d_name, ".cue") || strstr(entry.d_name, ".CUE") || strstr(entry.d_name, ".ntfs["))
+									else if( strstr(entry.d_name, ".iso") || strstr(entry.d_name, ".ISO") || strstr(entry.d_name, ".cue") || strstr(entry.d_name, ".CUE") || strstr(entry.d_name, ".ntfs[") || (strstr(entry.d_name, ".BIN.ENC") && strstr(entry.d_name, ".ENC.")==NULL) )
 										sprintf(fsize, "<a href=\"/mount.ps3%s\">%llu %s</a>", templn, sz, sf);
 #endif
 									else
