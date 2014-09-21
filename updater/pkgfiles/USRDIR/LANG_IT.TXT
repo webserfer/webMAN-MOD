@@ -36,7 +36,7 @@ STR_FTPSVC		[Disattiva servizio FTP]
 STR_COMBOS		[Disattiva tutte le scorciatoie PAD]
 STR_MMCOVERS	[Disattiva cover multiMAN]
 STR_ACCESS		[Disattiva accesso remoto ai servizi FTP/WWW]
-STR_NOSETUP		[Non mostrare Setup di webMAN in "webMAN Games"]
+STR_NOSETUP		[Non mostrare "Setup di webMAN" in "webMAN Games"]
 STR_NOSPOOF		[Disattiva spoof versione firmware]
 STR_NOGRP		[Non raggruppare i contenuti in "webMAN Games"]
 STR_NOWMDN		[Disattiva la notifica di avvio di webMAN nella XMB]
@@ -85,13 +85,13 @@ STR_UNMOUNTGAME	[Smonta il gioco corrente]
 
 STR_WMSTART		[webMAN caricato!]
 STR_WMUNL		[webMAN scaricato!]
-STR_CFWSYSALRD	[CFW Syscalls già disabilitate]
+STR_CFWSYSALRD	[Syscall CFW già disabilitate]
 STR_CFWSYSRIP	[Rimozione File cronologia & Syscall CFW in corso...]
 STR_RMVCFWSYS	[File cronologia & Syscall CFW rimossi!]
 STR_RMVCFWSYSF	[Impossibile rimuovere Syscall CFW]
 
 STR_RMVWMCFG	[Ripristino configurazione di WebMAN in corso...]
-STR_RMVWMCFGOK	[Fatto! riavviare entro 3 secondi]
+STR_RMVWMCFGOK	[Fatto! Riavvio entro 3 secondi]
 
 STR_PS3FORMAT	[Giochi formato PS3]
 STR_PS2FORMAT	[Giochi formato PS2]
@@ -102,7 +102,7 @@ STR_VIDFORMAT	[Blu-ray™ e DVD]
 STR_VIDEO		[Contenuti Video]
 
 STR_LAUNCHPSP	[Lancia la ISO PSP montata con webMAN o mmCM]
-STR_LAUNCHPS2	[Lancia la PS2 Classic]
+STR_LAUNCHPS2	[Lancia il PS2 Classic]
 
 STR_GAMEUM		[Gioco smontato.]
 
