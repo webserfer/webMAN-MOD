@@ -873,3 +873,51 @@ int printf(const char *fmt, ...)
 
 //#endif /* DEBUG */
 
+char h2a(const char hex)
+{
+	char c = hex;
+	if(c>=0 && c<=9)
+		c += 0x30;
+	else if(c>=10 && c<=15)
+		c += 0x57;
+	return c;
+}
+
+void strenc(char *dst, const char *src, size_t n)
+{
+	size_t j=0;
+	for(size_t i=0; i<n; i++,j++)
+	{
+		if(src[i] & 0x80)
+		{
+			dst[j++] = '%';
+			dst[j++] = h2a((unsigned char)src[i]>>4);
+			dst[j] = h2a(src[i] & 0xf);
+		}
+		else dst[j] = src[i];
+	}
+	dst[j] = '\0';
+}
+
+void strdec(char *src)
+{
+	if(strstr(src, "%"))
+	{
+		char *p=src;
+		for(size_t i=0; i<strlen(src); i++, p++)
+		{
+			if(src[i] != '%') *p = src[i];
+			else
+			{
+				if(src[++i]>='0' && src[i]<='9') *p=(src[i]-0x30)<<4;
+				else if(src[i]>='a' && src[i]<='f') *p=(src[i]-0x57)<<4;
+				else if(src[i]>='A' && src[i]<='F') *p=(src[i]-0x37)<<4;
+
+				if(src[++i]>='0' && src[i]<='9') *p|=src[i]-0x30;
+				else if(src[i]>='a' && src[i]<='f') *p|=src[i]-0x57;
+				else if(src[i]>='A' && src[i]<='F') *p|=src[i]-0x37;
+			}
+		}
+		*p = '\0';
+	}
+}

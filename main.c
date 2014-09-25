@@ -34,11 +34,11 @@
 #include <time.h>
 #include <unistd.h>
 
-#define ENGLISH_ONLY 1 // uncomment for english only version
+//#define ENGLISH_ONLY 1 // uncomment for english only version
 //#define USE_DEBUG 1
 
 //#define CCAPI 1		// uncomment for ccapi release
-//#define COBRA_ONLY 1	// comment out for ccapi/non-cobra release
+#define COBRA_ONLY 1	// comment out for ccapi/non-cobra release
 //#define REX_ONLY 1			// shortcuts for REBUG REX CFWs / comment out for usual CFW
 
 #include "types.h"
@@ -3588,6 +3588,11 @@ reconnect:
 
 							get_default_icon(icon, param, data[v3_entry].name, data[v3_entry].is_directory, ns, abort_connection);
 
+							//encode path (big5)
+							size_t len = strlen(data[v3_entry].name);
+							char enc_dir_name[len<<2];
+							strenc(enc_dir_name, data[v3_entry].name, len);
+
 							sprintf(tempstr, "<Table key=\"%04i\">"
 											 "<Pair key=\"icon\"><String>%s</String></Pair>"
 											 "<Pair key=\"title\"><String>%s</String></Pair>"
@@ -3595,7 +3600,7 @@ reconnect:
 											 "<Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/net%i%s/%s?random=%i</String></Pair>"
 											 "<Pair key=\"info\"><String>/net%i%s</String></Pair>"
 											 "</Table>",
-									key, icon, templn, (f0-7), param, data[v3_entry].name, (int)pTick.tick, (f0-7), param);
+									key, icon, templn, (f0-7), param, enc_dir_name, (int)pTick.tick, (f0-7), param);
 
 							v3_entry++;
 
@@ -3780,6 +3785,11 @@ reconnect:
 
 								get_default_icon(icon, param, entry.d_name, 0, ns, abort_connection);
 
+								//encode path (big5)
+								size_t len = strlen(entry.d_name);
+								char enc_dir_name[len<<2];
+								strenc(enc_dir_name, entry.d_name, len);
+
 								sprintf(tempstr, "<Table key=\"%04i\">"
                                                  "<Pair key=\"icon\"><String>%s</String></Pair>"
                                                  "<Pair key=\"title\"><String>%s</String></Pair>"
@@ -3787,7 +3797,7 @@ reconnect:
                                                  "<Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3%s/%s?random=%i</String></Pair>"
                                                  "<Pair key=\"info\"><String>%s</String></Pair>"
                                                  "</Table>",
-									key, icon, templn, param, entry.d_name, (int)pTick.tick, (f0==9?(char*)" ":param));
+									key, icon, templn, param, enc_dir_name, (int)pTick.tick, (f0==9?(char*)" ":param));
 
 								if(strlen(templn)<5) strcat(templn, "     ");
 								sprintf(skey[key], "3%c%c%c%c%04i", templn[0], templn[1], templn[2], templn[3], key);
@@ -4174,6 +4184,10 @@ again3:
 	ssend(debug_s, param);
 	ssend(debug_s, "\r\n");
 #endif
+			//decode big5
+			strdec(param);
+
+			//url decode (unescape)
 			if(strstr(param, "%"))
 			{
 				strcpy(buffer1, param);
@@ -4198,6 +4212,7 @@ again3:
 					param[pos]=0;
 				}
 			}
+
 			if(strstr(param, "popup.ps3"))
 			{
 				if(strlen(param)>10)
@@ -5682,6 +5697,11 @@ just_leave:
 
 								get_default_icon(tempstr, param+plen, param+plen, 0, 0, 0);
 
+								//encode icon (big5)
+								size_t len = strlen(tempstr);
+								char enc_icon[len<<2];
+								strenc(enc_icon, tempstr, len);
+
 								if(plen==IS_COPY)
 								{
 									if(strstr(param+plen, "/dev_usb"))
@@ -5719,17 +5739,17 @@ just_leave:
 													"<img src=\"%s\"><hr/>"
 													"%s: <a href=\"%s\">%s</a>",
 													STR_COPYING, param+plen, param+plen,
-													tempstr,
+													enc_icon,
 													STR_CPYDEST, target, target);
 								}
 								else if(strstr(param, ".BIN.ENC"))
-									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, tempstr, STR_PS2LOADED);
+									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, enc_icon, STR_PS2LOADED);
 								else if(strstr(param, "/PSPISO") || strstr(param, "/ISO"))
-									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, tempstr, STR_PSPLOADED);
+									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, enc_icon, STR_PSPLOADED);
 								else if(strstr(param, "/BDISO") || strstr(param, "/DVDISO") || strstr(param, ".ntfs[BDISO]") || strstr(param, ".ntfs[DVDISO]"))
-									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_MOVIETOM,param+plen, tempstr, STR_MOVIELOADED);
+									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_MOVIETOM,param+plen, enc_icon, STR_MOVIELOADED);
 								else
-									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, tempstr, STR_GAMELOADED);
+									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, enc_icon, STR_GAMELOADED);
 
 								strcat(buffer, templn);
 							}
@@ -6205,18 +6225,23 @@ just_leave:
 
 												get_default_icon(icon, param, entry.d_name, 0, ns, abort_connection);
 
+												//encode path (big5)
+												size_t len = strlen(entry.d_name);
+												char enc_dir_name[len<<2];
+												strenc(enc_dir_name, entry.d_name, len);
+
 												snprintf(ename, 6, "%s    ", templn);
 												if(is_iso)
 												{
 													sprintf(tempstr, "%c%c%c%c<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3%s/%s\"><img src=\"%s\" class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s\">%s</a></div></div>",
 														ename[0], ename[1], ename[2], ename[3],
-														param, entry.d_name, icon, param, templn);
+														param, enc_dir_name, icon, param, templn);
 												}
 												else
 												{
 													sprintf(tempstr, "%c%c%c%c<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3%s/%s\"><img src=\"%s\" class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s/%s\">%s</a></div></div>",
 														ename[0], ename[1], ename[2], ename[3],
-														param, entry.d_name, icon, param, entry.d_name, templn);
+														param, enc_dir_name, icon, param, enc_dir_name, templn);
 												}
 
 												strncpy(line_entry[idx].path, tempstr, 512);

@@ -28,5 +28,9 @@ int sprintf(char *buffer, const char *fmt, ...) __attribute__ ((format (printf, 
 int snprintf(char *buffer, size_t len, const char *fmt, ...);
 int printf(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 
+char h2a(const char hex);
+void strenc(char *dst, const char *src, size_t n);
+void strdec(char *src);
+
 #endif
 
