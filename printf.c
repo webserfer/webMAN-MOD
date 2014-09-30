@@ -886,6 +886,7 @@ char h2a(const char hex)
 void strenc(char *dst, const char *src, size_t n)
 {
 	size_t j=0;
+	memset(dst, 0, n*4);
 	for(size_t i=0; i<n; i++,j++)
 	{
 		if(src[i] & 0x80)
@@ -897,27 +898,4 @@ void strenc(char *dst, const char *src, size_t n)
 		else dst[j] = src[i];
 	}
 	dst[j] = '\0';
-}
-
-void strdec(char *src)
-{
-	if(strstr(src, "%"))
-	{
-		char *p=src;
-		for(size_t i=0; i<strlen(src); i++, p++)
-		{
-			if(src[i] != '%') *p = src[i];
-			else
-			{
-				if(src[++i]>='0' && src[i]<='9') *p=(src[i]-0x30)<<4;
-				else if(src[i]>='a' && src[i]<='f') *p=(src[i]-0x57)<<4;
-				else if(src[i]>='A' && src[i]<='F') *p=(src[i]-0x37)<<4;
-
-				if(src[++i]>='0' && src[i]<='9') *p|=src[i]-0x30;
-				else if(src[i]>='a' && src[i]<='f') *p|=src[i]-0x57;
-				else if(src[i]>='A' && src[i]<='F') *p|=src[i]-0x37;
-			}
-		}
-		*p = '\0';
-	}
 }

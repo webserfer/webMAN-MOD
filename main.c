@@ -66,7 +66,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
 #define PS2_CLASSIC_ISO_ICON     "/dev_hdd0/game/PS2U10000/ICON0.PNG"
 
-#define WM_VERSION			"1.30.30 MOD"						// webMAN version
+#define WM_VERSION			"1.30.31 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -3590,7 +3590,7 @@ reconnect:
 
 							//encode path (big5)
 							size_t len = strlen(data[v3_entry].name);
-							char enc_dir_name[len<<2];
+							char enc_dir_name[len*4];
 							strenc(enc_dir_name, data[v3_entry].name, len);
 
 							sprintf(tempstr, "<Table key=\"%04i\">"
@@ -3787,7 +3787,7 @@ reconnect:
 
 								//encode path (big5)
 								size_t len = strlen(entry.d_name);
-								char enc_dir_name[len<<2];
+								char enc_dir_name[len*4];
 								strenc(enc_dir_name, entry.d_name, len);
 
 								sprintf(tempstr, "<Table key=\"%04i\">"
@@ -4184,27 +4184,24 @@ again3:
 	ssend(debug_s, param);
 	ssend(debug_s, "\r\n");
 #endif
-			//decode big5
-			strdec(param);
-
 			//url decode (unescape)
 			if(strstr(param, "%"))
 			{
 				strcpy(buffer1, param);
-				int pos=0;
-				for(u32 i=0;i<strlen(buffer1);i++)
+				int pos=0, len=strlen(param);
+				for(u32 i=0;i<len;i++)
 				{
 					if(buffer1[i]!='%')
 						param[pos]=buffer1[i];
 					else
 					{
-						if(buffer1[i+2]>='0' && buffer1[i+2]<='9') param[pos]=buffer1[i+2]-0x30;
-						else
-							if(buffer1[i+2]>='A' && buffer1[i+2]<='F') param[pos]=buffer1[i+2]-55;
+						if(buffer1[i+2]>='0' && buffer1[i+2]<='9') param[pos]=buffer1[i+2]-0x30; else
+						if(buffer1[i+2]>='A' && buffer1[i+2]<='F') param[pos]=buffer1[i+2]-0x37; else
+						if(buffer1[i+2]>='a' && buffer1[i+2]<='f') param[pos]=buffer1[i+2]-0x57;
 
-						if(buffer1[i+1]>='0' && buffer1[i+1]<='9') param[pos]+=(buffer1[i+1]-0x30)*16;
-						else
-							if(buffer1[i+1]>='A' && buffer1[i+1]<='F') param[pos]+=(buffer1[i+1]-55)*16;
+						if(buffer1[i+1]>='0' && buffer1[i+1]<='9') param[pos]+=(buffer1[i+1]-0x30)*0x10; else
+						if(buffer1[i+1]>='A' && buffer1[i+1]<='F') param[pos]+=(buffer1[i+1]-0x37)*0x10; else
+						if(buffer1[i+1]>='a' && buffer1[i+1]<='f') param[pos]+=(buffer1[i+1]-0x57)*0x10;
 
 						i+=2;
 					}
@@ -5699,7 +5696,7 @@ just_leave:
 
 								//encode icon (big5)
 								size_t len = strlen(tempstr);
-								char enc_icon[len<<2];
+								char enc_icon[len*4];
 								strenc(enc_icon, tempstr, len);
 
 								if(plen==IS_COPY)
@@ -6227,7 +6224,7 @@ just_leave:
 
 												//encode path (big5)
 												size_t len = strlen(entry.d_name);
-												char enc_dir_name[len<<2];
+												char enc_dir_name[len*4];
 												strenc(enc_dir_name, entry.d_name, len);
 
 												snprintf(ename, 6, "%s    ", templn);
