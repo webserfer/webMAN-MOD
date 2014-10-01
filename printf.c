@@ -873,29 +873,3 @@ int printf(const char *fmt, ...)
 
 //#endif /* DEBUG */
 
-char h2a(const char hex)
-{
-	char c = hex;
-	if(c>=0 && c<=9)
-		c += 0x30;
-	else if(c>=10 && c<=15)
-		c += 0x57;
-	return c;
-}
-
-void strenc(char *dst, const char *src, size_t n)
-{
-	size_t j=0;
-	memset(dst, 0, n*4);
-	for(size_t i=0; i<n; i++,j++)
-	{
-		if(src[i] & 0x80)
-		{
-			dst[j++] = '%';
-			dst[j++] = h2a((unsigned char)src[i]>>4);
-			dst[j] = h2a(src[i] & 0xf);
-		}
-		else dst[j] = src[i];
-	}
-	dst[j] = '\0';
-}
