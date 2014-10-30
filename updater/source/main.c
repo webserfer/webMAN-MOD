@@ -191,6 +191,7 @@ int main()
 	sysLv2FsUnlink("/dev_hdd0/tmp/LANG_PT.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/LANG_RU.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/LANG_TR.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/LANG_ZH.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/LANG_XX.TXT");
 
     sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_EN.TXT");
@@ -212,6 +213,7 @@ int main()
 	sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_PT.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_RU.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_TR.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_ZH.TXT");
 
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_EN.TXT","/dev_hdd0/tmp/wm_lang/LANG_EN.TXT");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_AR.TXT","/dev_hdd0/tmp/wm_lang/LANG_AR.TXT");
@@ -232,6 +234,7 @@ int main()
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_PT.TXT","/dev_hdd0/tmp/wm_lang/LANG_PT.TXT");
     CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_RU.TXT","/dev_hdd0/tmp/wm_lang/LANG_RU.TXT");
     CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_TR.TXT","/dev_hdd0/tmp/wm_lang/LANG_TR.TXT");
+    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_ZH.TXT","/dev_hdd0/tmp/wm_lang/LANG_ZH.TXT");
 
     if(sysLv2FsStat("/dev_hdd0/tmp/wm_lang/LANG_XX.TXT", &s))
         CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_XX.TXT","/dev_hdd0/tmp/wm_lang/LANG_XX.TXT");

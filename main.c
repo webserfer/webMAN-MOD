@@ -66,7 +66,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
 #define PS2_CLASSIC_ISO_ICON     "/dev_hdd0/game/PS2U10000/ICON0.PNG"
 
-#define WM_VERSION			"1.30.29 MOD"						// webMAN version
+#define WM_VERSION			"1.30.33 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -87,14 +87,17 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ssend(socket, str) send(socket, str, strlen(str), 0)
 #define getPort(p1x, p2x) ((p1x * 256) + p2x)
 
-static u32 BUFFER_SIZE_FTP	= ( 128*1024);
+#define KB			1024UL
+#define MB			1048576UL
 
-static u32 BUFFER_SIZE		= ( 448*1024);
-static u32 BUFFER_SIZE_PSX	= ( 160*1024);
-static u32 BUFFER_SIZE_PSP	= (  32*1024);
-static u32 BUFFER_SIZE_PS2	= (  64*1024);
-static u32 BUFFER_SIZE_DVD	= ( 192*1024);
-static u32 BUFFER_SIZE_ALL	= ( 896*1024);
+static u32 BUFFER_SIZE_FTP	= ( 128*KB);
+
+static u32 BUFFER_SIZE		= ( 448*KB);
+static u32 BUFFER_SIZE_PSX	= ( 160*KB);
+static u32 BUFFER_SIZE_PSP	= (  32*KB);
+static u32 BUFFER_SIZE_PS2	= (  64*KB);
+static u32 BUFFER_SIZE_DVD	= ( 192*KB);
+static u32 BUFFER_SIZE_ALL	= ( 896*KB);
 
 static sys_ppu_thread_t thread_id_ntfs = -1;
 static sys_ppu_thread_t thread_id_net	=-1;
@@ -860,7 +863,7 @@ int filecopy(char *file1, char *file2, uint64_t maxbytes)
     int fd1, fd2;
     int ret=-1;
 
-    uint64_t chunk_size=64*1024; //64K
+    uint64_t chunk_size=64*KB; //64K
 
 	if(cellFsStat(file1, &buf)!=CELL_FS_SUCCEEDED) return ret;
 
@@ -954,6 +957,33 @@ int folder_copy(char *path1, char *path2)
 		return -1;
 
 	return CELL_FS_SUCCEEDED;
+}
+
+char h2a(char hex)
+{
+	char c = hex;
+	if(c>=0 && c<=9)
+		c += 0x30;
+	else if(c>=10 && c<=15)
+		c += 0x57;
+	return c;
+}
+
+void strenc(char *dst, char *src)
+{
+	size_t j=0;
+    size_t n=strlen(src);
+	for(size_t i=0; i<n; i++,j++)
+	{
+		if(src[i] & 0x80)
+		{
+			dst[j++] = '%';
+			dst[j++] = h2a((unsigned char)src[i]>>4);
+			dst[j] = h2a(src[i] & 0xf);
+		}
+		else dst[j] = src[i];
+	}
+	dst[j] = '\0';
 }
 
 int my_atoi(const char *c)
@@ -1337,7 +1367,7 @@ static int process_read_cd_2352_cmd(uint8_t *buf, uint32_t sector, uint32_t rema
 	{
 		sys_addr_t addr;
 
-		int ret = sys_memory_allocate(192*1024, SYS_MEMORY_PAGE_SIZE_64K, &addr);
+		int ret = sys_memory_allocate(192*KB, SYS_MEMORY_PAGE_SIZE_64K, &addr);
 		if (ret != 0)
 		{
 			//DPRINTF("sys_memory_allocate failed: %x\n", ret);
@@ -1446,7 +1476,7 @@ static void netiso_thread(uint64_t arg)
 		tracks = NULL;
 	}
 
-	ret = sys_storage_ext_mount_discfile_proxy(result_port, command_queue, emu_mode, discsize, 256*1024, numtracks, tracks);
+	ret = sys_storage_ext_mount_discfile_proxy(result_port, command_queue, emu_mode, discsize, 256*KB, numtracks, tracks);
 	//DPRINTF("mount = %x\n", ret);
 
 	sys_memory_free((sys_addr_t)args);
@@ -1794,7 +1824,7 @@ static int process_read_cd_2352_cmd_iso(uint8_t *buf, uint32_t sector, uint32_t 
 	{
 		sys_addr_t addr;
 
-		int ret = sys_memory_allocate(192*1024, SYS_MEMORY_PAGE_SIZE_64K, &addr);
+		int ret = sys_memory_allocate(192*KB, SYS_MEMORY_PAGE_SIZE_64K, &addr);
 		if (ret != 0)
 		{
 			//DPRINTF("sys_memory_allocate failed: %x\n", ret);
@@ -1917,7 +1947,7 @@ static void rawseciso_thread(uint64_t arg)
 		fake_eject_event();
 	}
 
-	ret = sys_storage_ext_mount_discfile_proxy(result_port, command_queue_ntfs, emu_mode, discsize, 256*1024, num_tracks, tracks);
+	ret = sys_storage_ext_mount_discfile_proxy(result_port, command_queue_ntfs, emu_mode, discsize, 256*KB, num_tracks, tracks);
 	//DPRINTF("mount = %x\n", ret);
 
 	fake_insert_event(real_disctype);
@@ -2064,9 +2094,9 @@ bool language(const char *file_str, char *default_str)
 	if(fh) f=fh; //file is already open
     else
     {
-		const char lang_code[21][3]={"EN", "FR", "IT", "ES", "DE", "NL", "PT", "RU", "HU", "PL", "GR", "HR", "BG", "IN", "TR", "AR", "CN", "KR", "JP", "XX"};
+		const char lang_code[21][3]={"EN", "FR", "IT", "ES", "DE", "NL", "PT", "RU", "HU", "PL", "GR", "HR", "BG", "IN", "TR", "AR", "CN", "KR", "JP", "ZH", "XX"};
 
-        if(webman_config->lang>18 && webman_config->lang!=99) return false;
+        if(webman_config->lang>19 && webman_config->lang!=99) return false;
 
 		const char lang_path[34];
         if(webman_config->lang==99)
@@ -2334,6 +2364,36 @@ uint64_t find_syscall_table()
 	return search64(opd_sc);
 }
 
+void get_idps_psid()
+{
+	if(c_firmware<=4.53f)
+	{
+		{system_call_1(870, (uint64_t) IDPS);}
+		{system_call_1(872, (uint64_t) PSID);}
+	}
+	else if(c_firmware==4.55f && dex_mode)
+	{
+			IDPS[0] = peekq(0x8000000000494F1CULL  );
+			IDPS[1] = peekq(0x8000000000494F1CULL+8);
+			PSID[0] = peekq(0x8000000000494F34ULL  );
+			PSID[1] = peekq(0x8000000000494F34ULL+8);
+	}
+	else if(c_firmware==4.65f && dex_mode)
+	{
+			IDPS[0] = peekq(0x800000000049CF1CULL  );
+			IDPS[1] = peekq(0x800000000049CF1CULL+8);
+			PSID[0] = peekq(0x800000000049CF34ULL  );
+			PSID[1] = peekq(0x800000000049CF34ULL+8);
+	}
+	else if((c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f) && !dex_mode)
+	{
+			IDPS[0] = peekq(0x8000000000474F1CULL  );
+			IDPS[1] = peekq(0x8000000000474F1CULL+8);
+			PSID[0] = peekq(0x8000000000474F34ULL  );
+			PSID[1] = peekq(0x8000000000474F34ULL+8);
+	}
+}
+
 void remove_cfw_syscalls()
 {
 	u64 syscall_table, syscall_not_impl;
@@ -2342,6 +2402,7 @@ void remove_cfw_syscalls()
 	u64 DEX=0x4445580000000000ULL;
 
 	if(peekq(0x80000000002ED860ULL)==CEX) {dex_mode=0; c_firmware=4.65f;}	else
+	if(peekq(0x800000000030F1A8ULL)==DEX) {dex_mode=2; c_firmware=4.65f;}	else
 	if(peekq(0x80000000002ED850ULL)==CEX) {dex_mode=0; c_firmware=4.60f;}	else
 	if(peekq(0x80000000002EC5E0ULL)==CEX) {dex_mode=0; c_firmware=4.55f;}	else
 	if(peekq(0x80000000002E9D70ULL)==CEX) {dex_mode=0; c_firmware=4.53f;}	else
@@ -2365,66 +2426,58 @@ void remove_cfw_syscalls()
 	if(peekq(0x8000000000309698ULL)==DEX) {dex_mode=2; c_firmware=4.50f;}	else
 	if(peekq(0x800000000030D6A8ULL)==DEX) {dex_mode=2; c_firmware=4.55f;}	else
 #endif
-    c_firmware=0.00f;
+	c_firmware=0.00f;
 
 	if(c_firmware==4.65f && !dex_mode) syscall_table = SYSCALL_TABLE_465;	else
+	if(c_firmware==4.65f &&  dex_mode) syscall_table = SYSCALL_TABLE_465D;	else
 	if(c_firmware==4.60f && !dex_mode) syscall_table = SYSCALL_TABLE_460;	else
 	if(c_firmware==4.55f && !dex_mode) syscall_table = SYSCALL_TABLE_455;	else
 	if(c_firmware==4.53f && !dex_mode) syscall_table = SYSCALL_TABLE_453;	else
-    if(c_firmware==4.53f &&  dex_mode) syscall_table = SYSCALL_TABLE_453D;	else
-    if(c_firmware==4.50f && !dex_mode) syscall_table = SYSCALL_TABLE_450;	else
-    if(c_firmware==4.46f && !dex_mode) syscall_table = SYSCALL_TABLE_446;	else
+	if(c_firmware==4.53f &&  dex_mode) syscall_table = SYSCALL_TABLE_453D;	else
+	if(c_firmware==4.50f && !dex_mode) syscall_table = SYSCALL_TABLE_450;	else
+	if(c_firmware==4.46f && !dex_mode) syscall_table = SYSCALL_TABLE_446;	else
 #ifndef COBRA_ONLY
-    if(c_firmware==4.21f && !dex_mode) syscall_table = SYSCALL_TABLE_421;	else
+	if(c_firmware==4.21f && !dex_mode) syscall_table = SYSCALL_TABLE_421;	else
 	if(c_firmware==4.21f &&  dex_mode) syscall_table = SYSCALL_TABLE_421D;	else
-    if(c_firmware==4.30f && !dex_mode) syscall_table = SYSCALL_TABLE_430;	else
-    if(c_firmware==4.30f &&  dex_mode) syscall_table = SYSCALL_TABLE_430D;	else
-    if(c_firmware==4.31f && !dex_mode) syscall_table = SYSCALL_TABLE_431;	else
-    if(c_firmware==4.40f && !dex_mode) syscall_table = SYSCALL_TABLE_440;	else
-    if(c_firmware==4.41f && !dex_mode) syscall_table = SYSCALL_TABLE_441;	else
-    if(c_firmware==4.41f &&  dex_mode) syscall_table = SYSCALL_TABLE_441D;	else
-    if(c_firmware==4.46f &&  dex_mode) syscall_table = SYSCALL_TABLE_446D;	else
+	if(c_firmware==4.30f && !dex_mode) syscall_table = SYSCALL_TABLE_430;	else
+	if(c_firmware==4.30f &&  dex_mode) syscall_table = SYSCALL_TABLE_430D;	else
+	if(c_firmware==4.31f && !dex_mode) syscall_table = SYSCALL_TABLE_431;	else
+	if(c_firmware==4.40f && !dex_mode) syscall_table = SYSCALL_TABLE_440;	else
+	if(c_firmware==4.41f && !dex_mode) syscall_table = SYSCALL_TABLE_441;	else
+	if(c_firmware==4.41f &&  dex_mode) syscall_table = SYSCALL_TABLE_441D;	else
+	if(c_firmware==4.46f &&  dex_mode) syscall_table = SYSCALL_TABLE_446D;	else
 	if(c_firmware==4.50f &&  dex_mode) syscall_table = SYSCALL_TABLE_450D;	else
 	if(c_firmware==4.55f &&  dex_mode) syscall_table = SYSCALL_TABLE_455D;	else
 #endif
 	syscall_table = find_syscall_table();
 	syscall_not_impl = peekq(syscall_table);
 
-	if(!dex_mode)
-	{
-		if(c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f)
-		{
-			IDPS[0] = peekq(0x8000000000474F1CULL  );
-			IDPS[1] = peekq(0x8000000000474F1CULL+8);
-			PSID[0] = peekq(0x8000000000474F34ULL  );
-			PSID[1] = peekq(0x8000000000474F34ULL+8);
-		}
-	}
+	get_idps_psid();
 
-    pokeq(syscall_table + (8*6),  syscall_not_impl);
+	pokeq(syscall_table + (8*6),  syscall_not_impl);
 	pokeq(syscall_table + (8*7),  syscall_not_impl);
-    pokeq(syscall_table + (8*8),  syscall_not_impl);
-    pokeq(syscall_table + (8*9),  syscall_not_impl);
-    pokeq(syscall_table + (8*10), syscall_not_impl);
-    pokeq(syscall_table + (8*35), syscall_not_impl);
-    pokeq(syscall_table + (8*36), syscall_not_impl);
+	pokeq(syscall_table + (8*8),  syscall_not_impl);
+	pokeq(syscall_table + (8*9),  syscall_not_impl);
+	pokeq(syscall_table + (8*10), syscall_not_impl);
+	pokeq(syscall_table + (8*35), syscall_not_impl);
+	pokeq(syscall_table + (8*36), syscall_not_impl);
 
-    u64 sc_not_impl_pt = peekq(syscall_not_impl);
-    u64 sc6 = peekq(syscall_table + (8*6));
+	u64 sc_not_impl_pt = peekq(syscall_not_impl);
+	u64 sc6 = peekq(syscall_table + (8*6));
 	u64 sc7 = peekq(syscall_table + (8*7));
-    //u64 sc8 = peekq(syscall_table + (8*8));
-    u64 sc9 = peekq(syscall_table + (8*9));
-    u64 sc10 = peekq(syscall_table + (8*10));
-    //u64 sc35 = peekq(syscall_table + (8*35));
-    u64 sc36 = peekq(syscall_table + (8*36));
+	//u64 sc8 = peekq(syscall_table + (8*8));
+	u64 sc9 = peekq(syscall_table + (8*9));
+	u64 sc10 = peekq(syscall_table + (8*10));
+	//u64 sc35 = peekq(syscall_table + (8*35));
+	u64 sc36 = peekq(syscall_table + (8*36));
 
-    if(sc6!=syscall_not_impl) pokeq(sc6, sc_not_impl_pt);
+	if(sc6!=syscall_not_impl) pokeq(sc6, sc_not_impl_pt);
 	if(sc7!=syscall_not_impl) pokeq(sc7, sc_not_impl_pt);
-    //if(sc8!=syscall_not_impl) pokeq(sc8, sc_not_impl_pt);
-    if(sc9!=syscall_not_impl) pokeq(sc9, sc_not_impl_pt);
-    if(sc10!=syscall_not_impl) pokeq(sc10, sc_not_impl_pt);
-    //if(sc35!=syscall_not_impl) pokeq(sc35, sc_not_impl_pt);
-    if(sc36!=syscall_not_impl) pokeq(sc36, sc_not_impl_pt);
+	//if(sc8!=syscall_not_impl) pokeq(sc8, sc_not_impl_pt);
+	if(sc9!=syscall_not_impl) pokeq(sc9, sc_not_impl_pt);
+	if(sc10!=syscall_not_impl) pokeq(sc10, sc_not_impl_pt);
+	//if(sc35!=syscall_not_impl) pokeq(sc35, sc_not_impl_pt);
+	if(sc36!=syscall_not_impl) pokeq(sc36, sc_not_impl_pt);
 }
 
  void delete_history()
@@ -2682,8 +2735,8 @@ static int read_remote_dir(int s, sys_addr_t *data /*netiso_read_dir_result_data
 static void add_radio_button(const char *name, const char *value, const char *id, const char *label, const char *sufix, bool checked, char *buffer)
 {
 	char templn[256];
-    sprintf(templn, "<label><input type=\"radio\" name=\"%s\" value=\"%s\" id=\"%s\" %s/> %s%s</label>", name, value, id, checked?(char*)"checked=\"checked\"" : (char*)"", label, (!sufix)?"<br>":sufix);
-    strcat(buffer, templn);
+	sprintf(templn, "<label><input type=\"radio\" name=\"%s\" value=\"%s\" id=\"%s\" %s/> %s%s</label>", name, value, id, checked?(char*)"checked=\"checked\"" : (char*)"", label, (!sufix)?"<br>":sufix);
+	strcat(buffer, templn);
 }
 
 static void add_check_box(const char *name, const char *value, const char *label, const char *sufix, bool checked, char *buffer)
@@ -2701,15 +2754,15 @@ static void add_check_box(const char *name, const char *value, const char *label
 		p=strstr(label, AUTOBOOT_PATH)+strlen(AUTOBOOT_PATH);
 		strcat(clabel, p);
 	}
-    sprintf(templn, "<label><input type=\"checkbox\" name=\"%s\" value=\"%s\" %s/> %s%s</label>", name, value, checked?(char*)"checked=\"checked\"" : (char*)"", clabel, (!sufix)?"<br>":sufix);
-    strcat(buffer, templn);
+	sprintf(templn, "<label><input type=\"checkbox\" name=\"%s\" value=\"%s\" %s/> %s%s</label>", name, value, checked?(char*)"checked=\"checked\"" : (char*)"", clabel, (!sufix)?"<br>":sufix);
+	strcat(buffer, templn);
 }
 
 static void add_option_item(const char *value, const char *label, bool selected, char *buffer)
 {
 	char templn[256];
-    sprintf(templn, "<option value=\"%s\" %s/>%s</option>", value, selected?(char*)"selected=\"selected\"" : (char*)"", label);
-    strcat(buffer, templn);
+	sprintf(templn, "<option value=\"%s\" %s/>%s</option>", value, selected?(char*)"selected=\"selected\"" : (char*)"", label);
+	strcat(buffer, templn);
 }
 
 static void parse_param_sfo(unsigned char *mem, char *titleID, char *title)
@@ -2756,55 +2809,56 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title)
 	}
 }
 
-static void get_cover(char *icon, char *titleid)
+static bool get_cover(char *icon, char *titleid)
 {
 	struct CellFsStat s;
 
 #ifndef ENGLISH_ONLY
 	if(covers_exist[0])
 	{
-        sprintf(icon, "%s/%s.JPG", COVERS_PATH, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-        sprintf(icon, "%s/%s.PNG", COVERS_PATH, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, "%s/%s.JPG", COVERS_PATH, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return true;
+		sprintf(icon, "%s/%s.PNG", COVERS_PATH, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return true;
 	}
 #endif
 
 	if(covers_exist[1])
 	{
-        sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_STD, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-        sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_STD, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_STD, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return true;
+		sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_STD, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return true;
 	}
 
 	if(covers_exist[2])
 	{
-		sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_STL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-		sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_STL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_STL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return true;
+		sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_STL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return true;
 	}
 
 	if(covers_exist[3])
 	{
-		sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_SSTL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-		sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_SSTL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, "%s/covers/%s.JPG", MM_ROOT_SSTL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return true;
+		sprintf(icon, "%s/covers/%s.PNG", MM_ROOT_SSTL, titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return true;
 	}
 
 	if(covers_exist[4])
 	{
-		sprintf(icon, "/dev_hdd0/GAMES/covers/%s.JPG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-		sprintf(icon, "/dev_hdd0/GAMES/covers/%s.PNG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, "/dev_hdd0/GAMES/covers/%s.JPG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return true;
+		sprintf(icon, "/dev_hdd0/GAMES/covers/%s.PNG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return true;
 	}
 
 	if(covers_exist[5])
 	{
-		sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.JPG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-		sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.PNG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.JPG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return true;
+		sprintf(icon, "/dev_hdd0/GAMEZ/covers/%s.PNG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return true;
 	}
 
 	if(covers_exist[6])
 	{
-		sprintf(icon, WMTMP "/%s.JPG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
-		sprintf(icon, WMTMP "/%s.PNG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, WMTMP "/%s.JPG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return true;
+		sprintf(icon, WMTMP "/%s.PNG", titleid); if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return true;
 	}
 
 	icon[0]=0;
+    return false;
 }
 
 static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns, int abort_connection)
@@ -2812,16 +2866,28 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 	//this function is called only from get_default_icon
 
 	struct CellFsStat s;
-    int flen;
+	int flen;
+
+	if(strstr(file, ".BIN.ENC"))
+	{
+		sprintf(icon, "%s/%s.png", param, file);
+		if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, "%s/%s.PNG", param, file);
+		if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, "%s.png", param);
+		if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+		sprintf(icon, "%s.PNG", param);
+		if(cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
+	}
 
 	sprintf(icon, "%s/%s", WMTMP, file);
 	flen=strlen(icon);
 
 	if(isdir)
-    {
+	{
 		strcat(icon, ".PNG");
 		flen+=4;
-    }
+	}
 	else
     {
 		icon[flen-4]=0; // remove file extension
@@ -2863,7 +2929,7 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 		{
 			strcat(icon, ".jpg");
 
-            sprintf(tempstr, "%s/%s", param, file);
+			sprintf(tempstr, "%s/%s", param, file);
 			tempstr[strlen(tempstr)-4]=0;
 			strcat(tempstr, ".jpg");
 		}
@@ -2924,9 +2990,9 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 	}
 }
 
-static int get_cover_from_name(char *icon, char *name, char *titleid)
+static bool get_cover_from_name(char *icon, char *name, char *titleid)
 {
-	if(webman_config->nocov) return -1;
+	if(webman_config->nocov) return false;
 
 	if(titleid[0]==0 && (strstr(name, "-[") || strstr(name, " [B") || strstr(name, " [N")))
 	{
@@ -2938,20 +3004,21 @@ static int get_cover_from_name(char *icon, char *name, char *titleid)
 			strncpy(titleid, strstr(name, " [N") + 2, 9);
 	}
 
-	if(titleid[0]) {get_cover(icon, titleid); return 0;}
-	return -1;
+	if(titleid[0] && get_cover(icon, titleid)) return true;
+
+	return false;
 }
 
 static void get_default_icon(char *icon, char *param, char *file, int isdir, int ns, int abort_connection)
 {
-	char titleid[10];
 	struct CellFsStat s;
 
 	// continue using cover or default icon0.png
 	if(icon[0]!=0 && cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 
+	char titleid[10];
 	memset(titleid, 0, 10);
-	if(!webman_config->nocov && get_cover_from_name(icon, file, titleid)==0) return;
+	if(!webman_config->nocov && get_cover_from_name(icon, file, titleid)) return;
 
 	// get icon from folder && copy remote icon
 	get_iso_icon(icon, param, file, isdir, ns, abort_connection);
@@ -2959,7 +3026,7 @@ static void get_default_icon(char *icon, char *param, char *file, int isdir, int
 	if(icon[0]!=0 && cellFsStat(icon, &s)==CELL_FS_SUCCEEDED) return;
 
 	// get cover if the filename contains a title id
-	if(get_cover_from_name(icon, file, titleid)==0) return;
+	if(get_cover_from_name(icon, file, titleid)) return;
 
 	//use the cached PNG from wmtmp if available
 	sprintf(icon, "%s/%s", WMTMP, file);
@@ -2995,6 +3062,8 @@ static void handleclient(u64 conn_s_p)
 
 	char templn[1024];
 	char tempstr[4096];
+
+	char enc_dir_name[1024];
 
 	char cmd[16], param[512];
 	char header[512];
@@ -3033,18 +3102,18 @@ static void handleclient(u64 conn_s_p)
 													covers_exist[5]=(cellFsStat("/dev_hdd0/GAMEZ/covers", &buf)==CELL_FS_SUCCEEDED);
 													covers_exist[6]=(cellFsStat(WMTMP, &buf)==CELL_FS_SUCCEEDED);
 
-        for(int i=0; i<12; i++)
-        {
-            if(cellFsStat(wm_icons[i], &buf)!=CELL_FS_SUCCEEDED)
-            {
-                if(i==0 || i==5) strcpy(wm_icons[i] + 32, "user/024.png"); else //ps3
-                if(i==1 || i==6) strcpy(wm_icons[i] + 32, "user/026.png"); else //psx
-                if(i==2 || i==7) strcpy(wm_icons[i] + 32, "user/025.png"); else //ps2
-                if(i==3 || i==8) strcpy(wm_icons[i] + 32, "user/022.png"); else //psp
-                if(i==4 || i==9) strcpy(wm_icons[i] + 32, "user/023.png"); else //dvd
-                                 strcpy(wm_icons[i] + 37, "icon_home.png"); //setup / eject
-            }
-        }
+		for(int i=0; i<12; i++)
+		{
+			if(cellFsStat(wm_icons[i], &buf)!=CELL_FS_SUCCEEDED)
+			{
+				if(i==0 || i==5) strcpy(wm_icons[i] + 32, "user/024.png"); else //ps3
+				if(i==1 || i==6) strcpy(wm_icons[i] + 32, "user/026.png"); else //psx
+				if(i==2 || i==7) strcpy(wm_icons[i] + 32, "user/025.png"); else //ps2
+				if(i==3 || i==8) strcpy(wm_icons[i] + 32, "user/022.png"); else //psp
+				if(i==4 || i==9) strcpy(wm_icons[i] + 32, "user/023.png"); else //dvd
+								 strcpy(wm_icons[i] + 37, "icon_home.png"); //setup / eject
+			}
+		}
 
 #ifdef COBRA_ONLY
 		//if(cobra_mode)
@@ -3084,17 +3153,26 @@ static void handleclient(u64 conn_s_p)
 			newPSID[0] = convertH(webman_config->vPSID1);
 			newPSID[1] = convertH(webman_config->vPSID2);
 
-			if(newPSID[0] != 0 && newPSID[1] != 0) {
-				if(c_firmware==4.55f && dex_mode) {
+			if(newPSID[0] != 0 && newPSID[1] != 0)
+			{
+				if(c_firmware==4.55f && dex_mode)
+				{
 					pokeq(0x8000000000494F34ULL  , newPSID[0]);
-                    pokeq(0x8000000000494F34ULL+8, newPSID[1]);
+					pokeq(0x8000000000494F34ULL+8, newPSID[1]);
+				}
+				else if(c_firmware==4.65f && dex_mode)
+				{
+					pokeq(0x800000000049CF34ULL  , newPSID[0]);
+					pokeq(0x800000000049CF34ULL+8, newPSID[1]);
 				}
 				else
-				if((c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f) && !dex_mode) {
+				if((c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f) && !dex_mode)
+				{
 					pokeq(0x8000000000474F34ULL  , newPSID[0]);
 					pokeq(0x8000000000474F34ULL+8, newPSID[1]);
 				}
-				else {
+				else
+				{
 					{system_call_1(872, (uint64_t) PSID);}
 					for(j = 0x8000000000000000ULL; j < 0x8000000000600000ULL; j+=4) {
 						if((peekq(j) == PSID[0]) && (peekq(j+8) == PSID[1])) {
@@ -3115,28 +3193,41 @@ static void handleclient(u64 conn_s_p)
 
 			if(newIDPS[0] != 0 && newIDPS[1] != 0)
 			{
-				if(c_firmware==4.55f && dex_mode) {
+				if(c_firmware==4.55f && dex_mode)
+				{
 					pokeq(0x8000000000407930ULL  , newIDPS[0]);
 					pokeq(0x8000000000407930ULL+8, newIDPS[1]);
 					pokeq(0x8000000000494F1CULL  , newIDPS[0]);
 					pokeq(0x8000000000494F1CULL+8, newIDPS[1]);
 				}
-				else if(c_firmware==4.55f) {
+				if(c_firmware==4.65f && dex_mode)
+				{
+					pokeq(0x80000000004095B0ULL  , newIDPS[0]);
+					pokeq(0x80000000004095B0ULL+8, newIDPS[1]);
+					pokeq(0x800000000049CF1CULL  , newIDPS[0]);
+					pokeq(0x800000000049CF1CULL+8, newIDPS[1]);
+				}
+				else if(c_firmware==4.55f)
+				{
 					pokeq(0x80000000003E17B0ULL  , newIDPS[0]);
 					pokeq(0x80000000003E17B0ULL+8, newIDPS[1]);
 					pokeq(0x8000000000474F1CULL  , newIDPS[0]);
 					pokeq(0x8000000000474F1CULL+8, newIDPS[1]);
 				}
-				else if(c_firmware==4.60f || c_firmware==4.65f) {
+				else if(c_firmware==4.60f || c_firmware==4.65f)
+				{
 					pokeq(0x80000000003E2BB0ULL  , newIDPS[0]);
 					pokeq(0x80000000003E2BB0ULL+8, newIDPS[1]);
 					pokeq(0x8000000000474F1CULL  , newIDPS[0]);
 					pokeq(0x8000000000474F1CULL+8, newIDPS[1]);
 				}
-				else {
+				else
+				{
 					{system_call_1(870, (uint64_t) IDPS);}
-					for(j = 0x8000000000000000ULL; j < 0x8000000000600000ULL; j+=4) {
-						if((peekq(j) == IDPS[0]) && (peekq(j+8) == IDPS[1])) {
+					for(j = 0x8000000000000000ULL; j < 0x8000000000600000ULL; j+=4)
+					{
+						if((peekq(j) == IDPS[0]) && (peekq(j+8) == IDPS[1]))
+						{
 							pokeq(j, newIDPS[0]); j+=8;
 							pokeq(j, newIDPS[1]); j+=8;
 						}
@@ -3145,19 +3236,7 @@ static void handleclient(u64 conn_s_p)
 			}
 		}
 
-	if(c_firmware==4.55f && dex_mode) {
-		IDPS[0] = peekq(0x8000000000494F1CULL  );
-		IDPS[1] = peekq(0x8000000000494F1CULL+8);
-		PSID[0] = peekq(0x8000000000494F34ULL  );
-		PSID[1] = peekq(0x8000000000494F34ULL+8);
-	}
-	else
-	if((c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f) && !dex_mode) {
-		IDPS[0] = peekq(0x8000000000474F1CULL  );
-		IDPS[1] = peekq(0x8000000000474F1CULL+8);
-		PSID[0] = peekq(0x8000000000474F34ULL  );
-		PSID[1] = peekq(0x8000000000474F34ULL+8);
-	}
+	get_idps_psid();
 
 #ifdef COBRA_ONLY
 	if(webman_config->spp)
@@ -3234,14 +3313,14 @@ again1:
 
 		_meminfo meminfo;
 		{system_call_1(352, (uint64_t) &meminfo);}
-		if((meminfo.avail)<( (BUFFER_SIZE_ALL) + 256*1024)) //leave if less than 1024+256KB memory
+		if((meminfo.avail)<( 256*KB )) //leave if less than 256KB memory
 		{
 			init_running=0;
 			sys_ppu_thread_exit(0);
 		}
 
 #ifdef USE_VM
-		if(sys_vm_memory_map(32*1024*1024, 1024*1024, SYS_MEMORY_CONTAINER_ID_INVALID, SYS_MEMORY_PAGE_SIZE_64K, SYS_VM_POLICY_AUTO_RECOMMENDED, &sysmem)!=CELL_OK)
+		if(sys_vm_memory_map(32*MB, 1*MB, SYS_MEMORY_CONTAINER_ID_INVALID, SYS_MEMORY_PAGE_SIZE_64K, SYS_VM_POLICY_AUTO_RECOMMENDED, &sysmem)!=CELL_OK)
 		{
 			init_running=0;
 			sys_ppu_thread_exit(0);
@@ -3258,13 +3337,13 @@ again1:
 		sys_addr_t sysmem2=sysmem1+(BUFFER_SIZE_PSX)+(BUFFER_SIZE_PSP);
 		sys_addr_t sysmem3=sysmem2+(BUFFER_SIZE_PS2);
 
-		char *myxml_ps3	= (char*)sysmem;
-		char *myxml_psx = NULL;
-		char *myxml_psp = NULL;
-		char *myxml_ps2 = NULL;
-		char *myxml_dvd = NULL;
-		char *myxml		= NULL;
-		char *myxml_items=NULL;
+		char *myxml_ps3   = (char*)sysmem;
+		char *myxml_psx   = NULL;
+		char *myxml_psp   = NULL;
+		char *myxml_ps2   = NULL;
+		char *myxml_dvd   = NULL;
+		char *myxml       = NULL;
+		char *myxml_items = NULL;
 
 		myxml_psx = (char*)sysmem1;
 		myxml_psp = (char*)sysmem1+(BUFFER_SIZE_PSX);
@@ -3287,21 +3366,21 @@ again1:
 		sprintf(xml, "/dev_hdd0/xmlhost/game_plugin/fb.xml");
 		cellFsUnlink(xml);
 		sprintf(myxml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                       "<XMBML version=\"1.0\">"
-                       "<View id=\"seg_fb\">"
-                       "<Attributes><Table key=\"mgames\">"
-                       "<Pair key=\"icon_rsc\"><String>item_tex_ps3util</String></Pair>"
-                       "<Pair key=\"icon_notation\"><String>WNT_XmbItemSavePS3</String></Pair>"
-                       "<Pair key=\"title\"><String>%s</String></Pair>"
-                       "<Pair key=\"info\"><String>%s</String></Pair>"
-                       "</Table>"
-                       "</Attributes>"
-                       "<Items>"
-                       "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mgames\" attr=\"mgames\" "
-                              "src=\"xmb://localhost/dev_hdd0/xmlhost/game_plugin/mygames.xml#seg_mygames\"/>"
-                       "</Items>"
-                       "</View>"
-                       "</XMBML>", STR_MYGAMES, STR_LOADGAMES);
+						"<XMBML version=\"1.0\">"
+						"<View id=\"seg_fb\">"
+						"<Attributes><Table key=\"mgames\">"
+						"<Pair key=\"icon_rsc\"><String>item_tex_ps3util</String></Pair>"
+						"<Pair key=\"icon_notation\"><String>WNT_XmbItemSavePS3</String></Pair>"
+						"<Pair key=\"title\"><String>%s</String></Pair>"
+						"<Pair key=\"info\"><String>%s</String></Pair>"
+						"</Table>"
+						"</Attributes>"
+						"<Items>"
+						"<Query class=\"type:x-xmb/folder-pixmap\" key=\"mgames\" attr=\"mgames\" "
+								"src=\"xmb://localhost/dev_hdd0/xmlhost/game_plugin/mygames.xml#seg_mygames\"/>"
+						"</Items>"
+						"</View>"
+						"</XMBML>", STR_MYGAMES, STR_LOADGAMES);
 		savefile(xml, (char*)myxml, strlen(myxml));
 
 		myxml[0]=0;
@@ -3314,35 +3393,33 @@ again1:
 		if(!(webman_config->nogrp))
 		{
 			if(!(webman_config->cmask & PS3)) strcpy(myxml_ps3, "<View id=\"seg_mygames_ps3_items\"><Attributes>");
-#ifdef COBRA_ONLY
-			{
-				if(!(webman_config->cmask & PS2)) {
-					strcpy(myxml_ps2, "<View id=\"seg_mygames_ps2_items\"><Attributes>");
-					if(webman_config->ps2l && cobra_mode && cellFsStat((char*)"/dev_hdd0/game/PS2U10000", &buf)==CELL_FS_SUCCEEDED) {
-						sprintf(templn, "<Table key=\"ps2_classic_launcher\">"
-										"<Pair key=\"icon\"><String>/dev_hdd0/game/PS2U10000/ICON0.PNG</String></Pair>"
-										"<Pair key=\"icon_notation\"><String>WNT_XmbItemBrowser</String></Pair>"
-										"<Pair key=\"title\"><String>PS2 Classic Launcher</String></Pair>"
-										"<Pair key=\"info\"><String>%s</String></Pair>"
-										"</Table>", STR_LAUNCHPS2);
-						strcat(myxml_ps2, templn);
-					}
+			if(!(webman_config->cmask & PS2)) {
+				strcpy(myxml_ps2, "<View id=\"seg_mygames_ps2_items\"><Attributes>");
+				if(webman_config->ps2l && cobra_mode && cellFsStat((char*)"/dev_hdd0/game/PS2U10000", &buf)==CELL_FS_SUCCEEDED) {
+					sprintf(templn, "<Table key=\"ps2_classic_launcher\">"
+									"<Pair key=\"icon\"><String>/dev_hdd0/game/PS2U10000/ICON0.PNG</String></Pair>"
+									"<Pair key=\"icon_notation\"><String>WNT_XmbItemBrowser</String></Pair>"
+									"<Pair key=\"title\"><String>PS2 Classic Launcher</String></Pair>"
+									"<Pair key=\"info\"><String>%s</String></Pair>"
+									"</Table>", STR_LAUNCHPS2);
+					strcat(myxml_ps2, templn);
 				}
-				if(!(webman_config->cmask & PS1)) strcpy(myxml_psx, "<View id=\"seg_mygames_psx_items\"><Attributes>");
-				if(!(webman_config->cmask & PSP)) {
-					strcpy(myxml_psp, "<View id=\"seg_mygames_psp_items\"><Attributes>");
-					if(webman_config->pspl && cobra_mode && cellFsStat((char*)"/dev_hdd0/game/PSPC66820", &buf)==CELL_FS_SUCCEEDED) {
-						sprintf(templn, "<Table key=\"cobra_psp_launcher\">"
-										"<Pair key=\"icon\"><String>/dev_hdd0/game/PSPC66820/ICON0.PNG</String></Pair>"
-										"<Pair key=\"icon_notation\"><String>WNT_XmbItemBrowser</String></Pair>"
-										"<Pair key=\"title\"><String>PSP Launcher</String></Pair>"
-										"<Pair key=\"info\"><String>%s</String></Pair>"
-										"</Table>", STR_LAUNCHPSP);
-						strcat(myxml_psp, templn);
-					}
-				}
-				if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU)) strcpy(myxml_dvd, "<View id=\"seg_mygames_dvd_items\"><Attributes>");
 			}
+#ifdef COBRA_ONLY
+			if(!(webman_config->cmask & PS1)) strcpy(myxml_psx, "<View id=\"seg_mygames_psx_items\"><Attributes>");
+			if(!(webman_config->cmask & PSP)) {
+				strcpy(myxml_psp, "<View id=\"seg_mygames_psp_items\"><Attributes>");
+				if(webman_config->pspl && cobra_mode && cellFsStat((char*)"/dev_hdd0/game/PSPC66820", &buf)==CELL_FS_SUCCEEDED) {
+					sprintf(templn, "<Table key=\"cobra_psp_launcher\">"
+									"<Pair key=\"icon\"><String>/dev_hdd0/game/PSPC66820/ICON0.PNG</String></Pair>"
+									"<Pair key=\"icon_notation\"><String>WNT_XmbItemBrowser</String></Pair>"
+									"<Pair key=\"title\"><String>PSP Launcher</String></Pair>"
+									"<Pair key=\"info\"><String>%s</String></Pair>"
+									"</Table>", STR_LAUNCHPSP);
+					strcat(myxml_psp, templn);
+				}
+			}
+			if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU)) strcpy(myxml_dvd, "<View id=\"seg_mygames_dvd_items\"><Attributes>");
 #endif
 		}
 
@@ -3357,18 +3434,17 @@ again1:
 		{
 			for(u8 f1=0; f1<11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
 			{
-				if(!cobra_mode && (f1>1 && f1<10)) continue;
+				if(!cobra_mode && (f1>1 && f1<10) && f1!=5) continue;
 
 				if(key>1020) break;
 
 				cellRtcGetCurrentTick(&pTick);
 
 				if(f1==5  && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
-				//if(f1==10 && f0>0) {if(f0>6) break; else strcpy(paths[10], f1==0 ? "video" : "GAMES_DUP");}
 				if(f1==10) {if(f0<7) strcpy(paths[10], f0==0 ? "video" : "GAMES_DUP"); else break;}
 				if(f0==9 && f1>6)   break;    // ntfs
-				if(f0==7 && (!webman_config->netd0 || f1>6 || !cobra_mode)) break;
-				if(f0==8 && (!webman_config->netd1 || f1>6 || !cobra_mode)) break;
+				if(f0==7 && (!webman_config->netd0 || f1>6 || !cobra_mode)) break; //net0
+				if(f0==8 && (!webman_config->netd1 || f1>6 || !cobra_mode)) break; //net1
 
 				if(f0==7 || f0==8) is_net=1; else is_net=0;
 #ifdef COBRA_ONLY
@@ -3377,6 +3453,7 @@ again1:
 					(  f0==8 && webman_config->netp1 && webman_config->neth1[0]) )
 					)
 				{
+					retries=0;
 reconnect:
 					if(f0==7)
 						ns=connect_to_server(webman_config->neth0, webman_config->netp0);  //net0
@@ -3573,6 +3650,8 @@ reconnect:
 
 							get_default_icon(icon, param, data[v3_entry].name, data[v3_entry].is_directory, ns, abort_connection);
 
+							strenc(enc_dir_name, data[v3_entry].name);
+
 							sprintf(tempstr, "<Table key=\"%04i\">"
 											 "<Pair key=\"icon\"><String>%s</String></Pair>"
 											 "<Pair key=\"title\"><String>%s</String></Pair>"
@@ -3580,7 +3659,7 @@ reconnect:
 											 "<Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/net%i%s/%s?random=%i</String></Pair>"
 											 "<Pair key=\"info\"><String>/net%i%s</String></Pair>"
 											 "</Table>",
-									key, icon, templn, (f0-7), param, data[v3_entry].name, (int)pTick.tick, (f0-7), param);
+									key, icon, templn, (f0-7), param, enc_dir_name, (int)pTick.tick, (f0-7), param);
 
 							v3_entry++;
 
@@ -3614,6 +3693,7 @@ reconnect:
 							char tmp_param[20];
 							strncpy(tmp_param, param, 20);
 
+#ifdef COBRA_ONLY
 							is_iso = (flen > 4) && (
 								   ((strstr(tmp_param, "/PS3ISO") || strstr(tmp_param, "/PS2ISO") ||
 									 strstr(tmp_param, "/PSPISO") || strstr(tmp_param, "/ISO")||
@@ -3623,10 +3703,13 @@ reconnect:
 								(
 									((strstr(entry.d_name + flen - 4, ".iso") || strstr(entry.d_name + flen - 4, ".ISO")) ||
 								     (flen > 7 && (strstr(entry.d_name + flen - 6, ".iso.0") || strstr(entry.d_name + flen - 6, ".ISO.0"))) ||
-									 (!(webman_config->cmask & PS2) && flen > 8 && strstr(entry.d_name + flen - 8, ".BIN.ENC")) ||
+									 (!(webman_config->cmask & PS2) && flen > 8 && strstr(entry.d_name + flen - 8, ".BIN.ENC")!=NULL) ||
 									 (strstr(tmp_param, "/PSX") && (strstr(entry.d_name + flen - 4, ".CUE") || strstr(entry.d_name + flen - 4, ".cue")))
 									)
 								)) || strstr(entry.d_name, ".ntfs["));
+#else
+							is_iso = (!(webman_config->cmask & PS2) && flen > 8 && strstr(entry.d_name + flen - 8, ".BIN.ENC")!=NULL);
+#endif
 
 							if(!is_iso) sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.d_name);
 
@@ -3648,6 +3731,7 @@ reconnect:
 								}
 								else
 								{
+#ifdef COBRA_ONLY
 									if((strstr(param, "/PS3ISO") && f0<9) || (f0==9 && f1==2 && strstr(entry.d_name, "ntfs[PS3ISO]")))
 									{
 										sprintf(templn, WMTMP "/%s", entry.d_name);
@@ -3680,10 +3764,12 @@ reconnect:
 										}
 									}
 									else
+#endif
 									{
 										sprintf(templn, "%s", entry.d_name);
+#ifdef COBRA_ONLY
 										if(f0==9)
-										{
+										{   // ntfs
 											if(f1< 2 || f1>6) continue;
 											if(f1==2 && !strstr(entry.d_name, "ntfs[PS3ISO]")) continue;
 											if(f1==3 && !strstr(entry.d_name, "ntfs[BDISO]")) continue;
@@ -3694,7 +3780,7 @@ reconnect:
 											if(f1==4 && strstr(entry.d_name, "ntfs[DVDISO]")) templn[strlen(templn)-13]=0;
 											if(f1==6 && strstr(entry.d_name, "ntfs[PSXISO]")) templn[strlen(templn)-13]=0;
 										}
-
+#endif
 										if(templn[strlen(templn)-2]=='.') templn[strlen(templn)-2]=0;
 										if(templn[strlen(templn)-4]=='.') templn[strlen(templn)-4]=0;
 									}
@@ -3731,9 +3817,10 @@ reconnect:
 										sprintf(icon, "%s/%s", param, entry.d_name);
 
 										flen = strlen(icon);
+#ifdef COBRA_ONLY
 										if(flen > 13 && (strstr(icon, "ntfs[PS3ISO]") || strstr(icon, "ntfs[DVDISO]") || strstr(icon, "ntfs[PSXISO]"))) {flen -= 13; icon[flen]=0;} else
 										if(flen > 12 && strstr(icon, "ntfs[BDISO]")) {flen -= 12; icon[flen]=0;}
-
+#endif
 										if(flen > 4 && icon[flen-4]=='.')
 										{
 											icon[flen-3]='p'; icon[flen-2]='n'; icon[flen-1]='g';
@@ -3757,14 +3844,17 @@ reconnect:
 
 								get_default_icon(icon, param, entry.d_name, 0, ns, abort_connection);
 
+								strenc(enc_dir_name, entry.d_name);
+
 								sprintf(tempstr, "<Table key=\"%04i\">"
-                                                 "<Pair key=\"icon\"><String>%s</String></Pair>"
-                                                 "<Pair key=\"title\"><String>%s</String></Pair>"
-                                                 "<Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair>"
-                                                 "<Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3%s/%s?random=%i</String></Pair>"
-                                                 "<Pair key=\"info\"><String>%s</String></Pair>"
-                                                 "</Table>",
-									key, icon, templn, param, entry.d_name, (int)pTick.tick, (f0==9?(char*)" ":param));
+												 "<Pair key=\"icon\"><String>%s</String></Pair>"
+												 "<Pair key=\"title\"><String>%s</String></Pair>"
+												 "<Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair>"
+												 "<Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3%s/%s?random=%i</String></Pair>"
+												 "<Pair key=\"info\"><String>%s</String></Pair>"
+												 "</Table>",
+									key, icon, templn, param, enc_dir_name, (int)pTick.tick, (f0==9?(char*)" ":param));
+
 
 								if(strlen(templn)<5) strcat(templn, "     ");
 								sprintf(skey[key], "3%c%c%c%c%04i", templn[0], templn[1], templn[2], templn[3], key);
@@ -3809,14 +3899,12 @@ reconnect:
 
 		if( !(webman_config->nogrp))
 		{
-			if(!(webman_config->cmask & PS3)) strcat(myxml_ps3, "</Attributes><Items>");
+			if(!(webman_config->cmask & PS3))  strcat(myxml_ps3, "</Attributes><Items>");
+			if(!(webman_config->cmask & PS2)) {strcat(myxml_ps2, "</Attributes><Items>"); if(webman_config->ps2l && cellFsStat((char*)PS2_CLASSIC_PLACEHOLDER, &buf)==CELL_FS_SUCCEEDED) strcat(myxml_ps2, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"ps2_classic_launcher\" attr=\"ps2_classic_launcher\" src=\"xcb://localhost/query?limit=1&cond=Ae+Game:Game.titleId PS2U10000\"/>");}
 #ifdef COBRA_ONLY
-			{
-				if(!(webman_config->cmask & PS2)) {strcat(myxml_ps2, "</Attributes><Items>"); if(webman_config->ps2l && cellFsStat((char*)PS2_CLASSIC_PLACEHOLDER, &buf)==CELL_FS_SUCCEEDED) strcat(myxml_ps2, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"ps2_classic_launcher\" attr=\"ps2_classic_launcher\" src=\"xcb://localhost/query?limit=1&cond=Ae+Game:Game.titleId PS2U10000\"/>");}
-				if(!(webman_config->cmask & PS1)) {strcat(myxml_psx, "</Attributes><Items>");}
-				if(!(webman_config->cmask & PSP)) {strcat(myxml_psp, "</Attributes><Items>"); if(webman_config->pspl && cobra_mode && cellFsStat((char*)"/dev_hdd0/game/PSPC66820", &buf)==CELL_FS_SUCCEEDED) strcat(myxml_psp, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"cobra_psp_launcher\" attr=\"cobra_psp_launcher\" src=\"xcb://localhost/query?limit=1&cond=Ae+Game:Game.titleId PSPC66820\"/>");}
-				if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU)) strcat(myxml_dvd, "</Attributes><Items>");
-			}
+			if(!(webman_config->cmask & PS1)) {strcat(myxml_psx, "</Attributes><Items>");}
+			if(!(webman_config->cmask & PSP)) {strcat(myxml_psp, "</Attributes><Items>"); if(webman_config->pspl && cobra_mode && cellFsStat((char*)"/dev_hdd0/game/PSPC66820", &buf)==CELL_FS_SUCCEEDED) strcat(myxml_psp, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"cobra_psp_launcher\" attr=\"cobra_psp_launcher\" src=\"xcb://localhost/query?limit=1&cond=Ae+Game:Game.titleId PSPC66820\"/>");}
+			if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU)) strcat(myxml_dvd, "</Attributes><Items>");
 #endif
 		}
 		else
@@ -3910,13 +3998,11 @@ reconnect:
 		if( !(webman_config->nogrp))
 		{
 			if(!(webman_config->cmask & PS3)) strcat(myxml_ps3, "</Items></View>");
+			if(!(webman_config->cmask & PS2)) strcat(myxml_ps2, "</Items></View>");
 #ifdef COBRA_ONLY
-			{
-				if(!(webman_config->cmask & PS2)) strcat(myxml_ps2, "</Items></View>");
-				if(!(webman_config->cmask & PS1)) strcat(myxml_psx, "</Items></View>");
-				if(!(webman_config->cmask & PSP)) strcat(myxml_psp, "</Items></View>");
-				if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU)) strcat(myxml_dvd, "</Items></View>");
-			}
+			if(!(webman_config->cmask & PS1)) strcat(myxml_psx, "</Items></View>");
+			if(!(webman_config->cmask & PSP)) strcat(myxml_psp, "</Items></View>");
+			if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU)) strcat(myxml_dvd, "</Items></View>");
 #endif
 		}
 
@@ -3930,38 +4016,37 @@ reconnect:
 						"<Pair key=\"module_name\"><String>webbrowser_plugin</String></Pair>"
 						"<Pair key=\"module_action\"><String>http://127.0.0.1/mount_ps3/unmount</String></Pair>"
 						"<Pair key=\"info\"><String>%s</String></Pair></Table>", wm_icons[11], STR_EJECTDISC, STR_UNMOUNTGAME); strcpy(myxml, templn);
+
 		if( !(webman_config->nogrp))
 		{
 			if( !(webman_config->cmask & PS3)) {sprintf(templn, "<Table key=\"mygames_ps3\">"
-                                                                "<Pair key=\"icon\"><String>%s</String></Pair>"
-                                                                "<Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x33</String></Pair>"
-                                                                "<Pair key=\"info\"><String>%s</String></Pair>"
-                                                                "<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
-                                                                "</Table>", wm_icons[0], STR_PS3FORMAT); strcat(myxml, templn);}
+																"<Pair key=\"icon\"><String>%s</String></Pair>"
+																"<Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x33</String></Pair>"
+																"<Pair key=\"info\"><String>%s</String></Pair>"
+																"<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
+																"</Table>", wm_icons[0], STR_PS3FORMAT); strcat(myxml, templn);}
+			if( !(webman_config->cmask & PS2)) {sprintf(templn, "<Table key=\"mygames_ps2\">"
+																"<Pair key=\"icon\"><String>%s</String></Pair>"
+																"<Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x32</String></Pair><Pair key=\"info\"><String>%s</String></Pair>"
+																"<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
+																"</Table>", wm_icons[2], STR_PS2FORMAT); strcat(myxml, templn);}
 #ifdef COBRA_ONLY
-			{
-				if( !(webman_config->cmask & PS2)) {sprintf(templn, "<Table key=\"mygames_ps2\">"
-																	"<Pair key=\"icon\"><String>%s</String></Pair>"
-                                                                    "<Pair key=\"title\"><String>PLAYSTATION\xC2\xAE\x32</String></Pair><Pair key=\"info\"><String>%s</String></Pair>"
-                                                                    "<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
-                                                                    "</Table>", wm_icons[2], STR_PS2FORMAT); strcat(myxml, templn);}
-				if( !(webman_config->cmask & PS1)) {sprintf(templn, "<Table key=\"mygames_psx\">"
-																	"<Pair key=\"icon\"><String>%s</String></Pair>"
-                                                                    "<Pair key=\"title\"><String>PLAYSTATION\xC2\xAE</String></Pair><Pair key=\"info\"><String>%s</String></Pair>"
-                                                                    "<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
-                                                                    "</Table>", wm_icons[1], STR_PS1FORMAT);strcat(myxml, templn);}
-				if( !(webman_config->cmask & PSP)) {sprintf(templn, "<Table key=\"mygames_psp\">"
-																	"<Pair key=\"icon\"><String>%s</String></Pair>"
-																	"<Pair key=\"title\"><String>PLAYSTATION\xC2\xAEPORTABLE</String></Pair>"
-																	"<Pair key=\"info\"><String>%s</String></Pair><Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
-																	"</Table>", wm_icons[3], STR_PSPFORMAT);strcat(myxml, templn);}
-				if( !(webman_config->cmask & DVD) ||
-                    !(webman_config->cmask & BLU)) {sprintf(templn, "<Table key=\"mygames_dvd\">"
-																	"<Pair key=\"icon\"><String>%s</String></Pair>"
-																	"<Pair key=\"title\"><String>%s</String></Pair><Pair key=\"info\"><String>%s</String></Pair>"
-																	"<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
-																	"</Table>", wm_icons[4], STR_VIDFORMAT, STR_VIDEO );strcat(myxml, templn);}
-			}
+			if( !(webman_config->cmask & PS1)) {sprintf(templn, "<Table key=\"mygames_psx\">"
+																"<Pair key=\"icon\"><String>%s</String></Pair>"
+																"<Pair key=\"title\"><String>PLAYSTATION\xC2\xAE</String></Pair><Pair key=\"info\"><String>%s</String></Pair>"
+																"<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
+																"</Table>", wm_icons[1], STR_PS1FORMAT);strcat(myxml, templn);}
+			if( !(webman_config->cmask & PSP)) {sprintf(templn, "<Table key=\"mygames_psp\">"
+																"<Pair key=\"icon\"><String>%s</String></Pair>"
+																"<Pair key=\"title\"><String>PLAYSTATION\xC2\xAEPORTABLE</String></Pair>"
+																"<Pair key=\"info\"><String>%s</String></Pair><Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
+																"</Table>", wm_icons[3], STR_PSPFORMAT);strcat(myxml, templn);}
+			if( !(webman_config->cmask & DVD) ||
+                !(webman_config->cmask & BLU)) {sprintf(templn, "<Table key=\"mygames_dvd\">"
+																"<Pair key=\"icon\"><String>%s</String></Pair>"
+																"<Pair key=\"title\"><String>%s</String></Pair><Pair key=\"info\"><String>%s</String></Pair>"
+																"<Pair key=\"str_noitem\"><String>msg_error_no_content</String></Pair>"
+																"</Table>", wm_icons[4], STR_VIDFORMAT, STR_VIDEO );strcat(myxml, templn);}
 #endif
 		}
 
@@ -3974,14 +4059,12 @@ reconnect:
 		{
 			strcat(myxml, "</Attributes><Items><Item class=\"type:x-xmb/module-action\" key=\"eject\" attr=\"eject\"/>");
 			if(!(webman_config->cmask & PS3)) strcat(myxml, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_ps3\" attr=\"mygames_ps3\" src=\"#seg_mygames_ps3_items\"/>");
+			if(!(webman_config->cmask & PS2)) strcat(myxml, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_ps2\" attr=\"mygames_ps2\" src=\"#seg_mygames_ps2_items\"/>");
 #ifdef COBRA_ONLY
-			{
-				if(!(webman_config->cmask & PS2)) strcat(myxml, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_ps2\" attr=\"mygames_ps2\" src=\"#seg_mygames_ps2_items\"/>");
-				if(!(webman_config->cmask & PS1)) strcat(myxml, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_psx\" attr=\"mygames_psx\" src=\"#seg_mygames_psx_items\"/>");
-				if(!(webman_config->cmask & PSP)) strcat(myxml, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_psp\" attr=\"mygames_psp\" src=\"#seg_mygames_psp_items\"/>");
-				if(!(webman_config->cmask & DVD) ||
-                   !(webman_config->cmask & BLU)) strcat(myxml, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_dvd\" attr=\"mygames_dvd\" src=\"#seg_mygames_dvd_items\"/>");
-			}
+			if(!(webman_config->cmask & PS1)) strcat(myxml, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_psx\" attr=\"mygames_psx\" src=\"#seg_mygames_psx_items\"/>");
+			if(!(webman_config->cmask & PSP)) strcat(myxml, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_psp\" attr=\"mygames_psp\" src=\"#seg_mygames_psp_items\"/>");
+			if(!(webman_config->cmask & DVD) ||
+			   !(webman_config->cmask & BLU)) strcat(myxml, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"mygames_dvd\" attr=\"mygames_dvd\" src=\"#seg_mygames_dvd_items\"/>");
 #endif
 		}
 
@@ -4006,13 +4089,11 @@ reconnect:
 		else
 		{
 			cellFsWrite(fdxml, (char*)myxml_ps3, strlen(myxml_ps3), NULL);
+			cellFsWrite(fdxml, (char*)myxml_ps2, strlen(myxml_ps2), NULL);
 #ifdef COBRA_ONLY
-			{
-				cellFsWrite(fdxml, (char*)myxml_ps2, strlen(myxml_ps2), NULL);
-				cellFsWrite(fdxml, (char*)myxml_psx, strlen(myxml_psx), NULL);
-				cellFsWrite(fdxml, (char*)myxml_psp, strlen(myxml_psp), NULL);
-				cellFsWrite(fdxml, (char*)myxml_dvd, strlen(myxml_dvd), NULL);
-			}
+			cellFsWrite(fdxml, (char*)myxml_psx, strlen(myxml_psx), NULL);
+			cellFsWrite(fdxml, (char*)myxml_psp, strlen(myxml_psp), NULL);
+			cellFsWrite(fdxml, (char*)myxml_dvd, strlen(myxml_dvd), NULL);
 #endif
 		}
 		if( (webman_config->nogrp))
@@ -4116,7 +4197,7 @@ reconnect:
 	u8 retries=0;
 again3:
 	{system_call_1(352, (uint64_t) &meminfo);}
-	if((meminfo.avail)<( (BUFFER_SIZE) + 256*1024))
+	if((meminfo.avail)<( 256*KB)) //leave if less than 256KB memory
 	{
 #ifdef USE_DEBUG
 	ssend(debug_s, "!!! NOT ENOUGH MEMORY!\r\n");
@@ -4160,23 +4241,24 @@ again3:
 	ssend(debug_s, param);
 	ssend(debug_s, "\r\n");
 #endif
+			//url decode (unescape)
 			if(strstr(param, "%"))
 			{
 				strcpy(buffer1, param);
-				int pos=0;
-				for(u32 i=0;i<strlen(buffer1);i++)
+				int pos=0, len=strlen(param);
+				for(u32 i=0;i<len;i++)
 				{
 					if(buffer1[i]!='%')
 						param[pos]=buffer1[i];
 					else
 					{
-						if(buffer1[i+2]>='0' && buffer1[i+2]<='9') param[pos]=buffer1[i+2]-0x30;
-						else
-							if(buffer1[i+2]>='A' && buffer1[i+2]<='F') param[pos]=buffer1[i+2]-55;
+						if(buffer1[i+2]>='0' && buffer1[i+2]<='9') param[pos]=buffer1[i+2]-0x30; else
+						if(buffer1[i+2]>='A' && buffer1[i+2]<='F') param[pos]=buffer1[i+2]-0x37; else
+						if(buffer1[i+2]>='a' && buffer1[i+2]<='f') param[pos]=buffer1[i+2]-0x57;
 
-						if(buffer1[i+1]>='0' && buffer1[i+1]<='9') param[pos]+=(buffer1[i+1]-0x30)*16;
-						else
-							if(buffer1[i+1]>='A' && buffer1[i+1]<='F') param[pos]+=(buffer1[i+1]-55)*16;
+						if(buffer1[i+1]>='0' && buffer1[i+1]<='9') param[pos]+=(buffer1[i+1]-0x30)*0x10; else
+						if(buffer1[i+1]>='A' && buffer1[i+1]<='F') param[pos]+=(buffer1[i+1]-0x37)*0x10; else
+						if(buffer1[i+1]>='a' && buffer1[i+1]<='f') param[pos]+=(buffer1[i+1]-0x57)*0x10;
 
 						i+=2;
 					}
@@ -4184,17 +4266,18 @@ again3:
 					param[pos]=0;
 				}
 			}
+
 			if(strstr(param, "popup.ps3"))
 			{
 				if(strlen(param)>10)
 				{
 					sprintf(buffer1, "HTTP/1.1 200 OK\r\n"
-                                     "Content-Type: text/html\r\n"
-                                     "Content-Length: %i\r\n\r\n"
-                                     "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
-                                     "<html xmlns=\"http://www.w3.org/1999/xhtml\"><meta http-equiv=\"Content-type\" content=\"text/html;charset=UTF-8\">"
-                                     "<META HTTP-EQUIV=\"CACHE-CONTROL\" CONTENT=\"NO-CACHE\">"
-                                     "<html><body>Message sent: %s</body></html>", strlen(param)+312, param+11);
+									 "Content-Type: text/html\r\n"
+									 "Content-Length: %i\r\n\r\n"
+									 "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
+									 "<html xmlns=\"http://www.w3.org/1999/xhtml\"><meta http-equiv=\"Content-type\" content=\"text/html;charset=UTF-8\">"
+									 "<META HTTP-EQUIV=\"CACHE-CONTROL\" CONTENT=\"NO-CACHE\">"
+									 "<html><body>Message sent: %s</body></html>", strlen(param)+312, param+11);
 					ssend(conn_s, buffer1);
 					show_msg((char*)param+11);
 				}
@@ -4655,9 +4738,10 @@ again3:
 					if(strstr(param, "l=13"))  webman_config->lang=13; // Indonesian
 					if(strstr(param, "l=14"))  webman_config->lang=14; // Turkish
 					if(strstr(param, "l=15"))  webman_config->lang=15; // Arabian
-					if(strstr(param, "l=16"))  webman_config->lang=16; // Chinese
+					if(strstr(param, "l=16"))  webman_config->lang=16; // Chinese Simplified
 					if(strstr(param, "l=17"))  webman_config->lang=17; // Korean
 					if(strstr(param, "l=18"))  webman_config->lang=18; // Japanese
+					if(strstr(param, "l=19"))  webman_config->lang=19; // Chinese Traditional
 
 					// Other
 					if(strstr(param, "l=99"))  webman_config->lang=99;	// Unknown LANG_XX.TXT
@@ -4765,6 +4849,7 @@ again3:
 				//	strcat(buffer, " onload=\"window.close();\"");
 				//if(cobra_mode) strcat(buffer, "[Cobra] ");
 				sprintf(templn, "PS3 webMAN " WM_VERSION " %s [<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, STR_SETUP ); strcat(buffer, templn);
+
 				u32 t1=0, t2=0, t1f=0, t2f=0;
 				get_temperature(0, &t1); // 3E030000 -> 3E.03'C -> 62.(03/256)'C
 				get_temperature(1, &t2);
@@ -4830,27 +4915,7 @@ again3:
 					eid0_idps[0]=buffr[0x0E];
 					eid0_idps[1]=buffr[0x0F];
 
-					if(c_firmware<=4.53f) {
-						{system_call_1(870, IDPS);}
-						{system_call_1(872, PSID);}
-					}
-					else if(peekq(0x8000000000003000ULL)!=0xFFFFFFFF80010003ULL) {
-						if(c_firmware==4.55f && dex_mode)
-						{
-							IDPS[0] = peekq(0x8000000000494F1CULL  );
-							IDPS[1] = peekq(0x8000000000494F1CULL+8);
-							PSID[0] = peekq(0x8000000000494F34ULL  );
-							PSID[1] = peekq(0x8000000000494F34ULL+8);
-						}
-						else if((c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f) && !dex_mode)
-						{
-							IDPS[0] = peekq(0x8000000000474F1CULL  );
-							IDPS[1] = peekq(0x8000000000474F1CULL+8);
-							PSID[0] = peekq(0x8000000000474F34ULL  );
-							PSID[1] = peekq(0x8000000000474F34ULL+8);
-						}
-					}
-
+					get_idps_psid();
 
 					sprintf(templn, "<hr><font size=42px><b>CPU: %i°C (MAX: %i°C)<br>"
 															"RSX: %i°C<hr>"
@@ -5410,9 +5475,9 @@ just_leave:
 						sprintf(templn, "<td nowrap><u>%s:</u><br>", STR_SCAN2); strcat(buffer, templn);
 
 						add_check_box("p0", "pst", "PLAYSTATION\xC2\xAE\x33"    , NULL     , !(webman_config->cmask & PS3), buffer);
-#ifdef COBRA_ONLY
 						add_check_box("p1", "ps2", "PLAYSTATION\xC2\xAE\x32"    , " ("     , !(webman_config->cmask & PS2), buffer);
                         add_check_box("p7", "p2l", STR_PS2L                     , ")<br>"  ,  (webman_config->ps2l)       , buffer);
+#ifdef COBRA_ONLY
 						add_check_box("p2", "ps1", "PLAYSTATION\xC2\xAE"        , NULL     , !(webman_config->cmask & PS1), buffer);
                         add_check_box("p3", "psp", "PLAYSTATION\xC2\xAEPORTABLE", " ("     , !(webman_config->cmask & PSP), buffer);
                         add_check_box("p6", "psl", STR_PSPL                     , ")<br>"  ,  (webman_config->pspl)       , buffer);
@@ -5493,8 +5558,7 @@ just_leave:
 #ifdef COBRA_ONLY
 						add_check_box("pp", "spp", STR_DELCFWSYS, NULL, (webman_config->spp), buffer);
 #endif
-
-						sprintf(templn, "<hr color=\"#0099FF\"/> %s: ", STR_MEMUSAGE); strcat(buffer, templn);
+						sprintf(templn, "<hr color=\"#0099FF\"/> %s [%iKB]: ", STR_MEMUSAGE, (int)(BUFFER_SIZE_ALL / KB)); strcat(buffer, templn);
 
 						add_radio_button("fp", "0", "fo_0", "Standard (896KB)", ",  ", (webman_config->foot==0), buffer);
 						add_radio_button("fp", "1", "fo_1", "Min (320KB)"     , ",  ", (webman_config->foot==1), buffer);
@@ -5521,6 +5585,7 @@ just_leave:
 						add_option_item("14", "T\xC3\xBCrk\xC3\xA7\x65"									, (webman_config->lang==14), buffer);
 						add_option_item("15", "\xD8\xA7\xD9\x84\xD8\xB9\xD8\xB1\xD8\xA8\xD9\x8A\xD8\xA9", (webman_config->lang==15), buffer);
 						add_option_item("16", "\xE4\xB8\xAD\xE6\x96\x87"								, (webman_config->lang==16), buffer);
+						add_option_item("19", "&#32321;&#39636;&#20013;&#25991;"						, (webman_config->lang==19), buffer);
 						add_option_item("17", "\xED\x95\x9C\xEA\xB5\xAD\xEC\x96\xB4"					, (webman_config->lang==17), buffer);
 						add_option_item("18", "\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA\x9E"					, (webman_config->lang==18), buffer);
 						add_option_item("99", "Unknown"													, (webman_config->lang==99), buffer);
@@ -5666,7 +5731,9 @@ just_leave:
 									}
 								}
 
-								get_default_icon(tempstr, param, param, 0, 0, 0);
+								get_default_icon(tempstr, param+plen, param+plen, 0, 0, 0);
+
+								strenc(enc_dir_name, tempstr);
 
 								if(plen==IS_COPY)
 								{
@@ -5705,17 +5772,17 @@ just_leave:
 													"<img src=\"%s\"><hr/>"
 													"%s: <a href=\"%s\">%s</a>",
 													STR_COPYING, param+plen, param+plen,
-													tempstr,
+													enc_dir_name,
 													STR_CPYDEST, target, target);
 								}
 								else if(strstr(param, ".BIN.ENC"))
-									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, tempstr, STR_PS2LOADED);
+									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, enc_dir_name, STR_PS2LOADED);
 								else if(strstr(param, "/PSPISO") || strstr(param, "/ISO"))
-									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, tempstr, STR_PSPLOADED);
+									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, enc_dir_name, STR_PSPLOADED);
 								else if(strstr(param, "/BDISO") || strstr(param, "/DVDISO") || strstr(param, ".ntfs[BDISO]") || strstr(param, ".ntfs[DVDISO]"))
-									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_MOVIETOM,param+plen, tempstr, STR_MOVIELOADED);
+									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_MOVIETOM,param+plen, enc_dir_name, STR_MOVIELOADED);
 								else
-									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, tempstr, STR_GAMELOADED);
+									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, enc_dir_name, STR_GAMELOADED);
 
 								strcat(buffer, templn);
 							}
@@ -5842,7 +5909,7 @@ just_leave:
 							{
 								for(u8 f1=0; f1<11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
 								{
-									if(!cobra_mode && (f1>1 && f1<10)) continue;
+									if(!cobra_mode && (f1>1 && f1<10) && f1!=5) continue;
 
 									if(tlen>(BUFFER_SIZE-1024)) break;
 									if(idx>=(max_entries-1)) break;
@@ -5850,7 +5917,6 @@ just_leave:
 									cellRtcGetCurrentTick(&pTick);
 
 									if(f1==5  && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
-									//if(f1==10 && f0>0) {if(f0>6) break; else strcpy(paths[10], f1==0 ? "video" : "GAMES_DUP");}
 									if(f1==10) {if(f0<7) strcpy(paths[10], f0==0 ? "video" : "GAMES_DUP"); else break;}
 									if(f0==9 && f1>6)   break;    // ntfs
 									if(f0==7 && (!webman_config->netd0 || f1>6 || !cobra_mode)) break;
@@ -5872,6 +5938,7 @@ just_leave:
 										  (f0==8 && webman_config->netp1 && webman_config->neth1[0]) )
 										)
 									{
+										retries=0;
 		reconnect2:
 										if(f0==7)
 											ns=connect_to_server(webman_config->neth0, webman_config->netp0);
@@ -6041,6 +6108,7 @@ just_leave:
 											char tmp_param[20];
 											strncpy(tmp_param, param, 20);
 
+#ifdef COBRA_ONLY
 											is_iso = (flen > 4) && (
 													 ((strstr(tmp_param, "/PS3ISO") || strstr(tmp_param, "/PS2ISO") ||
 													   strstr(tmp_param, "/PSPISO") || strstr(tmp_param, "/ISO")||
@@ -6050,10 +6118,13 @@ just_leave:
 													(
 													  ((strstr(entry.d_name + flen - 4, ".ISO") || strstr(entry.d_name + flen - 4, ".iso")) ||
 													   (flen > 7 && (strstr(entry.d_name + flen - 6, ".iso.0") || strstr(entry.d_name + flen - 6, ".ISO.0"))) ||
-													   (!(webman_config->cmask & PS2) && flen > 8 && strstr(entry.d_name + flen - 8, ".BIN.ENC")) ||
+													   (!(webman_config->cmask & PS2) && flen > 8 && strstr(entry.d_name + flen - 8, ".BIN.ENC")!=NULL) ||
 													   (strstr(tmp_param, "/PSX") && (strstr(entry.d_name + flen - 4, ".cue") || strstr(entry.d_name + flen - 4, ".CUE")))
 													  )
 													)) || strstr(entry.d_name, ".ntfs["));
+#else
+											is_iso = (!(webman_config->cmask & PS2) && flen > 8 && strstr(entry.d_name + flen - 8, ".BIN.ENC")!=NULL);
+#endif
 
 											if(!is_iso) sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.d_name);
 
@@ -6064,6 +6135,7 @@ just_leave:
 												if(is_iso)
 												{
 													sprintf(templn, "%s", entry.d_name);
+#ifdef COBRA_ONLY
 													if((strstr(param, "/PS3ISO") && f0<9) || (f0==9 && f1==2 && strstr(entry.d_name, "ntfs[PS3ISO]")))
 													{
 														int fs=0;
@@ -6135,6 +6207,7 @@ just_leave:
 															if(f1==6 && strstr(entry.d_name, "ntfs[PSXISO]")) templn[strlen(templn)-13]=0;
 														}
 													}
+#endif
 												}
 												else
 												{
@@ -6161,9 +6234,10 @@ just_leave:
 												{
 													sprintf(icon, "%s/%s", param, entry.d_name);
 													flen = strlen(icon);
+#ifdef COBRA_ONLY
 													if(flen > 13 && (strstr(icon, "ntfs[PS3ISO]") || strstr(icon, "ntfs[DVDISO]") || strstr(icon, "ntfs[PSXISO]"))) {flen -= 13; icon[flen]=0;} else
 													if(flen > 12 && strstr(icon, "ntfs[BDISO]")) {flen -= 12; icon[flen]=0;}
-
+#endif
 													if(flen > 4 && icon[flen-4]=='.')
 													{
 														icon[flen-3]='p'; icon[flen-2]='n'; icon[flen-1]='g';
@@ -6184,18 +6258,20 @@ just_leave:
 
 												get_default_icon(icon, param, entry.d_name, 0, ns, abort_connection);
 
+												strenc(enc_dir_name, entry.d_name);
+
 												snprintf(ename, 6, "%s    ", templn);
 												if(is_iso)
 												{
 													sprintf(tempstr, "%c%c%c%c<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3%s/%s\"><img src=\"%s\" class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s\">%s</a></div></div>",
 														ename[0], ename[1], ename[2], ename[3],
-														param, entry.d_name, icon, param, templn);
+														param, enc_dir_name, icon, param, templn);
 												}
 												else
 												{
 													sprintf(tempstr, "%c%c%c%c<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3%s/%s\"><img src=\"%s\" class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s/%s\">%s</a></div></div>",
 														ename[0], ename[1], ename[2], ename[3],
-														param, entry.d_name, icon, param, entry.d_name, templn);
+														param, enc_dir_name, icon, param, enc_dir_name, templn);
 												}
 
 												strncpy(line_entry[idx].path, tempstr, 512);
@@ -7757,17 +7833,7 @@ DEBUG Menu Switcher : L3+L2+X
 							eid0_idps[0]=buffer[0x0E];
 							eid0_idps[1]=buffer[0x0F];
 
-							if(c_firmware<=4.53f) {
-								{system_call_1(870, (uint64_t) IDPS);}
-								{system_call_1(872, PSID);}
-							}
-							else
-							if(peekq(0x8000000000003000ULL)!=0xFFFFFFFF80010003ULL) { //(c_firmware==4.55f || c_firmware==4.60f || c_firmware==4.65f)
-								IDPS[0] = peekq(0x8000000000474F1CULL  );
-								IDPS[1] = peekq(0x8000000000474F1CULL+8);
-								PSID[0] = peekq(0x8000000000474F34ULL  );
-								PSID[1] = peekq(0x8000000000474F34ULL+8);
-							}
+							get_idps_psid();
 
 							#define SEP "\n                  "
                             sprintf(tmp, "IDPS EID0 : %016llX" SEP
@@ -8238,6 +8304,7 @@ static void wwwd_thread(uint64_t arg)
 	c_firmware=0.00f;
 
 	if(peekq(0x80000000002ED860ULL)==CEX) {c_firmware=4.65f;}				else
+	if(peekq(0x800000000030F1A8ULL)==DEX) {c_firmware=4.65f; dex_mode=2;}	else
 	if(peekq(0x80000000002ED850ULL)==CEX) {c_firmware=4.60f;}				else
 	if(peekq(0x80000000002EC5E0ULL)==CEX) {c_firmware=4.55f;}				else
 	if(peekq(0x80000000002E9D70ULL)==CEX) {c_firmware=4.53f;}				else
@@ -8281,32 +8348,38 @@ static void wwwd_thread(uint64_t arg)
 		{system_call_8(837, (u64)(char*)"CELL_FS_IOS:BUILTIN_FLSH1", (u64)(char*)"CELL_FS_FAT", (u64)(char*)"/dev_blind", 0, 0, 0, 0, 0);}
 
 		//STANDARD
-		BUFFER_SIZE_FTP	= ( 128*1024);
-		BUFFER_SIZE		= ( 448*1024);
-		BUFFER_SIZE_PSX	= ( 160*1024);
-		BUFFER_SIZE_PSP	= (  32*1024);
-		BUFFER_SIZE_PS2	= (  64*1024);
-		BUFFER_SIZE_DVD	= ( 192*1024);
+		BUFFER_SIZE_FTP	= ( 128*KB);
+		BUFFER_SIZE		= ( 448*KB);
+		BUFFER_SIZE_PSX	= ( 160*KB);
+		BUFFER_SIZE_PSP	= (  32*KB);
+		BUFFER_SIZE_PS2	= (  64*KB);
+		BUFFER_SIZE_DVD	= ( 192*KB);
 
 	if(webman_config->foot==1) //MIN
 	{
-		BUFFER_SIZE_FTP	= ( 128*1024);
-		BUFFER_SIZE		= ( 128*1024);
-		BUFFER_SIZE_PSX	= (  32*1024);
-		BUFFER_SIZE_PSP	= (  32*1024);
-		BUFFER_SIZE_PS2	= (  64*1024);
-		BUFFER_SIZE_DVD	= (  64*1024);
+		BUFFER_SIZE_FTP	= ( 128*KB);
+		BUFFER_SIZE		= ( 128*KB);
+		BUFFER_SIZE_PSX	= (  32*KB);
+		BUFFER_SIZE_PSP	= (  32*KB);
+		BUFFER_SIZE_PS2	= (  64*KB);
+		BUFFER_SIZE_DVD	= (  64*KB);
 	}
-
+	else
 	if(webman_config->foot==2) //MAX
 	{
-		BUFFER_SIZE_FTP	= ( 256*1024);
-		BUFFER_SIZE		= ( 640*1024);
-		BUFFER_SIZE_PSX	= ( 192*1024);
-		BUFFER_SIZE_PSP	= (  64*1024);
-		BUFFER_SIZE_PS2	= ( 128*1024);
-		BUFFER_SIZE_DVD	= ( 256*1024);
+		BUFFER_SIZE_FTP	= ( 256*KB);
+		BUFFER_SIZE		= ( 640*KB);
+		BUFFER_SIZE_PSX	= ( 192*KB);
+		BUFFER_SIZE_PSP	= (  64*KB);
+		BUFFER_SIZE_PS2	= ( 128*KB);
+		BUFFER_SIZE_DVD	= ( 256*KB);
 	}
+
+	if( webman_config->cmask & PS3 ) BUFFER_SIZE     = 8*KB;
+	if( webman_config->cmask & PS1 ) BUFFER_SIZE_PSX = 2*KB;
+	if( webman_config->cmask & PSP ) BUFFER_SIZE_PSP = 2*KB;
+	if( webman_config->cmask & PS2 ) BUFFER_SIZE_PS2 = 2*KB;
+	if( webman_config->cmask & (BLU | DVD) ) BUFFER_SIZE_DVD = 2*KB;
 
 	BUFFER_SIZE_ALL=(BUFFER_SIZE)+(BUFFER_SIZE_PSX)+(BUFFER_SIZE_PSP)+(BUFFER_SIZE_PS2)+(BUFFER_SIZE_DVD);
 
@@ -8763,7 +8836,6 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 					}
 					else
 						break;
-
 				}
 			}
 
@@ -8774,11 +8846,11 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 				if(cellFsOpen(_path, CELL_FS_O_RDONLY, &fdw, 0, 0)==CELL_FS_SUCCEEDED)
 				{
 					sys_addr_t addr;
-					if(sys_memory_allocate(64*1024, SYS_MEMORY_PAGE_SIZE_64K, &addr)==0)
+					if(sys_memory_allocate(64*KB, SYS_MEMORY_PAGE_SIZE_64K, &addr)==0)
 					{
 						u8* sprx_data=(u8*)addr;
 						cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
-						cellFsRead(fdw, sprx_data, (64*1024), &msiz);
+						cellFsRead(fdw, sprx_data, (64*KB), &msiz);
 						cellFsClose(fdw);
 
 						sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)addr, -0x1d8, 0x2000, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
@@ -8812,10 +8884,10 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 			if(strstr(_path, "/net0") || strstr(_path, "/net1"))
 			{
 				sys_addr_t addr;
-				if(sys_memory_allocate(64*1024, SYS_MEMORY_PAGE_SIZE_64K, &addr)==0)
+				if(sys_memory_allocate(64*KB, SYS_MEMORY_PAGE_SIZE_64K, &addr)==0)
 				{
 					netiso_args *mynet_iso	= (netiso_args*)addr;
-					memset(mynet_iso, 0, 64*1024);
+					memset(mynet_iso, 0, 64*KB);
 
 					if( (strstr(_path, "/net0") && webman_config->netd0 && webman_config->neth0[0] && webman_config->netp0>0) ||
 						(strstr(_path, "/net1") && webman_config->netd1 && webman_config->neth1[0] && webman_config->netp1>0) )
@@ -8886,7 +8958,7 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 					}
 				}
 				goto patch;
-//				return;
+				//return;
 			}
 			else
 			{
@@ -8917,7 +8989,7 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 						}
 					}
 					goto patch;
-//					return;
+					//return;
 				}
 				else if(strstr(_path, "/PSPISO/") || strstr(_path, "/ISO/"))
 				{
@@ -9245,11 +9317,19 @@ patch:
 				}
 				else if(c_firmware==4.55f)
 				{
-					pokeq(0x80000000003884B0ULL, 0x8000000000001778ULL); //sc6  0x388480+8*(SC_6)=3884B0
-					pokeq(0x80000000003884B8ULL, 0x8000000000001780ULL); //sc7
-					pokeq(0x80000000003884C0ULL, 0x8000000000001788ULL); //sc8
-					pokeq(0x80000000003884C8ULL, 0x8000000000001790ULL); //sc9
-					pokeq(0x80000000003884D0ULL, 0x8000000000001798ULL); //sc10
+					pokeq(0x80000000003884B8ULL, 0x8000000000001778ULL); //sc6  0x388480+8*(SC_6)=3884B0
+					pokeq(0x80000000003884C0ULL, 0x8000000000001780ULL); //sc7
+					pokeq(0x80000000003884C8ULL, 0x8000000000001788ULL); //sc8
+					pokeq(0x80000000003884D0ULL, 0x8000000000001790ULL); //sc9
+					pokeq(0x80000000003884D8ULL, 0x8000000000001798ULL); //sc10
+				}
+				else if(c_firmware==4.65f)
+				{
+					pokeq(0x800000000038A150ULL, 0x8000000000001778ULL); //sc6  0x388480+8*(SC_6)=3884B0
+					pokeq(0x800000000038A158ULL, 0x8000000000001780ULL); //sc7
+					pokeq(0x800000000038A160ULL, 0x8000000000001788ULL); //sc8
+					pokeq(0x800000000038A168ULL, 0x8000000000001790ULL); //sc9
+					pokeq(0x800000000038A170ULL, 0x8000000000001798ULL); //sc10
 				}
 			}
 		}
@@ -9275,8 +9355,8 @@ patch:
 	if(c_firmware==4.55f && !dex_mode) SYSCALL_TABLE = SYSCALL_TABLE_455;  else
 	if(c_firmware==4.55f &&  dex_mode) SYSCALL_TABLE = SYSCALL_TABLE_455D; else
 	if(c_firmware==4.60f && !dex_mode) SYSCALL_TABLE = SYSCALL_TABLE_460;  else
-	if(c_firmware==4.65f && !dex_mode) SYSCALL_TABLE = SYSCALL_TABLE_465;
-
+	if(c_firmware==4.65f && !dex_mode) SYSCALL_TABLE = SYSCALL_TABLE_465;  else
+	if(c_firmware==4.65f &&  dex_mode) SYSCALL_TABLE = SYSCALL_TABLE_465D;
 
 	u64 sc_600 = 0;
 	u64 sc_604 = 0;
@@ -9454,8 +9534,19 @@ patch:
 			pokeq(0x8000000000055C58ULL, 0x386000004E800020ULL); // fix 0x8001002B error   Original: 0xF821FE917C0802A6ULL
 
 			// Booting of game discs and backups speed increased
-			lv2poke32(0x8000000000058DA0ULL, 0x38600001);
-			lv2poke32(0x800000000005A96CULL, 0x38600000);
+			//lv2poke32(0x8000000000058DA0ULL, 0x38600001);
+			//lv2poke32(0x800000000005A96CULL, 0x38600000);
+
+			// enable new habib patches
+			pokeq(0x8000000000058DACULL +  0, 0x60000000E8610098ULL);
+			pokeq(0x8000000000058DACULL +  8, 0x2FA30000419E000CULL);
+			pokeq(0x8000000000058DACULL + 16, 0x388000334800BE15ULL);
+			pokeq(0x8000000000058DACULL + 24, 0xE80100F07FE307B4ULL);
+
+			pokeq(0x8000000000055C5CULL +  0, 0x386000004E800020ULL);
+			pokeq(0x8000000000055C5CULL +  8, 0xFBC10160FBE10168ULL);
+			pokeq(0x8000000000055C5CULL + 16, 0xFB610148FB810150ULL);
+			pokeq(0x8000000000055C5CULL + 24, 0xFBA10158F8010180ULL);
 
 			sc_600=0x340630; //0x363A18 + 600*8 = 00364CD8 -> 80 00 00 00 00 34 06 30
 			sc_604=0x340798; //0x363A18 + 604*8 = 00364CF8 -> 80 00 00 00 00 34 07 98
@@ -9478,8 +9569,19 @@ patch:
 			pokeq(0x8000000000055C5CULL, 0x386000004E800020ULL); // fix 0x8001002B error   Original: 0xF821FE917C0802A6ULL
 
 			// Booting of game discs and backups speed increased
-			lv2poke32(0x8000000000058DA4ULL, 0x38600001);
-			lv2poke32(0x800000000005A970ULL, 0x38600000);
+			//lv2poke32(0x8000000000058DA4ULL, 0x38600001);
+			//lv2poke32(0x800000000005A970ULL, 0x38600000);
+
+			// enable new habib patches
+			pokeq(0x8000000000058DB0ULL +  0, 0x60000000E8610098ULL);
+			pokeq(0x8000000000058DB0ULL +  8, 0x2FA30000419E000CULL);
+			pokeq(0x8000000000058DB0ULL + 16, 0x388000334800BE15ULL);
+			pokeq(0x8000000000058DB0ULL + 24, 0xE80100F07FE307B4ULL);
+
+			pokeq(0x8000000000055C5CULL +  0, 0x386000004E800020ULL);
+			pokeq(0x8000000000055C5CULL +  8, 0xFBC10160FBE10168ULL);
+			pokeq(0x8000000000055C5CULL + 16, 0xFB610148FB810150ULL);
+			pokeq(0x8000000000055C5CULL + 24, 0xFBA10158F8010180ULL);
 
 			sc_600=0x340640; //0x363A18 + 600*8 = 00364CD8 -> 80 00 00 00 00 34 06 40
 			sc_604=0x3407A8; //0x363A18 + 604*8 = 00364CF8 -> 80 00 00 00 00 34 07 A8
@@ -9604,9 +9706,26 @@ patch:
 			pokeq(0x800000000005DCB8ULL, 0x2F83000060000000ULL );
             pokeq(0x800000000005DCD0ULL, 0x2F83000060000000ULL );
 
-			sc_600=0x33D050; //0x388480 + 600*8 = 00389740 -> 80 00 00 00 00 33 D0 50
-			sc_604=0x3635E8; //0x388480 + 604*8 = 00389760 -> 80 00 00 00 00 36 35 E8
-			sc_142=0x327318; //0x388480 + 142*8 = 003888F0 -> 80 00 00 00 00 32 73 18
+			sc_600=0x3634F8; //0x388488 + 600*8 = 00389748 -> 80 00 00 00 00 36 34 F8
+			sc_604=0x3635D0; //0x388488 + 604*8 = 00389768 -> 80 00 00 00 00 36 35 D0
+			sc_142=0x327348; //0x388488 + 142*8 = 003888F8 -> 80 00 00 00 00 32 73 48
+		}
+        else
+		if(c_firmware==4.65f)
+		{
+			pokeq(0x80000000002764F8ULL, 0x4E80002038600000ULL ); // fix 8001003C error
+			pokeq(0x8000000000276500ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
+			pokeq(0x8000000000059F5CULL, 0x63FF003D60000000ULL ); // fix 8001003D error
+			pokeq(0x800000000005A020ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
+
+			pokeq(0x8000000000059FCCULL, 0x419E00D860000000ULL );
+			pokeq(0x8000000000059FD4ULL, 0x2F84000448000098ULL );
+			pokeq(0x800000000005E024ULL, 0x2F83000060000000ULL );
+            pokeq(0x800000000005E03CULL, 0x2F83000060000000ULL );
+
+			sc_600=0x364DF0; //0x38A120 + 600*8 = 0038B3E0 -> 80 00 00 00 00 36 4D F0
+			sc_604=0x364EC8; //0x38A120 + 604*8 = 0038B400 -> 80 00 00 00 00 36 4E C8
+			sc_142=0x328E80; //0x38A120 + 142*8 = 0038A590 -> 80 00 00 00 00 32 8E 80
 		}
 	}
 
@@ -9729,6 +9848,11 @@ patch:
 	{
 		base_addr=0x2F8730;
 		open_hook=0x2B9C14;
+	}
+	else if(c_firmware==4.65f && dex_mode)
+	{
+		base_addr=0x2FA230;
+		open_hook=0x2BB010;
 	}
 	else return;
 
