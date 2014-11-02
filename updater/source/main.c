@@ -179,6 +179,7 @@ int main()
     sysLv2FsUnlink("/dev_hdd0/tmp/LANG_ES.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/LANG_FR.TXT");
 	sysLv2FsUnlink("/dev_hdd0/tmp/LANG_GR.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/LANG_DK.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/LANG_HU.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/LANG_HR.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/LANG_BG.TXT");
@@ -201,6 +202,7 @@ int main()
     sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_ES.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_FR.TXT");
 	sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_GR.TXT");
+    sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_DK.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_HU.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_HR.TXT");
     sysLv2FsUnlink("/dev_hdd0/tmp/wm_lang/LANG_BG.TXT");
@@ -222,6 +224,7 @@ int main()
     CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_ES.TXT","/dev_hdd0/tmp/wm_lang/LANG_ES.TXT");
     CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_FR.TXT","/dev_hdd0/tmp/wm_lang/LANG_FR.TXT");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_GR.TXT","/dev_hdd0/tmp/wm_lang/LANG_GR.TXT");
+    CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_DK.TXT","/dev_hdd0/tmp/wm_lang/LANG_DK.TXT");
     CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_HU.TXT","/dev_hdd0/tmp/wm_lang/LANG_HU.TXT");
     CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_HR.TXT","/dev_hdd0/tmp/wm_lang/LANG_HR.TXT");
     CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_BG.TXT","/dev_hdd0/tmp/wm_lang/LANG_BG.TXT");
@@ -240,6 +243,18 @@ int main()
         CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_XX.TXT","/dev_hdd0/tmp/wm_lang/LANG_XX.TXT");
 
     char ligne[255];
+    if((sysLv2FsStat("/dev_flash/vsh/module/webftp_server.sprx", &s) == 0) && (sysLv2FsStat("/dev_hdd0/boot_plugins.txt", &s) != 0)) {
+		if(sysLv2FsStat("/dev_blind/vsh/module/webftp_server.sprx", &s) != 0)
+			sys_fs_mount("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0);
+
+		sysLv2FsUnlink("/dev_blind/vsh/module/webftp_server.sprx");
+		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/webftp_server_rebug_cobra_multi21.sprx", "/dev_blind/vsh/module/webftp_server.sprx");
+
+		sysLv2FsUnlink("/dev_hdd0/tmp/turnoff");
+		{lv2syscall4(379,0x200,0,0,0);}
+		return 0;
+    }
+
     if(is_cobra()) {
         FILE* f=NULL;
         if(sysLv2FsStat("/dev_hdd0/boot_plugins.txt", &s) == 0) {

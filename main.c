@@ -66,7 +66,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
 #define PS2_CLASSIC_ISO_ICON     "/dev_hdd0/game/PS2U10000/ICON0.PNG"
 
-#define WM_VERSION			"1.30.33 MOD"						// webMAN version
+#define WM_VERSION			"1.30.34 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -2094,11 +2094,11 @@ bool language(const char *file_str, char *default_str)
 	if(fh) f=fh; //file is already open
     else
     {
-		const char lang_code[21][3]={"EN", "FR", "IT", "ES", "DE", "NL", "PT", "RU", "HU", "PL", "GR", "HR", "BG", "IN", "TR", "AR", "CN", "KR", "JP", "ZH", "XX"};
+		if(webman_config->lang>20 && webman_config->lang!=99) return false;
 
-        if(webman_config->lang>19 && webman_config->lang!=99) return false;
-
+		const char lang_code[22][3]={"EN", "FR", "IT", "ES", "DE", "NL", "PT", "RU", "HU", "PL", "GR", "HR", "BG", "IN", "TR", "AR", "CN", "KR", "JP", "ZH", "DK", "XX"};
 		const char lang_path[34];
+
         if(webman_config->lang==99)
 		    sprintf(lang_path, "/dev_hdd0/tmp/wm_lang/LANG_XX.TXT");
 		else
@@ -3048,6 +3048,28 @@ static void get_default_icon(char *icon, char *param, char *file, int isdir, int
 		strcpy(icon, wm_icons[5]);
 }
 
+static void make_fb_xml(char *xml, char *myxml)
+{
+	cellFsUnlink(xml);
+	sprintf(myxml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+					"<XMBML version=\"1.0\">"
+					"<View id=\"seg_fb\">"
+					"<Attributes><Table key=\"mgames\">"
+					"<Pair key=\"icon_rsc\"><String>item_tex_ps3util</String></Pair>"
+					"<Pair key=\"icon_notation\"><String>WNT_XmbItemSavePS3</String></Pair>"
+					"<Pair key=\"title\"><String>%s</String></Pair>"
+					"<Pair key=\"info\"><String>%s</String></Pair>"
+					"</Table>"
+					"</Attributes>"
+					"<Items>"
+					"<Query class=\"type:x-xmb/folder-pixmap\" key=\"mgames\" attr=\"mgames\" "
+							"src=\"xmb://localhost/dev_hdd0/xmlhost/game_plugin/mygames.xml#seg_mygames\"/>"
+					"</Items>"
+					"</View>"
+					"</XMBML>", STR_MYGAMES, STR_LOADGAMES);
+	savefile(xml, (char*)myxml, strlen(myxml));
+}
+
 static void handleclient(u64 conn_s_p)
 {
 	int conn_s = (int)conn_s_p; // main communications socket
@@ -3308,7 +3330,7 @@ again1:
 #endif
 
 		init_running=0;
-		sys_ppu_thread_exit(0);
+		if(cellFsStat("/dev_hdd0/xmlhost/game_plugin/fb.xml", &buf)==CELL_FS_SUCCEEDED) sys_ppu_thread_exit(0);
 	}
 
 		_meminfo meminfo;
@@ -3358,31 +3380,19 @@ again1:
 		cellFsMkdir((char*)"/dev_hdd0/xmlhost/game_plugin", 0777);
 		u32 key=0;
 
+		make_fb_xml("/dev_hdd0/xmlhost/game_plugin/fb.xml", myxml);
+
+		if(conn_s_p==0xC0FEBABE && webman_config->refr==1)
+        {
+#ifdef USE_VM
+			sys_vm_unmap(sysmem);
+#else
+			sys_memory_free(sysmem);
+#endif
+			sys_ppu_thread_exit(0);
+        }
+
 		char xml[128];
-		char skey[1024][10];
-		char swap[16];
-		u8 is_net=0;
-
-		sprintf(xml, "/dev_hdd0/xmlhost/game_plugin/fb.xml");
-		cellFsUnlink(xml);
-		sprintf(myxml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-						"<XMBML version=\"1.0\">"
-						"<View id=\"seg_fb\">"
-						"<Attributes><Table key=\"mgames\">"
-						"<Pair key=\"icon_rsc\"><String>item_tex_ps3util</String></Pair>"
-						"<Pair key=\"icon_notation\"><String>WNT_XmbItemSavePS3</String></Pair>"
-						"<Pair key=\"title\"><String>%s</String></Pair>"
-						"<Pair key=\"info\"><String>%s</String></Pair>"
-						"</Table>"
-						"</Attributes>"
-						"<Items>"
-						"<Query class=\"type:x-xmb/folder-pixmap\" key=\"mgames\" attr=\"mgames\" "
-								"src=\"xmb://localhost/dev_hdd0/xmlhost/game_plugin/mygames.xml#seg_mygames\"/>"
-						"</Items>"
-						"</View>"
-						"</XMBML>", STR_MYGAMES, STR_LOADGAMES);
-		savefile(xml, (char*)myxml, strlen(myxml));
-
 		myxml[0]=0;
 
 		sprintf(xml, "/dev_hdd0/xmlhost/game_plugin/mygames.xml");
@@ -3425,6 +3435,9 @@ again1:
 
 		cellRtcGetCurrentTick(&pTick);
 
+		char skey[1024][10];
+		u8 is_net=0;
+
 		int ns=-2;
 		u8 retries=0;
 
@@ -3446,7 +3459,26 @@ again1:
 				if(f0==7 && (!webman_config->netd0 || f1>6 || !cobra_mode)) break; //net0
 				if(f0==8 && (!webman_config->netd1 || f1>6 || !cobra_mode)) break; //net1
 
-				if(f0==7 || f0==8) is_net=1; else is_net=0;
+				if( (webman_config->cmask & PS3) && (f1<3 || f1==10)) continue;
+				if( (webman_config->cmask & BLU) && f1==3) continue;
+				if( (webman_config->cmask & DVD) && f1==4) continue;
+				if( (webman_config->cmask & PS2) && f1==5) continue;
+				if( (webman_config->cmask & PS1) && f1==6) continue;
+				if( (webman_config->cmask & PS1) && f1==7) continue;
+				if( (webman_config->cmask & PSP) && f1==8) continue;
+				if( (webman_config->cmask & PSP) && f1==9) continue;
+
+				if(f0==7 || f0==8) is_net=1; else
+				{
+					if(!webman_config->usb0 && f0==1) continue;
+					if(!webman_config->usb1 && f0==2) continue;
+					if(!webman_config->usb2 && f0==3) continue;
+					if(!webman_config->usb3 && f0==4) continue;
+					if(!webman_config->usb6 && f0==5) continue;
+					if(!webman_config->usb7 && f0==6) continue;
+					is_net=0;
+				}
+
 #ifdef COBRA_ONLY
 				if(ns==-2 && is_net &&
 					( (f0==7 && webman_config->netp0 && webman_config->neth0[0]) ||
@@ -3454,7 +3486,7 @@ again1:
 					)
 				{
 					retries=0;
-reconnect:
+ reconnect:
 					if(f0==7)
 						ns=connect_to_server(webman_config->neth0, webman_config->netp0);  //net0
 					else //if(f0==8)
@@ -3519,24 +3551,9 @@ reconnect:
 					}
 				}
 
-				if(f0==9 && !webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
-					!webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7) continue;
-
-				if(!webman_config->usb0 && strstr(param, drives[1])) continue;
-				if(!webman_config->usb1 && strstr(param, drives[2])) continue;
-				if(!webman_config->usb2 && strstr(param, drives[3])) continue;
-				if(!webman_config->usb3 && strstr(param, drives[4])) continue;
-				if(!webman_config->usb6 && strstr(param, drives[5])) continue;
-				if(!webman_config->usb7 && strstr(param, drives[6])) continue;
-
-				if( (webman_config->cmask & PS3) && (f1<3 || f1==10)) continue;
-				if( (webman_config->cmask & BLU) && f1==3) continue;
-				if( (webman_config->cmask & DVD) && f1==4) continue;
-				if( (webman_config->cmask & PS2) && f1==5) continue;
-				if( (webman_config->cmask & PS1) && f1==6) continue;
-				if( (webman_config->cmask & PS1) && f1==7) continue;
-				if( (webman_config->cmask & PSP) && f1==8) continue;
-				if( (webman_config->cmask & PSP) && f1==9) continue;
+				if(f0==9 && !webman_config->usb0 && !webman_config->usb1 &&
+							!webman_config->usb2 && !webman_config->usb3 &&
+							!webman_config->usb6 && !webman_config->usb7) continue;
 
 				if(!is_net && cellFsOpendir( param, &fd) != CELL_FS_SUCCEEDED) continue;
 
@@ -3929,6 +3946,7 @@ reconnect:
 	*/
 		if(key)
 		{
+			char swap[16];
 			for(u32 n=0; n<(key-1); n++)
 			{
 				for(u32 m=(n+1); m<key; m++)
@@ -4733,6 +4751,7 @@ again3:
 					if(strstr(param, "l=10"))  webman_config->lang=10; // Greek
 					if(strstr(param, "l=11"))  webman_config->lang=11; // Croatian
 					if(strstr(param, "l=12"))  webman_config->lang=12; // Bulgarian
+					if(strstr(param, "l=20"))  webman_config->lang=20; // Danish
 
 					// Asia
 					if(strstr(param, "l=13"))  webman_config->lang=13; // Indonesian
@@ -5580,6 +5599,7 @@ just_leave:
 						add_option_item("10", "\xCE\x95\xCE\xBB\xCE\xBB\xCE\xB7\xCE\xBD\xCE\xB9\xCE\xBA\xCF\x8E\xCE\xBD", (webman_config->lang==10), buffer);
 						add_option_item("11", "Hrvatski"                                                , (webman_config->lang==11), buffer);
 						add_option_item("12", "\xD0\xB1\xD1\x8A\xD0\xBB\xD0\xB3\xD0\xB0\xD1\x80\xD1\x81\xD0\xBA\xD0\xB8", (webman_config->lang==12), buffer);
+						add_option_item("20", "Dansk"                                                   , (webman_config->lang==20), buffer);
 
 						add_option_item("13", "Indonesian"												, (webman_config->lang==13), buffer);
 						add_option_item("14", "T\xC3\xBCrk\xC3\xA7\x65"									, (webman_config->lang==14), buffer);
@@ -8374,12 +8394,6 @@ static void wwwd_thread(uint64_t arg)
 		BUFFER_SIZE_PS2	= ( 128*KB);
 		BUFFER_SIZE_DVD	= ( 256*KB);
 	}
-
-	if( webman_config->cmask & PS3 ) BUFFER_SIZE     = 8*KB;
-	if( webman_config->cmask & PS1 ) BUFFER_SIZE_PSX = 2*KB;
-	if( webman_config->cmask & PSP ) BUFFER_SIZE_PSP = 2*KB;
-	if( webman_config->cmask & PS2 ) BUFFER_SIZE_PS2 = 2*KB;
-	if( webman_config->cmask & (BLU | DVD) ) BUFFER_SIZE_DVD = 2*KB;
 
 	BUFFER_SIZE_ALL=(BUFFER_SIZE)+(BUFFER_SIZE_PSX)+(BUFFER_SIZE_PSP)+(BUFFER_SIZE_PS2)+(BUFFER_SIZE_DVD);
 
