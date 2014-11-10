@@ -69,6 +69,11 @@
 				key="seg_package_files"
 				src="#seg_package_files"
 				/>
+			<Query 
+				class="type:x-xmb/folder-pixmap"
+				key="game_xmbm_hdd0"
+				src="xmb://localhost/dev_hdd0/game/XMBMANPLS/USRDIR/game_main.xml#seg_xmb_hdd0_app"
+				/>
 			<Query class="type:x-xmb/folder-pixmap"
 				key="xmb_app3" 
 				attr="xmb_app3" 
