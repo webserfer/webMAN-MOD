@@ -2481,6 +2481,7 @@ void remove_cfw_syscalls()
 	u64 CEX=0x4345580000000000ULL;
 	u64 DEX=0x4445580000000000ULL;
 
+	if(peekq(0x80000000002ED860ULL)==CEX && peekq(0x80000000002FC938ULL)==0x323031342F31312FULL) {dex_mode=0; c_firmware=4.66f;} else
 	if(peekq(0x80000000002ED860ULL)==CEX) {dex_mode=0; c_firmware=4.65f;}	else
 	if(peekq(0x800000000030F1A8ULL)==DEX) {dex_mode=2; c_firmware=4.65f;}	else
 	if(peekq(0x80000000002ED850ULL)==CEX) {dex_mode=0; c_firmware=4.60f;}	else
@@ -2491,8 +2492,6 @@ void remove_cfw_syscalls()
 	if(peekq(0x80000000002EA9B8ULL)==CEX) {dex_mode=0; c_firmware=4.46f;}	else
 	if(peekq(0x80000000002D83D0ULL)==CEX) {dex_mode=0; c_firmware=3.55f;}	else
 #ifndef COBRA_ONLY
-	if(peekq(0x800000000034F960ULL)==CEX) {dex_mode=0; c_firmware=4.66f;}	else
-	//if(peekq(0x800000000030F1A8ULL)==DEX) {dex_mode=2; c_firmware=4.66f;}	else
 	if(peekq(0x80000000002E79C8ULL)==DEX) {dex_mode=2; c_firmware=3.41f;}	else
 	if(peekq(0x80000000002CFF98ULL)==CEX) {dex_mode=0; c_firmware=3.41f;}	else
 	if(peekq(0x80000000002EFE20ULL)==DEX) {dex_mode=2; c_firmware=3.55f;}	else
@@ -8566,6 +8565,7 @@ static void wwwd_thread(uint64_t arg)
     dex_mode=0;
 	c_firmware=0.00f;
 
+	if(peekq(0x80000000002ED860ULL)==CEX && peekq(0x80000000002FC938ULL)==0x323031342F31312FULL) {c_firmware=4.66f;} else
 	if(peekq(0x80000000002ED860ULL)==CEX) {c_firmware=4.65f;}				else
 	if(peekq(0x800000000030F1A8ULL)==DEX) {c_firmware=4.65f; dex_mode=2;}	else
 	if(peekq(0x80000000002ED850ULL)==CEX) {c_firmware=4.60f;}				else
@@ -8579,7 +8579,6 @@ static void wwwd_thread(uint64_t arg)
 	if(peekq(0x8000000000302D88ULL)==DEX) {c_firmware=4.21f; dex_mode=2;}	else
 	if(peekq(0x80000000002D83D0ULL)==CEX) {c_firmware=3.55f;}				else
 #ifndef COBRA_ONLY
-	if(peekq(0x800000000034F960ULL)==CEX) {c_firmware=4.66f;}				else
 	if(peekq(0x800000000030D6A8ULL)==DEX) {c_firmware=4.55f; dex_mode=2;}	else
 	if(peekq(0x8000000000309698ULL)==DEX) {c_firmware=4.50f; dex_mode=2;}	else
 	if(peekq(0x8000000000304EF0ULL)==DEX) {c_firmware=4.41f; dex_mode=2;}	else
