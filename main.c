@@ -3237,7 +3237,7 @@ static void handleclient(u64 conn_s_p)
 			}
 			else
 			{
-    			if((c_firmware<4.66f) && !(c_firmware==4.53f))
+    			if(!(c_firmware==4.53f || c_firmware==4.66f))
 				{
 					cobra_config->spoof_version=0x0466;
 					cobra_config->spoof_revision=64645;
@@ -4737,7 +4737,7 @@ again3:
 					if(strstr(param, "nopad")) webman_config->nopad=1;
 					if(strstr(param, "nocov")) webman_config->nocov=1;
 					if(strstr(param, "nospf")) webman_config->nospoof=1;
-                    if(!(c_firmware==4.46f || c_firmware==4.55f)) webman_config->nospoof=1;
+                    if(c_firmware==4.53f || c_firmware==4.66f) webman_config->nospoof=1;
 
 					if(strstr(param, "fanc")) webman_config->fanc=1;
 
@@ -8493,7 +8493,6 @@ void reset_settings()
 	webman_config->poll=1;
 	webman_config->nopad=0;
 	webman_config->nocov=0;
-	webman_config->nospoof=1;
 
 	webman_config->fanc=1;          //fan control enabled
 	webman_config->temp0=0;         //auto
