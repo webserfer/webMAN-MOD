@@ -55,19 +55,19 @@ typedef uint32_t sys_device_handle_t;
 
 typedef struct
 {
-	char label[32]; 
-	uint32_t unk_08; 
-	uint32_t unk_0C; 
-	uint64_t sector_count; 
-	uint32_t sector_size; 
-	uint32_t unk_30; 
-	uint8_t unk_40[8]; 	
+	char label[32];
+	uint32_t unk_08;
+	uint32_t unk_0C;
+	uint64_t sector_count;
+	uint32_t sector_size;
+	uint32_t unk_30;
+	uint8_t unk_40[8];
 } __attribute__((packed)) sys_device_info_t;
 
 typedef struct
 {
 	uint32_t inlen;
-	uint32_t unk1; 
+	uint32_t unk1;
 	uint32_t outlen;
 	uint32_t unk2;
 	uint32_t unk3;
@@ -104,7 +104,7 @@ typedef struct
 {
 	int size;
 	int disc_emulation;
-	char firstfile_path[MAX_PATH];	
+	char firstfile_path[MAX_PATH];
 } __attribute__((packed)) sys_emu_state_t;
 
 static inline int sys_storage_ext_get_disc_type(unsigned int *real_disctype, unsigned int *effective_disctype, unsigned int *fake_disctype)
@@ -211,80 +211,86 @@ static inline uint64_t get_device(char *name)
 {
 	if (strcmp(name, "CELL_FS_IOS:ATA_HDD") == 0)
 		return ATA_HDD;
-	
+
 	if (strcmp(name, "CELL_FS_IOS:BDVD_DRIVE") == 0)
 		return BDVD_DRIVE;
-	
+
 	if (strcmp(name, "CELL_FS_IOS:PATA0_HDD_DRIVE") == 0)
 		return PATA0_HDD_DRIVE;
-	
+
 	if (strcmp(name, "CELL_FS_IOS:PATA0_BDVD_DRIVE") == 0)
 		return PATA0_BDVD_DRIVE;
-	
+
 	if (strcmp(name, "CELL_FS_IOS:PATA1_HDD_DRIVE") == 0)
 		return PATA1_HDD_DRIVE;
-	
+
 	if (strcmp(name, "CELL_FS_IOS:PATA1_BDVD_DRIVE") == 0)
 		return PATA1_BDVD_DRIVE;
-	
+
 	if (strcmp(name, "CELL_FS_IOS:BUILTIN_FLASH") == 0)
 		return BUILTIN_FLASH;
-	
+
 	if (strcmp(name, "CELL_FS_IOS:COMPACT_FLASH") == 0)
 		return COMPACT_FLASH;
-	
+
 	if (strcmp(name, "CELL_FS_IOS:MEMORY_STICK") == 0)
 		return MEMORY_STICK;
-	
+
 	if (strcmp(name, "CELL_FS_IOS:SD_CARD") == 0)
 		return SD_CARD;
-	
+
 	if (strncmp(name, "CELL_FS_IOS:USB_MASS_STORAGE", 28) == 0)
 	{
 		if (!isdigit(name[28]) || !isdigit(name[29]) || !isdigit(name[30]) || name[31] != 0)
 			return 0;
-		
+
 		unsigned int num = ((name[28]-'0')*100) + ((name[29]-'0')*10) + (name[30]-'0');
-		
+
 		if (num > 127)
 			return 0;
-		
+
 		if (num < 6)
 			return USB_MASS_STORAGE_1(num);
-		
+
 		return USB_MASS_STORAGE_2(num);
 	}
-	
+
 	if (strcmp(name, "CELL_FS_IOS:BUILTIN_FLSH1") == 0)
 		return FLASH_PARTITION(2);
-	
+
 	if (strcmp(name, "CELL_FS_IOS:BUILTIN_FLSH2") == 0)
 		return FLASH_PARTITION(3);
-	
+
 	if (strcmp(name, "CELL_FS_IOS:BUILTIN_FLSH3") == 0)
 		return FLASH_PARTITION(4);
-	
+
 	if (strcmp(name, "CELL_FS_IOS:BUILTIN_FLSH4") == 0)
 		return FLASH_PARTITION(5);
-	
+
 	if (strcmp(name, "CELL_FS_UTILITY:HDD0") == 0)
 		return HDD_PARTITION(1);
-	
+
 	if (strcmp(name, "CELL_FS_UTILITY:HDD1") == 0)
 		return HDD_PARTITION(2);
-	
+
 	if (strcmp(name, "CELL_FS_UTILITY:HDD2") == 0)
 		return HDD_PARTITION(3);
-	
+
 	if (strcmp(name, "CELL_FS_UTILITY:HDD") == 0)
-		return ATA_HDD;	
-	
+		return ATA_HDD;
+
 	return 0;
 }
 
 static inline int sys_map_path(char *oldpath, char *newpath)
 {
+#if 0
 	system_call_2(35, (uint64_t)(uint32_t)oldpath, (uint64_t)(uint32_t)newpath);
+#else
+	char *paths[1]={NULL,NULL}; char *new_paths[1]={NULL,NULL};
+	paths[0]=oldpath;new_paths[0]=newpath;
+	system_call_4(8, SYSCALL8_OPCODE_MAP_PATHS, (uint64_t)(uint32_t)paths, (uint64_t)(uint32_t)new_paths, 1);
+#endif
 	return (int)p1;
 }
 

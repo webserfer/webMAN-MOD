@@ -267,9 +267,9 @@ int main()
 		sysLv2FsUnlink("/dev_hdd0/game/IRISMAN01/USRDIR/webftp_server.sprx");
 
 		if((sysLv2FsStat("/dev_flash/rebug", &s) == SUCCESS))
-			CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/webftp_server_rebug_mamba.sprx", "/dev_hdd0/game/IRISMAN01/USRDIR/webftp_server.sprx");
+			CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/webftp_server_rebug_cobra_multi23.sprx", "/dev_hdd0/game/IRISMAN01/USRDIR/webftp_server.sprx");
 		else
-			CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/webftp_server_mamba.sprx", "/dev_hdd0/game/IRISMAN01/USRDIR/webftp_server.sprx");
+			CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/webftp_server.sprx", "/dev_hdd0/game/IRISMAN01/USRDIR/webftp_server.sprx");
 	}
 
 	char ligne[255];
