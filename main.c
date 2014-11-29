@@ -92,14 +92,14 @@ SYS_MODULE_STOP(wwwd_stop);
 
 #define FAILED		-1
 
-u32 BUFFER_SIZE_FTP	= ( 128*KB);
+static u32 BUFFER_SIZE_FTP	= ( 128*KB);
 
-u32 BUFFER_SIZE		= ( 448*KB);
-u32 BUFFER_SIZE_PSX	= ( 160*KB);
-u32 BUFFER_SIZE_PSP	= (  32*KB);
-u32 BUFFER_SIZE_PS2	= (  64*KB);
-u32 BUFFER_SIZE_DVD	= ( 192*KB);
-u32 BUFFER_SIZE_ALL	= ( 896*KB);
+static u32 BUFFER_SIZE		= ( 448*KB);
+static u32 BUFFER_SIZE_PSX	= ( 160*KB);
+static u32 BUFFER_SIZE_PSP	= (  32*KB);
+static u32 BUFFER_SIZE_PS2	= (  64*KB);
+static u32 BUFFER_SIZE_DVD	= ( 192*KB);
+static u32 BUFFER_SIZE_ALL	= ( 896*KB);
 
 static sys_ppu_thread_t thread_id_ntfs = -1;
 static sys_ppu_thread_t thread_id_net	=-1;
@@ -4726,15 +4726,15 @@ again3:
 
 #ifdef COBRA_ONLY
 					webman_config->cmask=0;
+					if(!strstr(param, "ps1")) webman_config->cmask|=PS1;
 					if(!strstr(param, "psp")) webman_config->cmask|=PSP;
 					if(!strstr(param, "blu")) webman_config->cmask|=BLU;
 					if(!strstr(param, "dvd")) webman_config->cmask|=DVD;
 #else
-					webman_config->cmask=(PSP | BLU | DVD);
+					webman_config->cmask=(PSP | PSX | BLU | DVD);
 #endif
 					if(!strstr(param, "pst")) webman_config->cmask|=PS3;
 					if(!strstr(param, "ps2")) webman_config->cmask|=PS2;
-					if(!strstr(param, "ps1")) webman_config->cmask|=PS1;
 
 					if(strstr(param, "psl")) webman_config->pspl=1;
 					if(strstr(param, "p2l")) webman_config->ps2l=1;
@@ -8526,7 +8526,7 @@ void reset_settings()
 #ifdef COBRA_ONLY
 	webman_config->cmask=0;
 #else
-	webman_config->cmask=(PSP | BLU | DVD);
+	webman_config->cmask=(PSP | PSX | BLU | DVD);
 #endif
 
 	webman_config->poll=1;
