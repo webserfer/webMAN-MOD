@@ -5867,7 +5867,7 @@ just_leave:
 						add_check_box("c15", "rbgmenu", STR_RBGMENU, 	" : <b>L3+L2+X</b><br>"               , !(webman_config->combo & DEBUGMENU), buffer);
 
 						if(is_rebug && (c_firmware==4.65f || c_firmware==4.66f))
-						add_check_box("c16", "rbgps2c", "PS2 CLASSIC",  " : <b>SELECT+L2+L1</b>"          , 1, buffer);
+						add_check_box("c16", "rbgps2c", "PS2 CLASSIC",  " : <b>SELECT+L2+&#8710;</b>"     , 1, buffer);
 #endif
 
 						sprintf(templn, "</td></tr></table><hr color=\"#FF0000\"/><input name=\"save\" type=\"submit\" value=\" %s \"/></form>", STR_SAVE); strcat(buffer, templn);
@@ -7774,7 +7774,7 @@ SYSCALLS     : R2+/\
 SHOW IDPS    : R2+O
 COBRA TOGGLE : L3+L2+/\
 
-TOGGLE PS2CLASSIC   : SELECT+L2+L1
+TOGGLE PS2CLASSIC   : SELECT+L2+/\
 SWITCH PS2EMU       : SELECT+L2+R2
 REBUG  Mode Switcher: L3+L2+/\
 Normal Mode Switcher: L3+L2+O
@@ -7835,7 +7835,7 @@ DEBUG Menu Switcher : L3+L2+X
 #ifdef REX_ONLY
 						else
 						if( (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2)
-							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L1) // SELECT+L2+L1
+							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_TRIANGLE) // SELECT+L2+TRIANGLE
 							&& is_rebug && (c_firmware==4.65f || c_firmware==4.66f) )
 						{
 							char msg[100]; int fd=0;
