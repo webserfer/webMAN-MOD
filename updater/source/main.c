@@ -256,13 +256,35 @@ int main()
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_TR.TXT","/dev_hdd0/tmp/wm_lang/LANG_TR.TXT");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_ZH.TXT","/dev_hdd0/tmp/wm_lang/LANG_ZH.TXT");
 
+
+	sysLv2FsMkdir("/dev_hdd0/tmp/wm_icons", 0777);
+
+	// copy new icons
+	if((sysLv2FsStat("/dev_hdd0/game/IRISMAN01/USRDIR/webftp_server.sprx", &s) == SUCCESS))
+	{
+		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/icon_wm_album_ps3.png", "/dev_hdd0/tmp/wm_icons/icon_wm_album_ps3.png");
+		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/icon_wm_album_psx.png", "/dev_hdd0/tmp/wm_icons/icon_wm_album_psx.png");
+		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/icon_wm_album_ps2.png", "/dev_hdd0/tmp/wm_icons/icon_wm_album_ps2.png");
+		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/icon_wm_album_psp.png", "/dev_hdd0/tmp/wm_icons/icon_wm_album_psp.png");
+		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/icon_wm_album_dvd.png", "/dev_hdd0/tmp/wm_icons/icon_wm_album_dvd.png");
+
+		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/icon_wm_ps3.png"      , "/dev_hdd0/tmp/wm_icons/icon_wm_ps3.png");
+		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/icon_wm_psx.png"      , "/dev_hdd0/tmp/wm_icons/icon_wm_psx.png");
+		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/icon_wm_ps2.png"      , "/dev_hdd0/tmp/wm_icons/icon_wm_ps2.png");
+		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/icon_wm_psp.png"      , "/dev_hdd0/tmp/wm_icons/icon_wm_psp.png");
+		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/icon_wm_dvd.png"      , "/dev_hdd0/tmp/wm_icons/icon_wm_dvd.png");
+
+		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/icon_wm_settings.png" , "/dev_hdd0/tmp/wm_icons/icon_wm_settings.png");
+		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/icon_wm_eject.png"    , "/dev_hdd0/tmp/wm_icons/icon_wm_eject.png"   );
+	}
+
 	// skip update custom language
 	if(sysLv2FsStat("/dev_hdd0/tmp/wm_lang/LANG_XX.TXT", &s))
 		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_XX.TXT","/dev_hdd0/tmp/wm_lang/LANG_XX.TXT");
 
 	// update PRX+Mamba Loader
-	if((sysLv2FsStat("/dev_hdd0/game/IRISMAN01/USRDIR/webftp_server.sprx", &s) == SUCCESS)) {
-
+	if((sysLv2FsStat("/dev_hdd0/game/IRISMAN01/USRDIR/webftp_server.sprx", &s) == SUCCESS))
+	{
 		sysLv2FsChmod("/dev_hdd0/game/IRISMAN01/USRDIR/webftp_server.sprx", 0777);
 		sysLv2FsUnlink("/dev_hdd0/game/IRISMAN01/USRDIR/webftp_server.sprx");
 
@@ -276,7 +298,8 @@ int main()
 	FILE* f=NULL;
 
 	// update PRX Loader
-	if(sysLv2FsStat("/dev_hdd0/game/PRXLOADER/USRDIR/plugins.txt", &s) == SUCCESS) {
+	if(sysLv2FsStat("/dev_hdd0/game/PRXLOADER/USRDIR/plugins.txt", &s) == SUCCESS)
+	{
 		f=fopen("/dev_hdd0/game/PRXLOADER/USRDIR/plugins.txt", "r");
 		while(fgets(ligne, 255, f) != NULL) {
 			if(strstr(ligne,"webftp_server") != NULL) {
@@ -298,7 +321,8 @@ int main()
 	}
 
 	// update dev_flash (rebug)
-	if((sysLv2FsStat("/dev_flash/vsh/module/webftp_server.sprx", &s) == SUCCESS)) {
+	if((sysLv2FsStat("/dev_flash/vsh/module/webftp_server.sprx", &s) == SUCCESS))
+	{
 		if(sysLv2FsStat("/dev_blind/vsh/module/webftp_server.sprx", &s) != SUCCESS)
 			sys_fs_mount("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0);
 
@@ -361,7 +385,8 @@ int main()
 exit:
 
 	// update category_game.xml (add fb.xml)
-	if(add_mygame() != -2) {
+	if(add_mygame() != -2)
+	{
 		// reboot
 		sysLv2FsUnlink("/dev_hdd0/tmp/turnoff");
 		{lv2syscall4(379,0x200,0,0,0);}

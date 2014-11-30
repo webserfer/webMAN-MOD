@@ -61,6 +61,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define PS2_EMU_PATH		"/dev_blind/ps2emu/"
 #define REBUG_COBRA_PATH	"/dev_blind/rebug/cobra/"
 #define SYS_COBRA_PATH		"/dev_blind/sys/"
+#define PS2_CLASSIC_TOGGLER "/dev_hdd0/classic_ps2"
 
 #define PS2_CLASSIC_PLACEHOLDER  "/dev_hdd0/game/PS2U10000/USRDIR"
 #define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
@@ -340,20 +341,20 @@ static char smonth[12][4]={"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug
 static char drives[10][16]={"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_usb002", "/dev_usb003", "/dev_usb006", "/dev_usb007", "/net0", "/net1", "/ext"};
 static char paths [11][16]={"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video"};
 
-static char wm_icons[12][60]={"/dev_flash/vsh/resource/explore/icon/icon_wm_album_ps3.png", //024.png  [0]
-                              "/dev_flash/vsh/resource/explore/icon/icon_wm_album_psx.png", //026.png  [1]
-                              "/dev_flash/vsh/resource/explore/icon/icon_wm_album_ps2.png", //025.png  [2]
-                              "/dev_flash/vsh/resource/explore/icon/icon_wm_album_psp.png", //022.png  [3]
-                              "/dev_flash/vsh/resource/explore/icon/icon_wm_album_dvd.png", //023.png  [4]
+static char wm_icons[12][60]={"/dev_hdd0/tmp/wm_icons/icon_wm_album_ps3.png", //024.png  [0]
+                              "/dev_hdd0/tmp/wm_icons/icon_wm_album_psx.png", //026.png  [1]
+                              "/dev_hdd0/tmp/wm_icons/icon_wm_album_ps2.png", //025.png  [2]
+                              "/dev_hdd0/tmp/wm_icons/icon_wm_album_psp.png", //022.png  [3]
+                              "/dev_hdd0/tmp/wm_icons/icon_wm_album_dvd.png", //023.png  [4]
 
-                              "/dev_flash/vsh/resource/explore/icon/icon_wm_ps3.png",       //024.png  [5]
-                              "/dev_flash/vsh/resource/explore/icon/icon_wm_psx.png",       //026.png  [6]
-                              "/dev_flash/vsh/resource/explore/icon/icon_wm_ps2.png",       //025.png  [7]
-                              "/dev_flash/vsh/resource/explore/icon/icon_wm_psp.png",       //022.png  [8]
-                              "/dev_flash/vsh/resource/explore/icon/icon_wm_dvd.png",       //023.png  [9]
+                              "/dev_hdd0/tmp/wm_icons/icon_wm_ps3.png",       //024.png  [5]
+                              "/dev_hdd0/tmp/wm_icons/icon_wm_psx.png",       //026.png  [6]
+                              "/dev_hdd0/tmp/wm_icons/icon_wm_ps2.png",       //025.png  [7]
+                              "/dev_hdd0/tmp/wm_icons/icon_wm_psp.png",       //022.png  [8]
+                              "/dev_hdd0/tmp/wm_icons/icon_wm_dvd.png",       //023.png  [9]
 
-                              "/dev_flash/vsh/resource/explore/icon/icon_wm_settings.png",  //icon/icon_home.png  [10]
-                              "/dev_flash/vsh/resource/explore/icon/icon_wm_eject.png"      //icon/icon_home.png  [11]
+                              "/dev_hdd0/tmp/wm_icons/icon_wm_settings.png",  //icon/icon_home.png  [10]
+                              "/dev_hdd0/tmp/wm_icons/icon_wm_eject.png"      //icon/icon_home.png  [11]
                              };
 
 static bool covers_exist[7];
@@ -453,7 +454,7 @@ int lang_pos, fh;
 #define STR_RBGMENU 	"MENU TOGGLE"
 #endif
 #define STR_SAVE	"Save"
-#define STR_SETTINGSUPD	"Settings updated.<br><br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATIONR3 system."
+#define STR_SETTINGSUPD	"Settings updated.<br><br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system."
 #define STR_ERROR	"Error!"
 
 #define STR_MYGAMES	"webMAN Games"
@@ -508,7 +509,7 @@ int lang_pos, fh;
 #define STR_KBFREE	"KB free"
 
 #define STR_FANCTRL3	"Fan control:"
-#define STR_ENABLED	"Enabled"
+#define STR_ENABLED 	"Enabled"
 #define STR_DISABLED	"Disabled"
 
 #define STR_FANCH0	"Fan setting changed:"
@@ -603,7 +604,7 @@ char STR_RBGNORM[100]		= "NORM MODE TOGGLE";
 char STR_RBGMENU[100] 		= "MENU TOGGLE";
 #endif
 char STR_SAVE[30]			= "Save";
-char STR_SETTINGSUPD[250]	= "Settings updated.<br><br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATIONR3 system.";
+char STR_SETTINGSUPD[250]	= "Settings updated.<br><br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system.";
 char STR_ERROR[30]			= "Error!";
 
 char STR_MYGAMES[50]		= "webMAN Games";
@@ -3250,6 +3251,9 @@ static void handleclient(u64 conn_s_p)
 		{
 			if(cellFsStat(wm_icons[i], &buf)!=CELL_FS_SUCCEEDED)
 			{
+				sprintf(templn, "/dev_flash/vsh/resource/explore/icon/%s\0", wm_icons[i] + 23); strcpy(wm_icons[i], templn);
+				if(cellFsStat(templn, &buf)==CELL_FS_SUCCEEDED) continue;
+				else
 				if(i==0 || i==5) strcpy(wm_icons[i] + 32, "user/024.png"); else //ps3
 				if(i==1 || i==6) strcpy(wm_icons[i] + 32, "user/026.png"); else //psx
 				if(i==2 || i==7) strcpy(wm_icons[i] + 32, "user/025.png"); else //ps2
@@ -5860,7 +5864,10 @@ just_leave:
 #ifdef REX_ONLY
 						add_check_box("c13", "rbgmode", STR_RBGMODE, 	" : <b>L3+L2+&#11787;</b><br>"    , !(webman_config->combo & REBUGMODE), buffer);
 						add_check_box("c14", "rbgnorm", STR_RBGNORM, 	" : <b>L3+L2+O</b><br>"           , !(webman_config->combo & NORMAMODE), buffer);
-						add_check_box("c15", "rbgmenu", STR_RBGMENU, 	" : <b>L3+L2+X</b>",!(webman_config->combo & DEBUGMENU), buffer);
+						add_check_box("c15", "rbgmenu", STR_RBGMENU, 	" : <b>L3+L2+X</b><br>"               , !(webman_config->combo & DEBUGMENU), buffer);
+
+						if(is_rebug && (c_firmware==4.65f || c_firmware==4.66f))
+						add_check_box("c16", "rbgps2c", "PS2 CLASSIC",  " : <b>SELECT+L2+L1</b>"          , 1, buffer);
 #endif
 
 						sprintf(templn, "</td></tr></table><hr color=\"#FF0000\"/><input name=\"save\" type=\"submit\" value=\" %s \"/></form>", STR_SAVE); strcat(buffer, templn);
@@ -7767,6 +7774,7 @@ SYSCALLS     : R2+/\
 SHOW IDPS    : R2+O
 COBRA TOGGLE : L3+L2+/\
 
+TOGGLE PS2CLASSIC   : SELECT+L2+L1
 SWITCH PS2EMU       : SELECT+L2+R2
 REBUG  Mode Switcher: L3+L2+/\
 Normal Mode Switcher: L3+L2+O
@@ -7824,6 +7832,28 @@ DEBUG Menu Switcher : L3+L2+X
 							sys_ppu_thread_exit(0);
 						}
 #ifdef COBRA_ONLY
+#ifdef REX_ONLY
+						else
+						if( (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2)
+							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L1) // SELECT+L2+L1
+							&& is_rebug && (c_firmware==4.65f || c_firmware==4.66f) )
+						{
+							char msg[100]; int fd=0;
+							if(cellFsStat((char*)PS2_CLASSIC_TOGGLER, &s)==CELL_FS_SUCCEEDED)
+							{
+								cellFsUnlink((char*)PS2_CLASSIC_TOGGLER);
+								sprintf(msg, "PS2 Classic %s", STR_DISABLED);
+							}
+							else if(cellFsOpen((char*)PS2_CLASSIC_TOGGLER, CELL_FS_O_CREAT| CELL_FS_O_TRUNC |CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+							{
+								cellFsClose(fd);
+								cellFsChmod((char*)PS2_CLASSIC_TOGGLER, 0777);
+								sprintf(msg, "PS2 Classic %s", STR_ENABLED);
+							}
+							show_msg((char*)msg);
+							sys_timer_sleep(3);
+						}
+#endif
 						else
 						if( (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2)    // Clone ps2emu habib's switcher
 							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2) // SELECT+L2+R2
@@ -9813,28 +9843,29 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 				{
 					if(strstr(_path, ".CUE") || strstr(_path, ".cue"))
 					{
-						cobra_iso_list[0][strlen(cobra_iso_list[0])-3]='B';
-						cobra_iso_list[0][strlen(cobra_iso_list[0])-2]='I';
-						cobra_iso_list[0][strlen(cobra_iso_list[0])-1]='N';
+						int flen=strlen(cobra_iso_list[0]);
+						cobra_iso_list[0][flen-3]='B';
+						cobra_iso_list[0][flen-2]='I';
+						cobra_iso_list[0][flen-1]='N';
 
 						struct CellFsStat s;
 						if(cellFsStat(cobra_iso_list[0], &s)!=CELL_FS_SUCCEEDED)
 						{
-							cobra_iso_list[0][strlen(cobra_iso_list[0])-3]='b';
-							cobra_iso_list[0][strlen(cobra_iso_list[0])-2]='i';
-							cobra_iso_list[0][strlen(cobra_iso_list[0])-1]='n';
+							cobra_iso_list[0][flen-3]='b';
+							cobra_iso_list[0][flen-2]='i';
+							cobra_iso_list[0][flen-1]='n';
 						}
 						if(cellFsStat(cobra_iso_list[0], &s)!=CELL_FS_SUCCEEDED)
 						{
-							cobra_iso_list[0][strlen(cobra_iso_list[0])-3]='I';
-							cobra_iso_list[0][strlen(cobra_iso_list[0])-2]='S';
-							cobra_iso_list[0][strlen(cobra_iso_list[0])-1]='O';
+							cobra_iso_list[0][flen-3]='I';
+							cobra_iso_list[0][flen-2]='S';
+							cobra_iso_list[0][flen-1]='O';
 						}
 						if(cellFsStat(cobra_iso_list[0], &s)!=CELL_FS_SUCCEEDED)
 						{
-							cobra_iso_list[0][strlen(cobra_iso_list[0])-3]='i';
-							cobra_iso_list[0][strlen(cobra_iso_list[0])-2]='s';
-							cobra_iso_list[0][strlen(cobra_iso_list[0])-1]='o';
+							cobra_iso_list[0][flen-3]='i';
+							cobra_iso_list[0][flen-2]='s';
+							cobra_iso_list[0][flen-1]='o';
 						}
 
 						unsigned int num_tracks=0;
