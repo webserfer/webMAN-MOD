@@ -34,13 +34,13 @@
 #include <time.h>
 #include <unistd.h>
 
-//#define ENGLISH_ONLY 1 // uncomment for english only version
+#define ENGLISH_ONLY 1 // uncomment for english only version
 //#define USE_DEBUG 1
 
 //#define CCAPI 1		// uncomment for ccapi release
 #define COBRA_ONLY 1	// comment out for ccapi/non-cobra release
 //#define REX_ONLY   1	// shortcuts for REBUG REX CFWs / comment out for usual CFW
-//#define LOCAL_PS3  1	// no ps3netsrv support, smaller memory footprint
+#define LOCAL_PS3  1	// no ps3netsrv support, smaller memory footprint
 
 #include "types.h"
 #include "common.h"
@@ -4539,13 +4539,15 @@ again3:
 
 			if(!is_busy && (strstr(param, "index.ps3")   ||
 							strstr(param, "refresh.ps3") ||
-							strstr(param, "copy.ps3/")   ||
+#ifndef LOCAL_PS3
 							strstr(param, "peek.lv2?")   ||
 							strstr(param, "poke.lv2?")   ||
 							strstr(param, "find.lv2?")   ||
 							strstr(param, "peek.lv1?")   ||
 							strstr(param, "poke.lv1?")   ||
-							strstr(param, "find.lv1?")))
+							strstr(param, "find.lv1?")   ||
+#endif
+							strstr(param, "copy.ps3/")))
 				is_binary=0;
 			else if(strstr(param, "cpursx.ps3")  ||
 					strstr(param, "setup.ps3")   ||
@@ -4604,7 +4606,7 @@ again3:
 				else
 				if(strstr(param, ".htm") || strstr(param, ".html"))
 					strcat(header, "text/html");
-#ifndef NO_EXTRA_CONTENT
+#ifndef LOCAL_PS3
 				else
 				if(strstr(param, ".AVI") || strstr(param, ".avi"))
 					strcat(header, "video/x-msvideo");
@@ -4979,6 +4981,9 @@ again3:
 #ifdef COBRA_ONLY
 					//if(cobra_mode)
 					{
+#ifndef LOCAL_PS3
+						char *pos=0;
+#else
 						char *pos=strstr(param, "neth0=") + 6;
 						char netp[7];
 						if(strstr(param, "neth0="))
@@ -5027,7 +5032,7 @@ again3:
 								webman_config->netp1=my_atoi(netp);
 							}
 						}
-
+#endif
 						if(strstr(param, "autop="))
 						{
 							u8 n;
@@ -5339,7 +5344,7 @@ again3:
 									else //may be a file
 									{
 										if(param[strlen(param)-1]=='/') param[strlen(param)-1]=0;
-#ifndef LOCAL_PS3
+
 										int is_directory=0, bytes_read=0;
 										int64_t file_size;
 										u64 mtime, ctime, atime;
@@ -5391,7 +5396,6 @@ again3:
 												}
 											}
 										}
-#endif
 									}
 									shutdown(ns, SHUT_RDWR); socketclose(ns);
 								}
@@ -5554,6 +5558,7 @@ just_leave:
 						strcat(buffer, "External Game DATA: ");
 						strcat(buffer, extgd?STR_ENABLED:STR_DISABLED);
 					}
+#ifndef LOCAL_PS3
 					else
 					if(strstr(param, "peek.lv") || strstr(param, "poke.lv") || strstr(param, "find.lv"))
 					{
@@ -5690,6 +5695,7 @@ just_leave:
 						}
 						strcat(buffer, "</pre>");
 					}
+#endif
 					else
 					if(strstr(param, "setup.ps3?"))
 					{
@@ -6830,13 +6836,15 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						if(strcasecmp(cmd, "HELP") == 0)
 						{
 							ssend(conn_s_ftp, "214-CMDs:\r\n"
+#ifndef LOCAL_PS3
 											  " SITE FLASH\r\n"
 											  " SITE EXTGD <ON/OFF>\r\n"
 											  " SITE MAPTO <path>\r\n"
 											  " SITE UMOUNT\r\n"
-											  " SITE CHMOD 777 <file>\r\n"
 											  " SITE COPY <file>\r\n"
 											  " SITE PASTE <file>\r\n"
+											  " SITE CHMOD 777 <file>\r\n"
+#endif
 											  " SITE SHUTDOWN\r\n"
 											  " SITE RESTART\r\n"
 											  "214 End\r\n");
@@ -6870,7 +6878,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							else
 								{system_call_3(838, (u64)(char*)"/dev_blind", 0, 1);}
 						}
-                        else
+#ifndef LOCAL_PS3
+						else
 						if(strcasecmp(cmd, "EXTGD") == 0)
 						{
 							ssend(conn_s_ftp, FTP_OK_250);
@@ -6946,6 +6955,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 								ssend(conn_s_ftp, FTP_ERROR_500);
 							}
 						}
+#endif
 						else
 						{
 							ssend(conn_s_ftp, FTP_ERROR_500);
