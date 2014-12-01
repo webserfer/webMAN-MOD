@@ -34,13 +34,13 @@
 #include <time.h>
 #include <unistd.h>
 
-#define ENGLISH_ONLY 1 // uncomment for english only version
+//#define ENGLISH_ONLY 1 // uncomment for english only version
 //#define USE_DEBUG 1
 
 //#define CCAPI 1		// uncomment for ccapi release
 #define COBRA_ONLY 1	// comment out for ccapi/non-cobra release
 //#define REX_ONLY   1	// shortcuts for REBUG REX CFWs / comment out for usual CFW
-#define LOCAL_PS3  1	// no ps3netsrv support, smaller memory footprint
+//#define LOCAL_PS3  1	// no ps3netsrv support, smaller memory footprint
 
 #include "types.h"
 #include "common.h"
@@ -4981,7 +4981,7 @@ again3:
 #ifdef COBRA_ONLY
 					//if(cobra_mode)
 					{
-#ifndef LOCAL_PS3
+#ifdef LOCAL_PS3
 						char *pos=0;
 #else
 						char *pos=strstr(param, "neth0=") + 6;
@@ -6012,7 +6012,7 @@ just_leave:
 								else if(strstr(param, "/BDISO") || strstr(param, "/DVDISO") || strstr(param, ".ntfs[BDISO]") || strstr(param, ".ntfs[DVDISO]"))
 									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_MOVIETOM,param+plen, enc_dir_name, STR_MOVIELOADED);
 								else
-									sprintf(templn, "%s: %s<hr/><img src=\"%s\"><hr/>%s", STR_GAMETOM, param+plen, enc_dir_name, STR_GAMELOADED);
+									sprintf(templn, "%s: %s<hr/><a href=\"/dev_bdvd\"><img src=\"%s\" border=0></a><hr/>%s", STR_GAMETOM, param+plen, enc_dir_name, STR_GAMELOADED);
 
 								strcat(buffer, templn);
 							}
@@ -6898,12 +6898,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						if(strcasecmp(cmd, "MAPTO") == 0)
 						{
 							ssend(conn_s_ftp, FTP_OK_250);
-							if(param)
+							if(strlen(param))
+							{
 								sys_map_path((char*)param, (char*)cwd);
+							}
 							else
 							{
-								sys_map_path((char*)"/dev_bdvd", (char*)cwd);
-								sys_map_path((char*)"/app_home", (char*)cwd);
+								sys_map_path((char*)"/dev_bdvd", cwd);
 							}
 						}
 #endif
