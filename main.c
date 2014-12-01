@@ -67,7 +67,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
 #define PS2_CLASSIC_ISO_ICON     "/dev_hdd0/game/PS2U10000/ICON0.PNG"
 
-#define WM_VERSION			"1.32.01 MOD"						// webMAN version
+#define WM_VERSION			"1.32.02 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -9014,6 +9014,7 @@ static void do_umount(void)
 
 		cobra_unset_psp_umd();
 		{sys_map_path((char*)"/dev_bdvd", NULL);}
+		{sys_map_path((char*)"//dev_bdvd", NULL);}
 		{sys_map_path((char*)"/app_home", is_rebug?NULL:(char*)"/dev_hdd0/packages");}
 
 		{
@@ -9679,8 +9680,9 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 
 			struct CellFsStat s;
 
-			{sys_map_path((char*)"/dev_bdvd", NULL);}
-			{sys_map_path((char*)"/app_home", is_rebug?NULL:(char*)"/dev_hdd0/packages");}
+			//{sys_map_path((char*)"/dev_bdvd", NULL);}
+			//{sys_map_path((char*)"/app_home", is_rebug?NULL:(char*)"/dev_hdd0/packages");}
+			do_umount();
 
 			u8 iso_num=1;
 			char tmp_iso[4096];
@@ -10501,6 +10503,7 @@ patch:
 	if(do_eject)
 	{
 		add_to_map((char*)"/dev_bdvd", path);
+		add_to_map((char*)"//dev_bdvd", path);
 
 		char path2[strlen(_path)+24];
 

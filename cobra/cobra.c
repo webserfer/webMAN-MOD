@@ -1462,10 +1462,11 @@ int cobra_map_game(char *path, char *title_id, int *special_mode)
 	build_blank_iso(title_id);
 
 	ret = sys_map_path("/dev_bdvd", path);
-	if (ret != 0)
-		return ret;
+	if (ret != 0) return ret;
 
+	sys_map_path("//dev_bdvd", path);
 	sys_map_path("/app_home", path);
+
 	sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
 
 	if (real_disctype == 0)
