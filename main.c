@@ -67,7 +67,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
 #define PS2_CLASSIC_ISO_ICON     "/dev_hdd0/game/PS2U10000/ICON0.PNG"
 
-#define WM_VERSION			"1.32.00 MOD"						// webMAN version
+#define WM_VERSION			"1.32.01 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -2462,11 +2462,12 @@ void set_gamedata_status(u8 status)
 	mount_with_mm(NULL, 0);
 #endif
 
+	char msg[100];
+
 	if(status)
 	{
 		struct CellFsStat buf;
 		char gamei_path[20]; u8 n;
-		char msg[40];
 
 		for(n=0; n<8; n++) {sprintf(gamei_path, "/dev_usb00%i/GAMEI", n); if(cellFsStat(gamei_path, &buf)==CELL_FS_SUCCEEDED) break;}
 		if(n>7)
@@ -2474,19 +2475,34 @@ void set_gamedata_status(u8 status)
 			for(n=0; n<8; n++) {sprintf(gamei_path, "/dev_usb00%i", n); if(cellFsStat(gamei_path, &buf)==CELL_FS_SUCCEEDED) break;}
 			if(n<8) {sprintf(gamei_path, "/dev_usb00%i/GAMEI", n); if(cellFsMkdir(gamei_path, 0777)==CELL_FS_SUCCEEDED) n=99;}
 		}
-		sprintf(msg, "External gameDATA enabled (usb00%i)", n);
+
+		if(n<8)
+		{
 #ifdef COBRA_ONLY
-		if(n<8) {sys_map_path((char*)"/dev_hdd0/game", gamei_path); show_msg((char*)msg);} else {status=0;show_msg((char*)"External gameDATA cannot be enabled");}
+			sys_map_path((char*)"/dev_hdd0/game", gamei_path);
 #else
-		if(n<8) {add_to_map((char*)"/dev_hdd0/game", (char*)gamei_path); show_msg((char*)msg);} else {status=0;show_msg((char*)"External gameDATA cannot be enabled");}
+			add_to_map((char*)"/dev_hdd0/game", (char*)gamei_path);
 #endif
+			sprintf(msg, "gameDATA %s (usb00%i)", STR_ENABLED, n);
+		}
+		else
+		{
+			status=0;
+			sprintf(msg, (char*)"gameDATA %s (no usb)", STR_ERROR);
+		}
 	}
 	else
+    {
+		sprintf(msg, (char*)"gameDATA %s", STR_DISABLED);
+
 #ifdef COBRA_ONLY
-		{sys_map_path((char*)"/dev_hdd0/game", NULL); show_msg((char*)"External gameDATA disabled");}
+		{sys_map_path((char*)"/dev_hdd0/game", NULL);}
 #else
-		{add_to_map((char*)"/dev_hdd0/game", NULL); show_msg((char*)"External gameDATA disabled");}
+		{add_to_map((char*)"/dev_hdd0/game", NULL);}
 #endif
+	}
+
+	show_msg((char*)msg);
 	extgd = status;
 }
 
@@ -5252,12 +5268,7 @@ again3:
 								strcat(buffer, swap);
 								strcpy(templn, param+tlen);
 							}
-							if(strcmp(param,"/") && strcmp(param,"/net0") && strcmp(param,"/net1"))
-							{
-								sprintf(swap, "<a href=\"/mount.ps3%s\">%s</a>", param, templn); strcat(buffer, swap);
-							}
-							else
-								strcat(buffer, param);
+							sprintf(swap, "<a href=\"/mount.ps3%s\">%s</a>", param, templn); strcat(buffer, swap);
 
                             strcat(buffer, ":</td><td></td><td></td></tr>");
 							tlen=0;
@@ -5463,7 +5474,7 @@ just_leave:
 								{
 									sprintf(tempstr, "0net0 <tr>"
                                                            "<td><a class=\"f\" href=\"/net0\">net0 (%s:%i)</a></td>"
-                                                           "<td align=right>&nbsp; &lt;dir&gt; &nbsp;</td><td>11-Nov-2006 11:11</td>"
+                                                           "<td align=right>&nbsp; <a href=\"/mount.ps3/net0\">&lt;dir&gt;</a> &nbsp;</td><td>11-Nov-2006 11:11</td>"
                                                            "</tr>", webman_config->neth0, webman_config->netp0);
 									strncpy(line_entry[idx].path, tempstr, 512);
 									idx++;
@@ -5473,7 +5484,7 @@ just_leave:
 								{
 									sprintf(tempstr, "0net1 <tr>"
                                                            "<td><a class=\"f\" href=\"/net1\">net1 (%s:%i)</a></td>"
-                                                           "<td align=right>&nbsp; &lt;dir&gt; &nbsp;</td><td>11-Nov-2006 11:11</td>"
+                                                           "<td align=right>&nbsp; <a href=\"/mount.ps3/net1\">&lt;dir&gt;</a> &nbsp;</td><td>11-Nov-2006 11:11</td>"
                                                            "</tr>", webman_config->neth1, webman_config->netp1);
 									strncpy(line_entry[idx].path, tempstr, 512);
 									idx++;
@@ -7810,7 +7821,13 @@ DEBUG Menu Switcher : L3+L2+X
 						if( !(webman_config->combo & FAIL_SAFE)                                    // Toggle External Game Data
                             && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_SQUARE)) // SELECT+SQUARE
 						{
-							set_gamedata_status(extgd^1); sys_timer_sleep(2); break;
+							if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2)
+                            {if(webman_config->netp0 && webman_config->neth0[0]) mount_with_mm((char*)"/net0/.", 1);}
+							else if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2)
+							{if(webman_config->netp1 && webman_config->neth1[0]) mount_with_mm((char*)"/net1/.", 1);}
+							else
+								set_gamedata_status(extgd^1);
+							sys_timer_sleep(2); break;
 						}
 						else
 						if( !(webman_config->combo & FAIL_SAFE)
@@ -8092,7 +8109,7 @@ DEBUG Menu Switcher : L3+L2+X
 							sys_timer_sleep(2);
 						}
 						else
-						if(!(webman_config->combo & PREV_GAME) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L1) ) // SELECT+L1 (previous title)
+						if(!(webman_config->combo & PREV_GAME) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_L1) ) // SELECT+L1 (previous title)
 						{
 							led(GREEN, BLINK);
 							mount_with_mm((char*)"_prev", 1);
@@ -8100,7 +8117,7 @@ DEBUG Menu Switcher : L3+L2+X
 							led(GREEN, ON);
 						}
 						else
-						if(!(webman_config->combo & NEXT_GAME) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R1) ) // SELECT+R1 (next title)
+						if(!(webman_config->combo & NEXT_GAME) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_R1) ) // SELECT+R1 (next title)
 						{
 							led(GREEN, BLINK);
 							mount_with_mm((char*)"_next", 1);
@@ -9241,10 +9258,13 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 			pokeq(0x800000000005A658ULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000005A66CULL, 0x2F83000060000000ULL );
 
-            //anti-ode patches by deank
-			pokeq(0x8000000000055C5CULL, 0xF821FE917C0802A6ULL );
-			pokeq(0x8000000000055C84ULL, 0x6000000060000000ULL );
-			pokeq(0x8000000000055C8CULL, 0x600000003BA00000ULL );
+			//anti-ode patches by deank
+			if(!is_rebug)
+            {
+				pokeq(0x8000000000055C5CULL, 0xF821FE917C0802A6ULL );
+				pokeq(0x8000000000055C84ULL, 0x6000000060000000ULL );
+				pokeq(0x8000000000055C8CULL, 0x600000003BA00000ULL );
+            }
 		 /*
 			//pokeq(0x80000000002A1060ULL, 0x386000014E800020ULL); // fix 0x80010017 error   Original: 0xFBC1FFF0EBC225B0ULL
 			//pokeq(0x8000000000055C5CULL, 0x386000004E800020ULL); // fix 0x8001002B error   Original: 0xF821FE917C0802A6ULL
@@ -9413,10 +9433,13 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 			pokeq(0x800000000005E028ULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000005E03CULL, 0x2F83000060000000ULL );
 
-            //anti-ode patches by deank
-			pokeq(0x800000000005962CULL, 0xF821FE917C0802A6ULL );
-			pokeq(0x8000000000059654ULL, 0x6000000060000000ULL );
-			pokeq(0x800000000005965CULL, 0x600000003BA00000ULL );
+			//anti-ode patches by deank
+			if(!is_rebug)
+			{
+				pokeq(0x800000000005962CULL, 0xF821FE917C0802A6ULL );
+				pokeq(0x8000000000059654ULL, 0x6000000060000000ULL );
+				pokeq(0x800000000005965CULL, 0x600000003BA00000ULL );
+			}
 
 			pokeq(0x800000000005C780ULL, 0x60000000E8610098ULL );
 		 /*
@@ -9446,6 +9469,10 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 	}
 
 	char _path[512];
+#ifndef LOCAL_PS3
+	if(!strcmp(_path0, "/net0")) strcpy(_path0, "/net0/."); else
+	if(!strcmp(_path0, "/net1")) strcpy(_path0, "/net1/.");
+#endif
 	strcpy(_path, _path0);
 
 	// Launch PS2 Classic
@@ -9460,6 +9487,17 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 			copy_in_progress=true;
 			show_msg(temp);
 
+#ifdef REX_ONLY
+			if(is_rebug && (c_firmware==4.65f || c_firmware==4.66f))
+			{   // Auto create "classic_ps2 flag" for PS2 Classic (.BIN.ENC) on rebug 4.65.2
+			    int fd;
+				if(cellFsOpen((char*)PS2_CLASSIC_TOGGLER, CELL_FS_O_CREAT| CELL_FS_O_TRUNC |CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+				{
+					cellFsClose(fd);
+					cellFsChmod((char*)PS2_CLASSIC_TOGGLER, 0777);
+				}
+			}
+#endif
 			cellFsUnlink(PS2_CLASSIC_ISO_PATH);
 			if(filecopy(_path, (char*)PS2_CLASSIC_ISO_PATH, COPY_WHOLE_FILE) == 0)
 			{
@@ -9488,7 +9526,7 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 			show_msg(temp);
 		}
 
-		return;
+		goto patch;
 	}
 
 	// auto-enable external GD
@@ -9583,10 +9621,11 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 			sprintf(path2, "\"%s", (strrchr(_path, '/')+1));
 			if(strstr(path2, ".ntfs[")) path2[strrchr(path2, '.')-path2]=0;
 			if(strrchr(path2, '.')!=NULL) path2[strrchr(path2, '.')-path2]=0;
-            sprintf(temp, "\" %s", STR_LOADED2); strcat(path2, temp);
+			if(path2[1]==NULL) sprintf(path2, "\"%s", _path);
+			sprintf(temp, "\" %s", STR_LOADED2); strcat(path2, temp);
 			show_msg(path2);
 
-			if(!strstr(_path, "ntfs["))
+			//if(!strstr(_path, ".ntfs["))
 			{
 				sprintf(path2, WMTMP "/last_game.txt");
 
@@ -9599,6 +9638,13 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 				}
 			}
 		}
+
+#ifdef REX_ONLY
+		if(is_rebug && (c_firmware==4.65f || c_firmware==4.66f) && strstr(_path, "/PS2ISO/")!=NULL)
+		{   // Auto remove "classic_ps2" flag for PS2 ISOs on rebug 4.65.2
+			cellFsUnlink((char*)PS2_CLASSIC_TOGGLER);
+		}
+#endif
 
 		{
 			//rawseciso_loaded=0;
@@ -9704,7 +9750,8 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 
 					}
 				}
-				return;
+				goto patch;
+				//return;
 			}
 
 #ifndef LOCAL_PS3
@@ -9738,10 +9785,10 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 					}
 
 					strcpy(mynet_iso->path, _path+5);
-					if(strstr(_path, "/PS3ISO/")) mynet_iso->emu_mode=EMU_PS3;
-					else if(strstr(_path, "/BDISO/")) mynet_iso->emu_mode=EMU_BD;
-					else if(strstr(_path, "/DVDISO/")) mynet_iso->emu_mode=EMU_DVD;
-					else if(strstr(_path, "/PSX"))
+					if(strstr(_path, "/PS3ISO/")) mynet_iso->emu_mode=EMU_PS3; else
+					if(strstr(_path, "/BDISO/" )) mynet_iso->emu_mode=EMU_BD;  else
+					if(strstr(_path, "/DVDISO/")) mynet_iso->emu_mode=EMU_DVD; else
+					if(strstr(_path, "/PSX"))
 					{
 						TrackDef tracks[1];
 						tracks[0].lba = 0;
