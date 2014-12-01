@@ -67,7 +67,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
 #define PS2_CLASSIC_ISO_ICON     "/dev_hdd0/game/PS2U10000/ICON0.PNG"
 
-#define WM_VERSION			"1.32.02 MOD"						// webMAN version
+#define WM_VERSION			"1.33.00 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -4917,6 +4917,7 @@ again3:
 					webman_config->foot=0;                           //STANDARD
 					if(strstr(param, "fp=1")) webman_config->foot=1; //MIN
 					if(strstr(param, "fp=2")) webman_config->foot=2; //MAX
+					if(strstr(param, "fp=3")) webman_config->foot=3; //MIN+
 
 					if(strstr(param, "sidps"))  webman_config->sidps=1; //spoof IDPS
 					if(strstr(param, "spsid"))  webman_config->spsid=1; //spoof PSID
@@ -5822,6 +5823,7 @@ just_leave:
 
 						add_radio_button("fp", "0", "fo_0", "Standard (896KB)", ",  ", (webman_config->foot==0), buffer);
 						add_radio_button("fp", "1", "fo_1", "Min (320KB)"     , ",  ", (webman_config->foot==1), buffer);
+						add_radio_button("fp", "3", "fo_3", "Min+ (512KB)"    , ",  ", (webman_config->foot==3), buffer);
 						add_radio_button("fp", "2", "fo_2", "Max (1280KB)"    , NULL , (webman_config->foot==2), buffer);
 
 #ifndef ENGLISH_ONLY
@@ -8739,6 +8741,16 @@ void set_buffer_sizes()
 		if((webman_config->cmask & PS2)) BUFFER_SIZE_PS2	= (64*KB);
 		if((webman_config->cmask & (BLU | DVD)) == (BLU | DVD)) BUFFER_SIZE_DVD = (64*KB);
 	}
+	if(webman_config->foot==3) //MIN+
+	{
+		BUFFER_SIZE_ALL = ( 512*KB);
+		BUFFER_SIZE_FTP	= ( 128*KB);
+		//BUFFER_SIZE		= ( 320*KB);
+		BUFFER_SIZE_PSX	= (  32*KB);
+		BUFFER_SIZE_PSP	= (  32*KB);
+		BUFFER_SIZE_PS2	= (  64*KB);
+		BUFFER_SIZE_DVD	= (  64*KB);
+	}
 	else	//STANDARD
 	{
 		BUFFER_SIZE_ALL = ( 896*KB);
@@ -9017,7 +9029,7 @@ static void do_umount(void)
 		{sys_map_path((char*)"/app_home", is_rebug?NULL:(char*)"/dev_hdd0/packages");}
 
 		{sys_map_path((char*)"//dev_bdvd", NULL);}
-		{sys_map_path((char*)"//app_home", NULL);}
+		//{sys_map_path((char*)"//app_home", NULL);}
 
 		{
 			sys_ppu_thread_t t;
@@ -10027,6 +10039,15 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 		else
 		{
 			int special_mode=0;
+
+			CellPadData data;
+			data.len=0;
+			if(cellPadGetData(0, &data) != CELL_PAD_OK)
+				if(cellPadGetData(1, &data) != CELL_PAD_OK)
+					cellPadGetData(2, &data) != CELL_PAD_OK;
+
+			if(data.len > 0 && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_SELECT)) special_mode=true;
+
 			cobra_map_game(_path, (char*)"TEST00000", &special_mode);
 		}
 		//return;
@@ -10520,7 +10541,7 @@ patch:
 	}
 
 	add_to_map((char*)"/app_home", path);
-	add_to_map((char*)"//app_home", path);
+	//add_to_map((char*)"//app_home", path);
 
 	if(c_firmware==4.21f)
 		sprintf(expplg, "%s/IEXP0_420.BIN", app_sys);

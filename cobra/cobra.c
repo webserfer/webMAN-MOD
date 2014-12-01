@@ -1464,10 +1464,13 @@ int cobra_map_game(char *path, char *title_id, int *special_mode)
 	ret = sys_map_path("/dev_bdvd", path);
 	if (ret != 0) return ret;
 
-	sys_map_path("/app_home", path);
+	if(special_mode)
+		sys_map_path("/app_home", path);
+	else
+		sys_map_path("/app_home", NULL);
 
 	sys_map_path("//dev_bdvd", path);
-	sys_map_path("//app_home", path);
+	//sys_map_path("//app_home", path);
 
 	sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
 
@@ -1498,8 +1501,7 @@ int cobra_map_game(char *path, char *title_id, int *special_mode)
 		}
 	}
 
-	if (special_mode)
-		*special_mode = sm;
+	if (special_mode) *special_mode = sm;
 
 	return 0;
 }
