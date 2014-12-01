@@ -9014,8 +9014,10 @@ static void do_umount(void)
 
 		cobra_unset_psp_umd();
 		{sys_map_path((char*)"/dev_bdvd", NULL);}
-		{sys_map_path((char*)"//dev_bdvd", NULL);}
 		{sys_map_path((char*)"/app_home", is_rebug?NULL:(char*)"/dev_hdd0/packages");}
+
+		{sys_map_path((char*)"//dev_bdvd", NULL);}
+		{sys_map_path((char*)"//app_home", NULL);}
 
 		{
 			sys_ppu_thread_t t;
@@ -10518,6 +10520,7 @@ patch:
 	}
 
 	add_to_map((char*)"/app_home", path);
+	add_to_map((char*)"//app_home", path);
 
 	if(c_firmware==4.21f)
 		sprintf(expplg, "%s/IEXP0_420.BIN", app_sys);

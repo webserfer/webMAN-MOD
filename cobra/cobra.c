@@ -1464,8 +1464,10 @@ int cobra_map_game(char *path, char *title_id, int *special_mode)
 	ret = sys_map_path("/dev_bdvd", path);
 	if (ret != 0) return ret;
 
-	sys_map_path("//dev_bdvd", path);
 	sys_map_path("/app_home", path);
+
+	sys_map_path("//dev_bdvd", path);
+	sys_map_path("//app_home", path);
 
 	sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
 
@@ -2254,18 +2256,3 @@ int cobra_unload_vsh_plugin(unsigned int slot)
 }
 
 */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
