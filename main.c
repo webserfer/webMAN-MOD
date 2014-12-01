@@ -8741,6 +8741,7 @@ void set_buffer_sizes()
 		if((webman_config->cmask & PS2)) BUFFER_SIZE_PS2	= (64*KB);
 		if((webman_config->cmask & (BLU | DVD)) == (BLU | DVD)) BUFFER_SIZE_DVD = (64*KB);
 	}
+	else
 	if(webman_config->foot==3) //MIN+
 	{
 		BUFFER_SIZE_ALL = ( 512*KB);
