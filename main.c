@@ -34,13 +34,13 @@
 #include <time.h>
 #include <unistd.h>
 
-#define ENGLISH_ONLY 1 // uncomment for english only version
+//#define ENGLISH_ONLY 1 // uncomment for english only version
 //#define USE_DEBUG 1
 
 //#define CCAPI 1		// uncomment for ccapi release
 #define COBRA_ONLY 1	// comment out for ccapi/non-cobra release
 //#define REX_ONLY   1	// shortcuts for REBUG REX CFWs / comment out for usual CFW
-#define LOCAL_PS3  1	// no ps3netsrv support, smaller memory footprint
+//#define LOCAL_PS3  1	// no ps3netsrv support, smaller memory footprint
 
 #include "types.h"
 #include "common.h"
@@ -9425,7 +9425,8 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 	strcpy(_path, _path0);
 
 	// last mounted game
-	if(_path)
+	if(_path[0]=='_' || strrchr(_path, '/')==NULL) ;
+	else
 	{
 		char path2[512]; int fd;
 		sprintf(path2, WMTMP "/last_game.txt");
