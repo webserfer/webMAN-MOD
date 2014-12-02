@@ -34,13 +34,13 @@
 #include <time.h>
 #include <unistd.h>
 
-//#define ENGLISH_ONLY 1 // uncomment for english only version
+#define ENGLISH_ONLY 1 // uncomment for english only version
 //#define USE_DEBUG 1
 
 //#define CCAPI 1		// uncomment for ccapi release
 #define COBRA_ONLY 1	// comment out for ccapi/non-cobra release
 //#define REX_ONLY   1	// shortcuts for REBUG REX CFWs / comment out for usual CFW
-//#define LOCAL_PS3  1	// no ps3netsrv support, smaller memory footprint
+#define LOCAL_PS3  1	// no ps3netsrv support, smaller memory footprint
 
 #include "types.h"
 #include "common.h"
@@ -67,7 +67,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
 #define PS2_CLASSIC_ISO_ICON     "/dev_hdd0/game/PS2U10000/ICON0.PNG"
 
-#define WM_VERSION			"1.33.00 MOD"						// webMAN version
+#define WM_VERSION			"1.33.01 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -145,6 +145,9 @@ static sys_ppu_thread_t thread_id		=-1;
 #define IS_COPY				9
 #define COPY_WHOLE_FILE		0
 
+#define START_DAEMON		(0xC0FEBABE)
+#define REFRESH_CONTENT		(0xC0FEBAB0)
+
 #define LV1_UPPER_MEMORY	0x8000000001000000ULL
 #define LV2_UPPER_MEMORY	0x8000000000800000ULL
 
@@ -210,7 +213,7 @@ static uint32_t cached_cd_sector=0x80000000;
 
 #define MIN_FANSPEED	(25)
 #define MAX_FANSPEED	(0xE6)
-#define MY_TEMP 		(65)
+#define MY_TEMP 		(68)
 static u8 fan_speed=0x33;
 static u8 old_fan=0x33;
 static u32 max_temp=MY_TEMP;
@@ -322,7 +325,13 @@ typedef struct
 #define DEBUGMENU (1<<15)
 #endif
 
-#define AUTOBOOT_PATH "/dev_hdd0/PS3ISO/AUTOBOOT.ISO"
+#define AUTOBOOT_PATH            "/dev_hdd0/PS3ISO/AUTOBOOT.ISO"
+
+#ifdef COBRA_ONLY
+#define DEFAULT_AUTOBOOT_PATH    "/dev_hdd0/PS3ISO/AUTOBOOT.ISO"
+#else
+#define DEFAULT_AUTOBOOT_PATH    "/dev_hdd0/GAMES/AUTOBOOT"
+#endif
 
 void set_gamedata_status(u8 status);
 void set_buffer_sizes();
@@ -695,7 +704,7 @@ void sclose(int *socket_e);
 
 int my_atoi(const char *c);
 
-static void do_umount(void);
+static void do_umount(bool clean);
 static void do_umount_iso(void);
 static void mount_with_mm(const char *_path, u8 do_eject);
 void eject_insert(u8 eject, u8 insert);
@@ -3207,6 +3216,66 @@ static void make_fb_xml(char *xml, char *myxml)
 	savefile(xml, (char*)myxml, strlen(myxml));
 }
 
+static void waitfor(char *path, uint8_t timeout)
+{
+	struct CellFsStat s;
+	uint8_t n=0;
+	while(n<(timeout*2))
+	{
+		if(path[0]!=NULL && cellFsStat(path, &s)==CELL_FS_SUCCEEDED) break;
+		sys_timer_usleep(500000);
+		n++;
+	}
+}
+
+static void mount_autoboot()
+{
+	struct CellFsStat s;
+	char path[512];
+
+	// get autoboot path
+	if(webman_config->autob &&
+      ((cobra_mode && strstr(webman_config->autoboot_path, "/net")!=NULL) || cellFsStat((char *)webman_config->autoboot_path, &s)==CELL_FS_SUCCEEDED)) // autoboot
+		strcpy(path, (char *) webman_config->autoboot_path);
+	else
+	{   // get last game path
+		sprintf(path, WMTMP "/last_game.txt");
+		if(webman_config->lastp && cellFsStat(path, &s)==CELL_FS_SUCCEEDED)
+		{
+			int fd=0;
+			if(cellFsOpen(path, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+			{
+				u64 read_e = 0;
+				if(cellFsRead(fd, (void *)path, 512, &read_e) == CELL_FS_SUCCEEDED) path[read_e]=0;
+				cellFsClose(fd);
+			}
+			else
+				path[0]=0;
+		}
+		else
+			path[0]=0;
+	}
+
+	bool do_mount=false;
+
+    // wait few seconds until path becomes ready
+	if(strlen(path)>10 || (cobra_mode && (strstr(path, "/net")!=NULL || strstr(path, ".ntfs[")!=NULL)))
+	{
+		waitfor((char*)path, 2*(webman_config->boots+webman_config->bootd));
+		do_mount=((cobra_mode && strstr(path, "/net")!=NULL) || cellFsStat(path, &s)==CELL_FS_SUCCEEDED);
+	}
+
+	if(do_mount)
+	{   // add some delay
+		if(webman_config->delay)      {sys_timer_sleep(10); waitfor((char*)path, 2*(webman_config->boots+webman_config->bootd));}
+		else if(strstr(path, "/net"))  sys_timer_sleep(10);
+#ifndef COBRA_ONLY
+		if(strstr(path, "/net")==NULL && strstr(path, ".ntfs[")==NULL)
+#endif
+		mount_with_mm(path, 1); // mount path
+	}
+}
+
 static void handleclient(u64 conn_s_p)
 {
 	int conn_s = (int)conn_s_p; // main communications socket
@@ -3234,14 +3303,14 @@ static void handleclient(u64 conn_s_p)
 	CellRtcDateTime rDate;
 	CellRtcTick pTick;
 
-	if(conn_s_p==0xC0FEBABE || conn_s_p==0xC0FEBAB0)
+	if(conn_s_p==START_DAEMON || conn_s_p==REFRESH_CONTENT)
 	{
 
 #ifndef ENGLISH_ONLY
 		update_language();
 #endif
 
-		if(conn_s_p==0xC0FEBABE && !(webman_config->wmdn) && strlen(STR_WMSTART)>0)
+		if(conn_s_p==START_DAEMON && !(webman_config->wmdn) && strlen(STR_WMSTART)>0)
 		{
 			sys_timer_sleep(10);
 			show_msg((char*)STR_WMSTART);
@@ -3263,7 +3332,7 @@ static void handleclient(u64 conn_s_p)
 													covers_exist[5]=(cellFsStat("/dev_hdd0/GAMEZ/covers", &buf)==CELL_FS_SUCCEEDED);
 													covers_exist[6]=(cellFsStat(WMTMP, &buf)==CELL_FS_SUCCEEDED);
 
-		for(int i=0; i<12; i++)
+		for(u8 i=0; i<12; i++)
 		{
 			if(cellFsStat(wm_icons[i], &buf)!=CELL_FS_SUCCEEDED)
 			{
@@ -3414,64 +3483,10 @@ static void handleclient(u64 conn_s_p)
 		delete_history(false);
 #endif
 
-	if(conn_s_p==0xC0FEBABE && webman_config->refr==1)
+
+	if(conn_s_p==START_DAEMON && webman_config->refr==1)
 	{
-#ifdef COBRA_ONLY
-
-		u8 do_delay=0;
-
-		if(cobra_mode && webman_config->autob)
-			strcpy(tempstr, (char *) webman_config->autoboot_path);
-		else
-		{
-			sprintf(tempstr, WMTMP "/last_game.txt");
-			if(cobra_mode && webman_config->lastp && cellFsStat(tempstr, &buf)==CELL_FS_SUCCEEDED)
-			{
-				int fd=0;
-				if(cellFsOpen(tempstr, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-				{
-					u64 read_e = 0;
-					if(cellFsRead(fd, (void *)&tempstr, 512, &read_e) == CELL_FS_SUCCEEDED) tempstr[read_e]=0;
-					cellFsClose(fd);
-				}
-			}
-			else
-				tempstr[0]=0;
-		}
-
-		u8 retries1=0;
-		if(strlen(tempstr)>10 || strstr(tempstr, "/net") || strstr(tempstr, ".ntfs["))
-		{
-again1:
-			if(strstr(tempstr, "/dev_usb") && cellFsStat(tempstr, &buf)!=CELL_FS_SUCCEEDED)
-			{
-				sys_timer_sleep(1);
-				retries1++;
-				if(retries1<10) goto again1;
-			}
-			if(strstr(tempstr, "/net") || cellFsStat(tempstr, &buf)==CELL_FS_SUCCEEDED) do_delay=1;
-			else if(strstr(tempstr, ".ntfs[") && !webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
-												 !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7) do_delay=0;
-		}
-
-		if(do_delay)
-		{
-			if(webman_config->delay)
-			{
-				sys_timer_sleep(30);
-				/*
-				if(!webman_config->bootd || !webman_config->boots)
-					sys_timer_sleep(20);
-				else
-					sys_timer_sleep(10);
-				*/
-			}
-			else
-				if(strstr(tempstr, "/net") || strstr(tempstr, ".ntfs[")) sys_timer_sleep(10);
-
-			mount_with_mm(tempstr, 0);
-		}
-#endif
+		mount_autoboot();
 
 		init_running=0;
 		if(cellFsStat("/dev_hdd0/xmlhost/game_plugin/fb.xml", &buf)==CELL_FS_SUCCEEDED) sys_ppu_thread_exit(0);
@@ -3528,7 +3543,7 @@ again1:
 
 		make_fb_xml((char*)"/dev_hdd0/xmlhost/game_plugin/fb.xml", myxml);
 
-		if(conn_s_p==0xC0FEBABE && webman_config->refr==1)
+		if(conn_s_p==START_DAEMON && webman_config->refr==1)
         {
 #ifdef USE_VM
 			sys_vm_unmap(sysmem);
@@ -3593,8 +3608,9 @@ again1:
 		{
 			for(u8 f1=0; f1<11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
 			{
-				if(!cobra_mode && (f1>1 && f1<10) && f1!=5) continue;
-
+#ifndef COBRA_ONLY
+				if((f1>1 && f1<10) && f1!=5) continue;
+#endif
 				if(key>1020) break;
 
 				cellRtcGetCurrentTick(&pTick);
@@ -3614,16 +3630,7 @@ again1:
 				if( (webman_config->cmask & PSP) && f1==8) continue;
 				if( (webman_config->cmask & PSP) && f1==9) continue;
 
-				if(f0==7 || f0==8) is_net=1; else
-				{
-					if(!webman_config->usb0 && f0==1) continue;
-					if(!webman_config->usb1 && f0==2) continue;
-					if(!webman_config->usb2 && f0==3) continue;
-					if(!webman_config->usb3 && f0==4) continue;
-					if(!webman_config->usb6 && f0==5) continue;
-					if(!webman_config->usb7 && f0==6) continue;
-					is_net=0;
-				}
+				if(f0==7 || f0==8) is_net=1; else is_net=0;
 
 #ifdef COBRA_ONLY
 #ifndef LOCAL_PS3
@@ -3650,9 +3657,19 @@ again1:
 					}
 				}
 #endif
-
-				if(ns<0 && is_net) break;
 #endif
+				if(ns<0 && is_net) break;
+
+				if(!webman_config->usb0 && f0==1) continue;
+				if(!webman_config->usb1 && f0==2) continue;
+				if(!webman_config->usb2 && f0==3) continue;
+				if(!webman_config->usb3 && f0==4) continue;
+				if(!webman_config->usb6 && f0==5) continue;
+				if(!webman_config->usb7 && f0==6) continue;
+
+				if(f0==9 && !webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
+							!webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7) continue;
+
 //
 				u8 d0 = 0; bool has_dirs = false; u8 subfolder = 0;
 read_folder_xml:
@@ -3680,16 +3697,10 @@ read_folder_xml:
 				{
 					if(f0==1 && (f1==0 || f1==1 || f1==10) && webman_config->bootd)
 					{
-						for(u8 z=0; z<((webman_config->bootd)*2); z++) // 5 seconds
-						{
-							if(cellFsStat((char*)"/dev_usb", &buf)==CELL_FS_SUCCEEDED)
-								break;
-							else
-								sys_timer_usleep(500000);
-						}
+						waitfor((char*)"/dev_usb", webman_config->bootd);
 					}
 
-					if(f0>=1 && f0<=6 && (f1==0 || f1==1 || f1==10)) // usb000->007  (f1: 0=/GAMES, 1=/GAMEZ, 10=/video)
+					if(f0>=1 && f0<=6 && (f1==0 || f1==1 || f1==10) && conn_s_p==START_DAEMON) // usb000->007  (f1: 0=/GAMES, 1=/GAMEZ, 10=/video)
 					{
 
 						if(((webman_config->usb0 && f0==1) ||
@@ -3700,20 +3711,10 @@ read_folder_xml:
 							(webman_config->usb7 && f0==6)
 							) && webman_config->boots )
 						{
-							for(u8 z=0; z<((webman_config->boots)*2); z++) // 3 seconds per usb drive
-							{
-								if(cellFsStat(drives[f0], &buf)==CELL_FS_SUCCEEDED)
-									break;
-								else
-									sys_timer_usleep(500000);
-							}
+							waitfor((char*)drives[f0], webman_config->boots);
 						}
 					}
 				}
-
-				if(f0==9 && !webman_config->usb0 && !webman_config->usb1 &&
-							!webman_config->usb2 && !webman_config->usb3 &&
-							!webman_config->usb6 && !webman_config->usb7) continue;
 
 				if(!is_net && cellFsOpendir( param, &fd) != CELL_FS_SUCCEEDED) goto continue_reading_folder_xml; //continue;
 
@@ -4140,49 +4141,29 @@ continue_reading_folder_xml:
 
 		led(YELLOW, OFF);
 		led(GREEN, ON);
-	/*
-	int data_s=connect_to_server((char*)"192.168.100.209", 38008);
-	for(u32 n=0; n<key; n++)
-	{
-		sprintf(tempstr, "%i) [%s] (%i)\r\n", n, skey[n], strlen(skey[n]));
-		send(data_s, tempstr, strlen(tempstr), 0);
-	}
 
-	for(u32 n=0; n<key; n++)
-	{
-		sprintf(tempstr, "%i] [%s] (%i)\r\n", n, skey[n], strlen(skey[n]));
-		send(data_s, tempstr, strlen(tempstr), 0);
-	}
-	sclose(&data_s)
-	*/
 		if(key)
-		{
-			char swap[16];
-			for(u32 n=0; n<(key-1); n++)
-			{
-				for(u32 m=(n+1); m<key; m++)
-				{
-					if( (webman_config->nogrp))
-					{
+		{   // sort xmb items
+			char swap[16]; u16 m, n;
+
+			if((webman_config->nogrp))
+				for(n=0; n<(key-1); n++)
+					for(m=(n+1); m<key; m++)
 						if(strcasecmp(skey[n]+1, skey[m]+1)>0)
 						{
 							strcpy(swap, skey[n]);
 							strcpy(skey[n], skey[m]);
 							strcpy(skey[m], swap);
 						}
-					}
-
-					else
-					{
+			else
+				for(n=0; n<(key-1); n++)
+					for(m=(n+1); m<key; m++)
 						if(strcasecmp(skey[n], skey[m])>0)
 						{
 							strcpy(swap, skey[n]);
 							strcpy(skey[n], skey[m]);
 							strcpy(skey[m], swap);
 						}
-					}
-				}
-			}
 		}
 
 		if( (webman_config->nogrp))
@@ -4191,7 +4172,7 @@ continue_reading_folder_xml:
 			if(!webman_config->noset) strcat(myxml_items, "<Item class=\"type:x-xmb/module-action\" key=\"setup\" attr=\"setup\"/>");
 		}
 
-		for(u32 a=0; a<key; a++)
+		for(u16 a=0; a<key; a++)
 		{
 			sprintf(tempstr, "<Item class=\"type:x-xmb/module-action\" key=\"%s\" attr=\"%s\"/>", skey[(a)]+5, skey[(a)]+5);
 			if( !(webman_config->nogrp))
@@ -4348,40 +4329,6 @@ continue_reading_folder_xml:
 			cellFsClose(fdxml);
 		}
 
-#ifdef COBRA_ONLY
-		u8 do_delay=0;
-
-		if(cobra_mode && webman_config->autob)
-			strcpy(tempstr, (char *) webman_config->autoboot_path);
-		else
-		{
-			sprintf(tempstr, WMTMP "/last_game.txt");
-			if(cobra_mode && webman_config->lastp && cellFsStat(tempstr, &buf)==CELL_FS_SUCCEEDED)
-			{
-				int fd=0;
-				if(cellFsOpen(tempstr, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-				{
-					u64 read_e = 0;
-					if(cellFsRead(fd, (void *)tempstr, 512, &read_e)==CELL_FS_SUCCEEDED) tempstr[read_e]=0;
-					cellFsClose(fd);
-				}
-			}
-			else
-				tempstr[0]=0;
-		}
-
-		if(strlen(tempstr)>10 || strstr(tempstr, "/net") || strstr(tempstr, ".ntfs["))
-		{
-			if(strstr(tempstr, "/net") || cellFsStat(tempstr, &buf)==CELL_FS_SUCCEEDED) do_delay=1;
-			else if(strstr(tempstr, ".ntfs["))
-			{
-                if(!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
-				   !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7) do_delay=0;
-				else if(!webman_config->delay) sys_timer_sleep(10);
-            }
-		}
-
-#endif
 		led(GREEN, ON);
 
 #ifdef USE_VM
@@ -4390,19 +4337,8 @@ continue_reading_folder_xml:
 		sys_memory_free(sysmem);
 #endif
 
-#ifdef COBRA_ONLY
-		if(do_delay)
-		{
-			if(webman_config->delay)
-			{
-				if(!webman_config->bootd || !webman_config->boots)
-					sys_timer_sleep(20);
-				else
-					sys_timer_sleep(10);
-			}
-			mount_with_mm(tempstr, 0);
-		}
-#endif
+		mount_autoboot();
+
 		init_running=0;
 		sys_ppu_thread_exit(0);
 	}
@@ -4764,10 +4700,6 @@ again3:
 					else
 						{system_call_3(838, (u64)(char*)"/dev_blind", 0, 1);}
 
-
-					if(strstr(param, "netd0"))  webman_config->netd0=1;
-					if(strstr(param, "netd1"))  webman_config->netd1=1;
-
 					if(strstr(param, "noset")) webman_config->noset=1;
 					if(strstr(param, "nogrp") || !cobra_mode) webman_config->nogrp=1;
 
@@ -4993,14 +4925,14 @@ again3:
 
 					update_language();
 #endif
-					webman_config->neth0[0]=0;
-					webman_config->neth1[0]=0;
+					webman_config->neth1[0] = webman_config->neth0[0]=0;
+					webman_config->netp1    = webman_config->netp0=38008;
 #ifdef COBRA_ONLY
-					//if(cobra_mode)
+#ifndef LOCAL_PS3
 					{
-#ifdef LOCAL_PS3
-						char *pos=0;
-#else
+						if(strstr(param, "netd0"))  webman_config->netd0=1;
+						if(strstr(param, "netd1"))  webman_config->netd1=1;
+
 						char *pos=strstr(param, "neth0=") + 6;
 						char netp[7];
 						if(strstr(param, "neth0="))
@@ -5049,22 +4981,22 @@ again3:
 								webman_config->netp1=my_atoi(netp);
 							}
 						}
-#endif
-						if(strstr(param, "autop="))
-						{
-							u8 n;
-							pos=strstr(param, "autop=") + 6;
-							for(n=0;n<255;n++)
-							{
-								if(pos[n]=='+') webman_config->autoboot_path[n]=' ';
-								else if(pos[n]!='&') webman_config->autoboot_path[n]=pos[n];
-								else break;
-							}
-							webman_config->autoboot_path[n]=0;
-						}
-						if(!strlen(webman_config->autoboot_path)) strcpy(webman_config->autoboot_path, AUTOBOOT_PATH);
 					}
 #endif
+#endif
+					if(strstr(param, "autop="))
+					{
+						u8 n;
+						char *pos=strstr(param, "autop=") + 6;
+						for(n=0;n<255;n++)
+						{
+							if(pos[n]=='+') webman_config->autoboot_path[n]=' ';
+							else if(pos[n]!='&') webman_config->autoboot_path[n]=pos[n];
+							else break;
+						}
+						webman_config->autoboot_path[n]=0;
+					}
+					if(strlen(webman_config->autoboot_path)==0) strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);
 				}
 
 				strcpy(buffer, "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><meta http-equiv=\"Content-type\" content=\"text/html;charset=UTF-8\"><META HTTP-EQUIV=\"CACHE-CONTROL\" CONTENT=\"NO-CACHE\">");
@@ -5326,10 +5258,8 @@ again3:
 
 											if(data[n].is_directory)
 												sprintf(fsize, "<a href=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
-#ifdef COBRA_ONLY
 											else if( strstr(data[n].name, ".iso") || strstr(data[n].name, ".ISO") || strstr(data[n].name, ".cue") || strstr(data[n].name, ".CUE") || strstr(data[n].name, ".ntfs[") || (strstr(data[n].name, ".BIN.ENC") && strstr(data[n].name, ".ENC.")==NULL) )
 												sprintf(fsize, "<a href=\"/mount.ps3%s\">%llu %s</a>", templn, sz, sf);
-#endif
 											else
 												sprintf(fsize, "%llu %s", sz, sf);
 											snprintf(ename, 6, "%s    ", data[n].name);
@@ -5495,19 +5425,16 @@ just_leave:
 
 		//sclose(&data_s);
 							if(idx)
-							{
-								for(u16 n=0; n<(idx-1); n++)
-								{
-									for(u16 m=(n+1); m<idx; m++)
-									{
+							{   // sort html file entries
+								u16 n, m;
+								for(n=0; n<(idx-1); n++)
+									for(m=(n+1); m<idx; m++)
 										if(strcasecmp(line_entry[n].path, line_entry[m].path)>0)
 										{
 											strcpy(swap, line_entry[n].path);
 											strcpy(line_entry[n].path, line_entry[m].path);
 											strcpy(line_entry[m].path, swap);
 										}
-									}
-								}
 							}
 
 							for(u16 m=0;m<idx;m++)
@@ -5543,7 +5470,7 @@ just_leave:
 					{
 						init_running=1;
 						sys_ppu_thread_t id3;
-						sys_ppu_thread_create(&id3, handleclient, (u64)0xC0FEBAB0, -0x1d8, 0x20000, 0, "wwwd2");
+						sys_ppu_thread_create(&id3, handleclient, (u64)REFRESH_CONTENT, -0x1d8, 0x20000, 0, "wwwd2");
 						while(init_running && working) sys_timer_usleep(300000);
 						sprintf(templn,  "<br>%s", STR_XMLRF); strcat(buffer, templn);
 					}
@@ -5666,7 +5593,7 @@ just_leave:
 						address&=0xFFFFFFFFFFFFFFF0ULL;
 						addr=address;
 
-						for(int i=0; i<0x200; i++)
+						for(u16 i=0; i<0x200; i++)
 						{
 							if(!p)
 							{
@@ -5733,7 +5660,7 @@ just_leave:
 						add_check_box("u6", "usb6", drives[5], NULL, (webman_config->usb6), buffer);
 						add_check_box("u7", "usb7", drives[6], NULL, (webman_config->usb7), buffer);
 
-						sprintf(templn, "<td nowrap><u>%s:</u><br>", STR_SCAN2); strcat(buffer, templn);
+						sprintf(templn, "<td nowrap valign=top><u>%s:</u><br>", STR_SCAN2); strcat(buffer, templn);
 
 						add_check_box("p0", "pst", "PLAYSTATION\xC2\xAE\x33"    , NULL     , !(webman_config->cmask & PS3), buffer);
 						add_check_box("p1", "ps2", "PLAYSTATION\xC2\xAE\x32"    , " ("     , !(webman_config->cmask & PS2), buffer);
@@ -5748,11 +5675,10 @@ just_leave:
 
 						strcat(buffer, "</td></tr></table><hr color=\"#0099FF\"/>");
 
-#ifdef COBRA_ONLY
 						add_check_box("l", "lastp", STR_LPG    , NULL, (webman_config->lastp), buffer);
 						add_check_box("a", "autob", STR_AUTOB  , NULL, (webman_config->autob), buffer);
 						add_check_box("d", "delay", STR_DELAYAB, NULL, (webman_config->delay), buffer);
-#endif
+
 						add_check_box("bl", "blind", STR_DEVBL,    NULL, (webman_config->blind), buffer);
 						add_check_box("wn", "wmdn",  STR_NOWMDN,   NULL, (webman_config->wmdn) , buffer);
 						add_check_box("rf", "refr",  STR_CONTSCAN, NULL, (webman_config->refr) , buffer);
@@ -5924,12 +5850,11 @@ just_leave:
 						//unmount game
 						if(strstr(param, "ps3/unmount"))
 						{
-							do_umount();
+							do_umount(true);
 
 							strcat(buffer, STR_GAMEUM);
 							if(mount_ps3)
 							{
-								//sys_timer_sleep(1);
 								strcat(buffer, "<script type=\"text/javascript\">window.close(this);</script>");
 							}
 						}
@@ -6147,8 +6072,9 @@ just_leave:
 							{
 								for(u8 f1=0; f1<11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
 								{
-									if(!cobra_mode && (f1>1 && f1<10) && f1!=5) continue;
-
+#ifndef COBRA_ONLY
+									if((f1>1 && f1<10) && f1!=5) continue;
+#endif
 									if(tlen>(BUFFER_SIZE-1024)) break;
 									if(idx>=(max_entries-1)) break;
 
@@ -6171,6 +6097,7 @@ just_leave:
 
 									if(f0==7 || f0==8) is_net=1; else is_net=0;
 #ifdef COBRA_ONLY
+#ifndef LOCAL_PS3
 									if(ns==-2 && is_net &&
 										( (f0==7 && webman_config->netp0 && webman_config->neth0[0]) ||
 										  (f0==8 && webman_config->netp1 && webman_config->neth1[0]) )
@@ -6194,6 +6121,7 @@ just_leave:
 										}
 									}
 #endif
+#endif
 									if(ns<0 && is_net) break;
 
 									if(!webman_config->usb0 && f0==1) continue;
@@ -6209,6 +6137,7 @@ just_leave:
 									u8 d1 = 0; bool has_dirs = false; u8 subfolder = 0;
 		read_folder_html:
 //
+#ifndef LOCAL_PS3
 									if(is_net)
 									{
 										if(d1==0)
@@ -6217,6 +6146,7 @@ just_leave:
 											sprintf(param, "/%s/%c", paths[f1], d1);
 									}
 									else
+#endif
 									{
 										if(f0==9)//ntfs
 											strcpy(param, WMTMP);
@@ -6581,19 +6511,16 @@ just_leave:
 
 
 							if(idx)
-							{
-								for(u16 n=0; n<(idx-1); n++)
-								{
-									for(u16 m=(n+1); m<idx; m++)
-									{
+							{   // sort html game items
+								u16 n, m;
+								for(n=0; n<(idx-1); n++)
+									for(m=(n+1); m<idx; m++)
 										if(strcasecmp(line_entry[n].path, line_entry[m].path)>0)
 										{
 											strcpy(swap, line_entry[n].path);
 											strcpy(line_entry[n].path, line_entry[m].path);
 											strcpy(line_entry[m].path, swap);
 										}
-									}
-								}
 							}
 
 							for(u16 m=0;m<idx;m++)
@@ -6904,7 +6831,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						if(strcasecmp(cmd, "UMOUNT") == 0)
 						{
 							ssend(conn_s_ftp, FTP_OK_250);
-							do_umount();
+							do_umount(true);
 						}
 #ifdef COBRA_ONLY
 						else
@@ -8693,22 +8620,27 @@ void reset_settings()
 	webman_config->vPSID2[0]=0;
 
 	webman_config->lang=0; //english
-	strcpy(webman_config->autoboot_path, AUTOBOOT_PATH);
+	strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);
 
-	int fdwm=0;
-	if(cellFsOpen(WMCONFIG, CELL_FS_O_RDONLY, &fdwm, NULL, 0) == CELL_FS_SUCCEEDED)
+    int fdwm=0;
+
+	for(u8 n=0;n<10;n++)
 	{
-		cellFsRead(fdwm, (void *)wmconfig, sizeof(WebmanCfg), NULL);
-		cellFsClose(fdwm);
+		if(cellFsOpen(WMCONFIG, CELL_FS_O_RDONLY, &fdwm, NULL, 0) == CELL_FS_SUCCEEDED)
+		{
+			cellFsRead(fdwm, (void *)wmconfig, sizeof(WebmanCfg), NULL);
+			cellFsClose(fdwm);
 
 #ifndef COBRA_ONLY
 		webman_config->spp=0; //disable removal of syscalls on nonCobra
 #endif
-	}
-	else
+			break;
+		}
+	    sys_timer_usleep(500000);
 		save_settings();
+	}
 
-	if(!strlen(webman_config->autoboot_path)) strcpy(webman_config->autoboot_path, AUTOBOOT_PATH);
+	if(strlen(webman_config->autoboot_path)==0) strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);
 
 	if(webman_config->warn>1) webman_config->warn=0;
 	if(webman_config->minfan<MIN_FANSPEED) webman_config->minfan=MIN_FANSPEED;
@@ -8802,7 +8734,7 @@ static void wwwd_thread(uint64_t arg)
 
 	init_running=1;
 	sys_ppu_thread_t id2;
-	sys_ppu_thread_create(&id2, handleclient, (u64)0xC0FEBABE, -0x1d8, 0x20000, 0, "wwwd2");
+	sys_ppu_thread_create(&id2, handleclient, (u64)START_DAEMON, -0x1d8, 0x20000, 0, "wwwd2");
 
 	if(!webman_config->ftpd)
 		sys_ppu_thread_create(&thread_id_ftp, ftpd_thread, NULL, -0x1d8,  0x2000, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_FTP);
@@ -9016,9 +8948,10 @@ static void do_umount_iso(void)
 }
 #endif
 
-static void do_umount(void)
+static void do_umount(bool clean)
 {
-	cellFsUnlink((char*)WMTMP "/last_game.txt");
+	if(clean) cellFsUnlink((char*)WMTMP "/last_game.txt");
+
 #ifdef COBRA_ONLY
 	//if(cobra_mode)
 	{
@@ -9491,6 +9424,21 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 #endif
 	strcpy(_path, _path0);
 
+	// last mounted game
+	if(_path)
+	{
+		char path2[512]; int fd;
+		sprintf(path2, WMTMP "/last_game.txt");
+
+		if(cellFsOpen(path2, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+		{
+			u64 written = 0;
+			cellFsWrite(fd, (void *)_path, strlen(_path), &written);
+			cellFsClose(fd);
+			cellFsChmod(path2, 0666);
+		}
+	}
+
 	// Launch PS2 Classic
 	if(strstr(_path, ".BIN.ENC"))
 	{
@@ -9632,6 +9580,7 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 
 			if(_path[0]=='_' || strrchr(_path, '/')==NULL) return;
 
+			// show loaded path
 			char path2[512];
 			char temp[512];
 			sprintf(path2, "\"%s", (strrchr(_path, '/')+1));
@@ -9640,19 +9589,6 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 			if(path2[1]==NULL) sprintf(path2, "\"%s", _path);
 			sprintf(temp, "\" %s", STR_LOADED2); strcat(path2, temp);
 			show_msg(path2);
-
-			//if(!strstr(_path, ".ntfs["))
-			{
-				sprintf(path2, WMTMP "/last_game.txt");
-
-				if(cellFsOpen(path2, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-				{
-					u64 written = 0;
-					cellFsWrite(fd, (void *)_path, strlen(_path), &written);
-					cellFsClose(fd);
-					cellFsChmod(path2, 0666);
-				}
-			}
 		}
 
 #ifdef REX_ONLY
@@ -9697,7 +9633,7 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 
 			//{sys_map_path((char*)"/dev_bdvd", NULL);}
 			//{sys_map_path((char*)"/app_home", is_rebug?NULL:(char*)"/dev_hdd0/packages");}
-			do_umount();
+			do_umount(false);
 
 			u8 iso_num=1;
 			char tmp_iso[4096];
@@ -10579,6 +10515,16 @@ patch:
 	}
 
 	if(!max_mapped) return;
+
+	if(do_eject)
+	{   // show loaded path
+		char path2[512];
+		char temp[512];
+		sprintf(path2, "\"%s", (strrchr(_path, '/')+1));
+		if(path2[1]==NULL) sprintf(path2, "\"%s", _path);
+		sprintf(temp, "\" %s", STR_LOADED2); strcat(path2, temp);
+		show_msg(path2);
+	}
 
 	for(u8 n=0; n<max_mapped; n++)
 	{
