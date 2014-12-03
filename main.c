@@ -67,7 +67,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
 #define PS2_CLASSIC_ISO_ICON     "/dev_hdd0/game/PS2U10000/ICON0.PNG"
 
-#define WM_VERSION			"1.33.01 MOD"						// webMAN version
+#define WM_VERSION			"1.33.02 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -4147,6 +4147,7 @@ continue_reading_folder_xml:
 			char swap[16]; u16 m, n;
 
 			if((webman_config->nogrp))
+			{
 				for(n=0; n<(key-1); n++)
 					for(m=(n+1); m<key; m++)
 						if(strcasecmp(skey[n]+1, skey[m]+1)>0)
@@ -4155,6 +4156,7 @@ continue_reading_folder_xml:
 							strcpy(skey[n], skey[m]);
 							strcpy(skey[m], swap);
 						}
+			}
 			else
 				for(n=0; n<(key-1); n++)
 					for(m=(n+1); m<key; m++)
