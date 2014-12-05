@@ -3,6 +3,7 @@
 STR_FILES		[Dateien]
 STR_GAMES		[Spiele]
 STR_SETUP		[Einstellungen]
+STR_HOME			[Home]
 STR_EJECT		[Disk auswerfen]
 STR_INSERT		[Disk einziehen]
 STR_UNMOUNT		[Aushängen]
@@ -80,6 +81,7 @@ STR_LOADGAMES	[Lade Spiele mit webMAN]
 STR_WMSETUP		[webMAN Einstellungen]
 STR_WMSETUP2	[Einstellungen im webMAN]
 
+STR_HOME			[Home]
 STR_EJECTDISC	[Disk ausgeschoben]
 STR_UNMOUNTGAME	[Verlasse geladenes Spiel]
 
@@ -106,6 +108,7 @@ STR_LAUNCHPS2	[PS2 Classic Spiele]
 
 STR_GAMEUM		[Spiel verlassen]
 
+STR_HOME			[Home]
 STR_EJECTED		[Disk ausgeschoben]
 STR_LOADED		[Disk eingezogen]
 

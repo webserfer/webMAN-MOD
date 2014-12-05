@@ -3,6 +3,7 @@ STR_TRADBY			[]
 STR_FILES			[Soubory]
 STR_GAMES			[Hry]
 STR_SETUP			[Nastavení]
+STR_HOME			[Home]
 STR_EJECT			[Vysunout]
 STR_INSERT			[Vložit]
 STR_UNMOUNT			[Odpojit]
@@ -80,6 +81,7 @@ STR_LOADGAMES		[Načíst hry pomocí webMAN]
 STR_WMSETUP			[webMAN nastavení]
 STR_WMSETUP2		[Změna nastavení webMAN]
                 	
+STR_HOME			[Home]
 STR_EJECTDISC		[Vysunout disk]
 STR_UNMOUNTGAME		[Vysunout stávající hru]
                 	
@@ -106,6 +108,7 @@ STR_LAUNCHPS2		[Spustit PS2 Classic]
 
 STR_GAMEUM			[Hra odebrána.]
 
+STR_HOME			[Home]
 STR_EJECTED			[Disk vysunut.]
 STR_LOADED			[Disk vložen.]
                 	

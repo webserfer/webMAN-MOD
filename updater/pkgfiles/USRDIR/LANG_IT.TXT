@@ -3,6 +3,7 @@
 STR_FILES		[File]
 STR_GAMES		[Giochi]
 STR_SETUP		[Setup]
+STR_HOME			[Home]
 STR_EJECT		[Rimuovi]
 STR_INSERT		[Inserisci]
 STR_UNMOUNT		[Smonta]
@@ -80,6 +81,7 @@ STR_LOADGAMES	[Carica i giochi con webMAN]
 STR_WMSETUP		[Setup di webMAN]
 STR_WMSETUP2	[Configurazione opzioni di webMAN]
 
+STR_HOME			[Home]
 STR_EJECTDISC	[Rimuovi Disco]
 STR_UNMOUNTGAME	[Smonta il gioco corrente]
 
@@ -106,6 +108,7 @@ STR_LAUNCHPS2	[Lancia il PS2 Classic]
 
 STR_GAMEUM		[Gioco smontato.]
 
+STR_HOME			[Home]
 STR_EJECTED		[Disco estratto.]
 STR_LOADED		[Disco inserito.]
 

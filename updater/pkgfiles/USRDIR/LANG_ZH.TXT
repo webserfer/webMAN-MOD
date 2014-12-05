@@ -3,6 +3,7 @@
 STR_FILES			[檔案]
 STR_GAMES			[遊戲]
 STR_SETUP			[設定]
+STR_HOME			[Home]
 STR_EJECT			[退出]
 STR_INSERT			[插入]
 STR_UNMOUNT			[卸載]
@@ -80,6 +81,7 @@ STR_LOADGAMES		[使用 webMAN 加載遊戲]
 STR_WMSETUP			[webMAN 設定]
 STR_WMSETUP2		[設定 webMAN 選項]
 
+STR_HOME			[Home]
 STR_EJECTDISC		[退出光碟]
 STR_UNMOUNTGAME		[卸載當前遊戲]
 
@@ -106,6 +108,7 @@ STR_LAUNCHPS2		[啟動已掛載的 PS2 Classic]
 
 STR_GAMEUM			[遊戲已卸載.]
 
+STR_HOME			[Home]
 STR_EJECTED			[光碟已退出.]
 STR_LOADED			[光碟已插入.]
 

@@ -3,6 +3,7 @@
 STR_FILES		[Arsip]
 STR_GAMES		[Game]
 STR_SETUP		[Pengaturan]
+STR_HOME			[Home]
 STR_EJECT		[Mengeluarkan]
 STR_INSERT		[Memasukkan]
 STR_UNMOUNT		[Melepas]
@@ -80,6 +81,7 @@ STR_LOADGAMES	[Memuat game dengan webMAN]
 STR_WMSETUP		[Pengaturan webMAN]
 STR_WMSETUP2	[Opsi Pengaturan webMAN]
 
+STR_HOME			[Home]
 STR_EJECTDISC	[Keluarkan Disc]
 STR_UNMOUNTGAME	[Melepas game saat ini]
 
@@ -106,6 +108,7 @@ STR_LAUNCHPS2	[Peluncuran PS2 Classic]
 
 STR_GAMEUM		[Game dilepas.]
 
+STR_HOME			[Home]
 STR_EJECTED		[Disc dikeluarkan.]
 STR_LOADED		[Disc dimasukkan.]
 

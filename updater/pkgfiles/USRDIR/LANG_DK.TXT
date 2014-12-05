@@ -3,6 +3,7 @@ STR_TRADBY [Danish Translate By Assassins <BR/>from www.http://psx-scene.com<BR/
 STR_FILES [Filer]
 STR_GAMES [Spil]
 STR_SETUP [Opsætning]
+STR_HOME			[Home]
 STR_EJECT [Skub ud]
 STR_INSERT [Indsæt]
 STR_UNMOUNT [Demonter]
@@ -80,6 +81,7 @@ STR_LOADGAMES [Load spil med webMAN]
 STR_WMSETUP [webMAN Opsætning]
 STR_WMSETUP2 [Opsætning webMAN]
 
+STR_HOME			[Home]
 STR_EJECTDISC [Skub disk ud]
 STR_UNMOUNTGAME [Demonter nuværende spil]
 
@@ -106,6 +108,7 @@ STR_LAUNCHPS2 [Start PS2 Classic]
 
 STR_GAMEUM [Spil umonteret.]
 
+STR_HOME			[Home]
 STR_EJECTED [Disken skubbes ud.]
 STR_LOADED [indsæt disk.]
 

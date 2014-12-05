@@ -3,6 +3,7 @@
 STR_FILES			[파일]
 STR_GAMES			[게임]
 STR_SETUP			[설정]
+STR_HOME			[Home]
 STR_EJECT			[꺼내기]
 STR_INSERT			[삽입]
 STR_UNMOUNT			[마운트해제]
@@ -80,6 +81,7 @@ STR_LOADGAMES		[웹맨에서 게임 불러오기]
 STR_WMSETUP			[웹맨 설정]
 STR_WMSETUP2		[웹맨 설정 및 설치]
 
+STR_HOME			[Home]
 STR_EJECTDISC		[디스크 꺼내기]
 STR_UNMOUNTGAME		[현재 게임 마운트 해제하기]
 
@@ -106,6 +108,7 @@ STR_LAUNCHPS2		[부팅시 PS2 Classic]
 
 STR_GAMEUM			[게임 마운트를 해제하였습니다.]
 
+STR_HOME			[Home]
 STR_EJECTED			[디스크 배출.]
 STR_LOADED			[디스크 삽입.]
 
