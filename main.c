@@ -5001,7 +5001,7 @@ again3:
 #ifndef ENGLISH_ONLY
 					// Europe
 					if(strstr(param, "l=0"))   webman_config->lang=0;  // English
-					if(strstr(param, "l=1"))   webman_config->lang=1;  // French
+					if(strstr(param, "&l=1"))   webman_config->lang=1;  // French
 					if(strstr(param, "l=2"))   webman_config->lang=2;  // Italian
 					if(strstr(param, "l=3"))   webman_config->lang=3;  // Spanish
 					if(strstr(param, "l=4"))   webman_config->lang=4;  // German
