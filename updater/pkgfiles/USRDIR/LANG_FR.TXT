@@ -81,7 +81,6 @@ STR_LOADGAMES	[Chargement des backups avec webMAN]
 STR_WMSETUP		[Configuration de webMAN]
 STR_WMSETUP2	[Gérer vos préférences et options]
 
-STR_HOME			[Home]
 STR_EJECTDISC	[Éjecter le Disque]
 STR_UNMOUNTGAME	[Démonte le jeu actuel]
 
@@ -108,7 +107,6 @@ STR_LAUNCHPS2	[Lancement des PS2 Classic]
 
 STR_GAMEUM		[Jeu démonté.]
 
-STR_HOME			[Home]
 STR_EJECTED		[Disque éjecté.]
 STR_LOADED		[Disque inséré.]
 

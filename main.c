@@ -5377,7 +5377,12 @@ again3:
 											if(data[n].is_directory)
 												sprintf(fsize, "<a href=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
 											else if( strstr(data[n].name, ".iso") || strstr(data[n].name, ".ISO") || strstr(data[n].name, ".cue") || strstr(data[n].name, ".CUE") || strstr(data[n].name, ".ntfs[") || (strstr(data[n].name, ".BIN.ENC") && strstr(data[n].name, ".ENC.")==NULL) )
-												sprintf(fsize, "<a href=\"/mount.ps3%s\">%llu %s</a>", templn, sz, sf);
+											{
+												if( (strstr(data[n].name, ".iso.") || strstr(data[n].name, ".ISO.")) && !(strstr(data[n].name, ".iso.0") || strstr(data[n].name, ".ISO.0")) )
+													sprintf(fsize, "%llu %s", sz, sf);
+												else
+													sprintf(fsize, "<a href=\"/mount.ps3%s\">%llu %s</a>", templn, sz, sf);
+											}
 											else
 												sprintf(fsize, "%llu %s", sz, sf);
 											snprintf(ename, 6, "%s    ", data[n].name);
@@ -5487,10 +5492,20 @@ again3:
 									else {sprintf(sf, "%s", STR_GIGABYTE); sz>>=30;}
 
 									if((buf.st_mode & S_IFDIR) != 0)
-										sprintf(fsize, "<a href=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
+									{
+										if(entry.d_name[0]=='.')
+											sprintf(fsize, "&lt;dir&gt;");
+										else
+											sprintf(fsize, "<a href=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
+									}
 #ifdef COBRA_ONLY
 									else if( strstr(entry.d_name, ".iso") || strstr(entry.d_name, ".ISO") || strstr(entry.d_name, ".cue") || strstr(entry.d_name, ".CUE") || strstr(entry.d_name, ".ntfs[") || (strstr(entry.d_name, ".BIN.ENC") && strstr(entry.d_name, ".ENC.")==NULL) )
-										sprintf(fsize, "<a href=\"/mount.ps3%s\">%llu %s</a>", templn, sz, sf);
+									{
+										if( (strstr(entry.d_name, ".iso.") || strstr(entry.d_name, ".ISO.")) && !(strstr(entry.d_name, ".iso.0") || strstr(entry.d_name, ".ISO.0")) )
+											sprintf(fsize, "%llu %s", sz, sf);
+										else
+											sprintf(fsize, "<a href=\"/mount.ps3%s\">%llu %s</a>", templn, sz, sf);
+									}
 #endif
 									else
 										sprintf(fsize, "%llu %s", sz, sf);
@@ -9639,7 +9654,8 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 	}
 
 	// auto-enable external GD
-	if(strstr(_path, "/GAME"))
+	if(do_eject==0) ;
+	else if(strstr(_path, "/GAME"))
 	{
 		int fdd=0; char extgdfile[540];
 		sprintf(extgdfile, "%s/PS3_GAME/PS3GAME.INI", _path);
@@ -9648,14 +9664,13 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 			u64 read_e = 0;
 			if(cellFsRead(fdd, (void *)&extgdfile, 12, &read_e) == CELL_FS_SUCCEEDED) extgdfile[read_e]=0;
 			cellFsClose(fdd);
-			if((extgd==0) && (extgdfile[10] & (1<<1))) set_gamedata_status(1); else if((extgd==1) && !(extgdfile[10] & (1<<1))) set_gamedata_status(0);
+			if((extgd==0) &&  (extgdfile[10] & (1<<1))) set_gamedata_status(1); else
+			if((extgd==1) && !(extgdfile[10] & (1<<1))) set_gamedata_status(0);
 		}
 		else if(extgd) set_gamedata_status(0);
 	}
-	else if(strstr(_path, "/PS3ISO")!=NULL && strstr(_path, "[gd]")!=NULL)
-	{
+	else if((extgd==0) && (strstr(_path, "/PS3ISO")!=NULL) && (strstr(_path, "[gd]")!=NULL))
 		set_gamedata_status(1);
-	}
 	else if(extgd) set_gamedata_status(0);
 
 #ifdef COBRA_ONLY

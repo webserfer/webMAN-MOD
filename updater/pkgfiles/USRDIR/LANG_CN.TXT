@@ -81,7 +81,6 @@ STR_LOADGAMES		[使用 webMAN 加载游戏]
 STR_WMSETUP			[webMAN 设置]
 STR_WMSETUP2		[设置 webMAN 配置]
 
-STR_HOME			[Home]
 STR_EJECTDISC		[弹出光盘]
 STR_UNMOUNTGAME		[卸载当前游戏]
 
@@ -108,7 +107,6 @@ STR_LAUNCHPS2		[启动已挂载的 PS2 Classic]
 
 STR_GAMEUM			[游戏已卸载.]
 
-STR_HOME			[Home]
 STR_EJECTED			[光碟已弹出.]
 STR_LOADED			[光碟已插入.]
 

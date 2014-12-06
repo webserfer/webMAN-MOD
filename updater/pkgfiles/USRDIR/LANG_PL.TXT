@@ -81,7 +81,6 @@ STR_LOADGAMES			[Ładuj gry webMANem]
 STR_WMSETUP				[Ustawienia webMANa]
 STR_WMSETUP2			[Skonfiguruj opcje webMANa]
 
-STR_HOME			[Home]
 STR_EJECTDISC			[Wysuń Dysk]
 STR_UNMOUNTGAME		[Odmontuj obecną grę]
 
@@ -108,7 +107,6 @@ STR_LAUNCHPS2		[Uruchom PS2 Classic]
 
 STR_GAMEUM			[Gra odmontowana]
 
-STR_HOME			[Home]
 STR_EJECTED			[Dysk wysunięty]
 STR_LOADED			[Dysk załadowany]
 

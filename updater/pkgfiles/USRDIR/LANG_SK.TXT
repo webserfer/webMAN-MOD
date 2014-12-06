@@ -81,7 +81,6 @@ STR_LOADGAMES		[Načítať hry s webMAN]
 STR_WMSETUP			[webMAN Nastavenie]
 STR_WMSETUP2		[Možnosti nastavenia Webman]
                 	
-STR_HOME			[Home]
 STR_EJECTDISC		[Vysunúť Disc]
 STR_UNMOUNTGAME		[Odpojiť aktuálnu hru]
                 	
@@ -108,7 +107,6 @@ STR_LAUNCHPS2		[Spustiť PS2 Classic]
 
 STR_GAMEUM			[Hra odpojená.]
 
-STR_HOME			[Home]
 STR_EJECTED			[Disc vysunutý.]
 STR_LOADED			[Disc vložený.]
                 	

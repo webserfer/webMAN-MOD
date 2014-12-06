@@ -81,7 +81,6 @@ STR_LOADGAMES	[Ucitaj igre putem webMANa]
 STR_WMSETUP		[webMAN Postavke]
 STR_WMSETUP2	[Postavke webMAN izbornika]
 
-STR_HOME			[Home]
 STR_EJECTDISC	[Izbaci Disk]
 STR_UNMOUNTGAME	[Izbaci trenutnu igru]
 
@@ -108,7 +107,6 @@ STR_LAUNCHPS2	[Pokreni PS2 Classic]
 
 STR_GAMEUM		[Igra vise nije ucitana.]
 
-STR_HOME			[Home]
 STR_EJECTED		[Disk izbacen.]
 STR_LOADED		[Disk umetnut.]
 

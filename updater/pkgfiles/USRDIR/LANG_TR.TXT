@@ -81,7 +81,6 @@ STR_LOADGAMES		[webMAN ile oyunlari yükler]
 STR_WMSETUP			[webMAN Ayarlari]
 STR_WMSETUP2		[webMAN seçeneklerini ayarlar]
 
-STR_HOME			[Home]
 STR_EJECTDISC		[Diski Çikar]
 STR_UNMOUNTGAME		[Mevcut oyunu çöz]
 
@@ -108,7 +107,6 @@ STR_LAUNCHPS2		[PS2 Classic sunu çalistir]
 
 STR_GAMEUM			[Oyun çözüldü.]
 
-STR_HOME			[Home]
 STR_EJECTED			[Disk çikarildi.]
 STR_LOADED			[Disc takildi.]
 

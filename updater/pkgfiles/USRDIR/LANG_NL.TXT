@@ -81,7 +81,6 @@ STR_LOADGAMES	[Laadt spellen met webMAN]
 STR_WMSETUP		[webMAN Setup]
 STR_WMSETUP2	[Setup webMAN opties]
 
-STR_HOME			[Home]
 STR_EJECTDISC	[Disk uitwerpen]
 STR_UNMOUNTGAME	[Ontkoppel recent spel]
 
@@ -108,7 +107,6 @@ STR_LAUNCHPS2	[Laadt PS2 Classic]
 
 STR_GAMEUM		[Spel ontkoppeld.]
 
-STR_HOME			[Home]
 STR_EJECTED		[Disk uitgeworpen.]
 STR_LOADED		[Disk geladen.]
 

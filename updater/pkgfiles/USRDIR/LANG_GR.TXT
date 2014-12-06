@@ -81,7 +81,6 @@ STR_LOADGAMES	[Φόρτωση των παιχνιδιών μέσω webMAN]
 STR_WMSETUP		[Ρυθμίσεις του webMAN]
 STR_WMSETUP2	[Ρυθμίσεις του webMAN]
 
-STR_HOME			[Home]
 STR_EJECTDISC	[Βγάλε το δισκάκι]
 STR_UNMOUNTGAME	[Αποπροσάρτηση του παιχνιδιού]
 
@@ -108,7 +107,6 @@ STR_LAUNCHPS2	[Εκκίνηση ενός PS2 Classic]
 
 STR_GAMEUM		[Αποπροσάρτηση του παιχνιδιού.]
 
-STR_HOME			[Home]
 STR_EJECTED		[Αφαίρεση δίσκου.]
 STR_LOADED		[Εισαγωγή δισκου.]
 

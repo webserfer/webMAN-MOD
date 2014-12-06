@@ -81,7 +81,6 @@ STR_LOADGAMES	[webMANでゲームをロード]
 STR_WMSETUP		[webMAN設定]
 STR_WMSETUP2	[webMANオプションの設定]
 
-STR_HOME			[Home]
 STR_EJECTDISC	[マウント解除]
 STR_UNMOUNTGAME	[マウントしているゲームのマウント解除]
 
@@ -108,7 +107,6 @@ STR_LAUNCHPS2	[PS2 Classicゲームの起動]
 
 STR_GAMEUM		[ゲームをマウント解除しました]
 
-STR_HOME			[Home]
 STR_EJECTED		[ディスクを取出しました]
 STR_LOADED		[ディスクを挿入しました]
 

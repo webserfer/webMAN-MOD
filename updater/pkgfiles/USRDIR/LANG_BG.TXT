@@ -81,7 +81,6 @@ STR_LOADGAMES		[Зареди игри с webMAN]
 STR_WMSETUP			[webMAN Настройки]
 STR_WMSETUP2		[Настрой опциите на webMAN]
                 	
-STR_HOME			[Home]
 STR_EJECTDISC		[Изкарай Диска]
 STR_UNMOUNTGAME		[Демонтирай настоящата игра]
                 	
@@ -108,7 +107,6 @@ STR_LAUNCHPS2		[Зареди PS2 Classic]
 
 STR_GAMEUM			[Играта е демонтирана.]
 
-STR_HOME			[Home]
 STR_EJECTED			[Дискът е изкаран.]
 STR_LOADED			[Дискът е вкаран.]
                 	

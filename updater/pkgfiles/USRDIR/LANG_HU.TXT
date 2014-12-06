@@ -81,7 +81,6 @@ STR_LOADGAMES		[Játékok betöltése a webMAN-nel]
 STR_WMSETUP			[webMAN beállítása]
 STR_WMSETUP2		[webMAN beállításai]
 
-STR_HOME			[Home]
 STR_EJECTDISC		[Lemez kiadása]
 STR_UNMOUNTGAME		[Jelenlegi játék leválasztása]
 
@@ -108,7 +107,6 @@ STR_LAUNCHPS2		[Beillesztett PS2 Classic]
 
 STR_GAMEUM			[Játék leválasztva.]
 
-STR_HOME			[Home]
 STR_EJECTED			[Lemez kiadva.]
 STR_LOADED			[Lemez behelyezve.]
 
