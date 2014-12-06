@@ -5118,16 +5118,16 @@ again3:
 				strcpy(buffer, "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><meta http-equiv=\"Content-type\" content=\"text/html;charset=UTF-8\"><META HTTP-EQUIV=\"CACHE-CONTROL\" CONTENT=\"NO-CACHE\">");
 				if(strstr(param, "cpursx.ps3")) strcat(buffer, "<meta http-equiv=\"refresh\" content=\"3\">");
 				strcat(buffer,	"<head><title>PS3 webMAN</title>"
-								"<style type=\"text/css\">\r\n"
-								"<!--\r\na:visited {color: #A0A0A0; text-decoration: none;}\r\n"
-								"a:hover {color: #C0C0C0; text-decoration: none;}\r\n"
-								"a:active {color: #F0F0F0; text-decoration: none;}\r\n"
+								"<style type=\"text/css\">"
+								"<!--\r\na:visited {color: #A0A0A0; text-decoration: none;}"
+								"a:hover {color: #C0C0C0; text-decoration: none;}"
+								"a:active {color: #F0F0F0; text-decoration: none;}"
 								"a:link {color: #909090;	text-decoration: none;}"
 								"a.f:visited {color: #E0E0E0; text-decoration: none;}"
 								"a.f:hover {color: #F0F0F0; text-decoration: none;}"
 								"a.f:active {color: #F8F8F8; text-decoration: none;}"
-								"a.f:link {color: #D0D0D0;	text-decoration: none;}\r\n"
-								"body,td,th {color: #f0f0f0;}\r\n"
+								"a.f:link {color: #D0D0D0;	text-decoration: none;}"
+								"body,td,th {color: #f0f0f0;}.list {display:inline;}"
 								".propfont {font-family: \"Courier New\", Courier, monospace;}"
 								".gc{float: left;overflow: hidden;position: relative;text-align: center;width: 280px;height: 260px;margin: 3px;border: 1px dashed grey;}"
 								".ic{position: absolute;top: 5px;right: 5px;left: 5px;bottom: 40px;}");
