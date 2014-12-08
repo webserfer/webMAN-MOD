@@ -67,7 +67,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
 #define PS2_CLASSIC_ISO_ICON     "/dev_hdd0/game/PS2U10000/ICON0.PNG"
 
-#define WM_VERSION			"1.33.04 MOD"						// webMAN version
+#define WM_VERSION			"1.33.05 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -337,6 +337,7 @@ typedef struct
 #define PS2TOGGLE (1<<3)
 #define PS2SWITCH (1<<4)
 #define BLOCKSVRS (1<<5)
+#define XMLREFRSH (1<<6)
 
 #ifdef REX_ONLY
 #define REBUGMODE (1<<13)
@@ -352,7 +353,7 @@ typedef struct
 #define DEFAULT_AUTOBOOT_PATH    "/dev_hdd0/GAMES/AUTOBOOT"
 #endif
 
-void set_gamedata_status(u8 status, bool do_mount);
+int set_gamedata_status(u8 status, bool do_mount);
 void set_buffer_sizes();
 
 void reset_settings(void);
@@ -2487,13 +2488,13 @@ void string_to_lv2(char* path, u64 addr)
 }
 #endif
 
-void set_gamedata_status(u8 status, bool do_mount)
+int set_gamedata_status(u8 status, bool do_mount)
 {
 	char msg[100];
 	char gamei_path[512]; u8 n;
 
 #ifndef COBRA_ONLY
-	sprintf(gamei_path, "/dev_hdd0/game");
+	sprintf(gamei_path, "//dev_hdd0/game");
 	if(do_mount) max_mapped=0;
 #endif
 
@@ -2522,11 +2523,13 @@ void set_gamedata_status(u8 status, bool do_mount)
 		}
 		else
 		{
-			status=0;
-#ifndef COBRA_ONLY
-			sys_map_path((char*)"/dev_hdd0/game", gamei_path);
+			extgd = 0;
+#ifdef COBRA_ONLY
+			sys_map_path((char*)"/dev_hdd0/game", NULL);
 #endif
 			sprintf(msg, (char*)"gameDATA %s (no usb)", STR_ERROR);
+			show_msg((char*)msg);
+			return FAILED;
 		}
 	}
 	else
@@ -2536,7 +2539,7 @@ void set_gamedata_status(u8 status, bool do_mount)
 #ifdef COBRA_ONLY
 		sys_map_path((char*)"/dev_hdd0/game", NULL);
 #else
-		sys_map_path((char*)"/dev_hdd0/game", gamei_path);
+		add_to_map((char*)"/dev_hdd0/game", gamei_path);
 #endif
 	}
 
@@ -2549,6 +2552,7 @@ void set_gamedata_status(u8 status, bool do_mount)
 		mount_with_mm(gamei_path, MOUNT_EXT_GDATA);
 #endif
 	}
+	return 0;
 }
 
 void detect_firmware()
@@ -4849,6 +4853,7 @@ again3:
 					if(!strstr(param, "pf2=1")) webman_config->combo|=MINDYNFAN;
 					if(!strstr(param, "pdf=1")) webman_config->combo|=DISABLEFC;
 					if(!strstr(param, "psc=1")) webman_config->combo|=DISABLESH;
+					if(!strstr(param, "pxr=1")) webman_config->combo|=XMLREFRSH;
 #ifdef COBRA_ONLY
 					if(!strstr(param, "pdc=1")) webman_config->combo|=DISACOBRA;
 #endif
@@ -5644,9 +5649,11 @@ just_leave:
 						if(strstr(param,"?disable")) extgd=0; else
 													 extgd=extgd^1;
 
-						set_gamedata_status(extgd, true);
 						strcat(buffer, "External Game DATA: ");
-						strcat(buffer, extgd?STR_ENABLED:STR_DISABLED);
+						if(set_gamedata_status(extgd, true))
+							strcat(buffer, STR_ERROR);
+						else
+							strcat(buffer, extgd?STR_ENABLED:STR_DISABLED);
 					}
 #ifndef LOCAL_PS3
 					else
@@ -5945,8 +5952,9 @@ just_leave:
 						add_check_box("pdf", "1", STR_FANCTRL4,   " : <b>L3+R2+START</b><br>"       , !(webman_config->combo & DISABLEFC), buffer);
 
 
-						add_check_box("psv", "1", "OFFLINE",     " : <b>R2+&#11787;</b><br>"        , !(webman_config->combo2 & BLOCKSVRS), buffer);
-						add_check_box("pgd", "1", "gameDATA",    " : <b>SELECT+&#11787;</b><br>"    , !(webman_config->combo2 & EXTGAMDAT), buffer);
+						add_check_box("psv", "1", "OFFLINE",      " : <b>R2+&#11787;</b><br>"       , !(webman_config->combo2 & BLOCKSVRS), buffer);
+						add_check_box("pgd", "1", "gameDATA",     " : <b>SELECT+&#11787;</b><br>"   , !(webman_config->combo2 & EXTGAMDAT), buffer);
+						add_check_box("pxr", "1", "REFRESH XML",  " : <b>SELECT+L3</b><br>"         , !(webman_config->combo2 & XMLREFRSH), buffer);
 
 #ifdef REX_ONLY
 						add_check_box("pid", "1", STR_SHOWIDPS,   " : <b>R2+O</b><br>"              , !(webman_config->combo & SHOW_IDPS), buffer);
@@ -6991,8 +6999,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						if(strcasecmp(cmd, "EXTGD") == 0)
 						{
 							ssend(conn_s_ftp, FTP_OK_250);
-							if(strcasecmp(param, "ON" ) == 0)	set_gamedata_status(0, true);			 else
-							if(strcasecmp(param, "OFF") == 0)	set_gamedata_status(1, true);			 else
+							if(strcasecmp(param, "ON" ) == 0)	set_gamedata_status(0, true);		 else
+							if(strcasecmp(param, "OFF") == 0)	set_gamedata_status(1, true);		 else
 																set_gamedata_status(extgd^1, true);
 						}
 						else
@@ -8083,6 +8091,19 @@ DEBUG Menu Switcher : L3+L2+X
                                 }
 						}
 #endif
+						else
+						if(!(webman_config->combo & XMLREFRSH) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_L3) ) // SELECT+L3 refresh XML
+						{
+							char msg[200];
+							sprintf(msg, "%s XML: %s", STR_REFRESH, STR_SCAN2);
+							show_msg((char*)msg);
+							init_running=1;
+							sys_ppu_thread_t id3;
+							sys_ppu_thread_create(&id3, handleclient, (u64)REFRESH_CONTENT, -0x1d8, 0x20000, 0, "wwwd2");
+							while(init_running && working) sys_timer_usleep(300000);
+							sprintf(msg, "%s XML: OK", STR_REFRESH);
+							show_msg((char*)msg);
+						}
 						else
 						if(!(webman_config->combo & SHOW_TEMP) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & (CELL_PAD_CTRL_R3 | CELL_PAD_CTRL_START)) ) // SELECT+R3 or (SELECT+START) show temperatures / hdd space
 						{
@@ -9600,8 +9621,8 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 
 	char _path[512];
 #ifndef LOCAL_PS3
-	if(!strcmp(_path0, "/net0")) strcpy(_path0, "/net0/."); else
-	if(!strcmp(_path0, "/net1")) strcpy(_path0, "/net1/."); else
+	if(!strcmp(_path0, "/net0")) strcpy((char*)_path0, "/net0/."); else
+	if(!strcmp(_path0, "/net1")) strcpy((char*)_path0, "/net1/."); else
 #endif
     if(!strcmp(_path0, "/dev_bdvd")) {do_umount(false); max_mapped=0; return;}
 	strcpy(_path, _path0);
@@ -10501,6 +10522,8 @@ patch:
 	}
     else
 		sprintf(path, "%s", _path);
+
+	if(!isDir(path)) _path[0]=path[0]=0;
 
     //----------------------------------
 	// map game to /dev_bdvd & /app_home
