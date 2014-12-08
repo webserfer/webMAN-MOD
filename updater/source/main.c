@@ -303,10 +303,11 @@ int main()
 		f=fopen("/dev_hdd0/game/PRXLOADER/USRDIR/plugins.txt", "r");
 		while(fgets(ligne, 255, f) != NULL) {
 			if(strstr(ligne,"webftp_server") != NULL) {
+				fclose(f);
 				strtok(ligne, "\r\n");
 				sysLv2FsUnlink(ligne);
 				CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/webftp_server_noncobra.sprx",ligne);
-				break;
+				goto cont;
 			}
 		}
 		fclose(f);
@@ -319,6 +320,8 @@ int main()
 
 		CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/webftp_server_noncobra.sprx","/dev_hdd0/game/PRXLOADER/USRDIR/webftp_server_noncobra.sprx");
 	}
+
+cont:
 
 	// update dev_flash (rebug)
 	if((sysLv2FsStat("/dev_flash/vsh/module/webftp_server.sprx", &s) == SUCCESS))
@@ -364,6 +367,7 @@ int main()
 			f=fopen("/dev_hdd0/boot_plugins.txt", "r");
 			while(fgets(ligne, 255, f) != NULL) {
 				if(strstr(ligne,"webftp_server.sprx") != NULL) {
+					fclose(f);
 					strtok(ligne, "\r\n");
 					sysLv2FsChmod(ligne, 0777);
 					sysLv2FsUnlink(ligne);
