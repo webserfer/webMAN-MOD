@@ -4866,8 +4866,10 @@ again3:
 #endif
 					if(!strstr(param, "p2s=1")) webman_config->combo2|=PS2SWITCH;
 					if(!strstr(param, "pgd=1")) webman_config->combo2|=EXTGAMDAT;
+#ifndef LOCAL_PS3
 					if(!strstr(param, "pn0=1")) webman_config->combo2|=MOUNTNET0;
 					if(!strstr(param, "pn1=1")) webman_config->combo2|=MOUNTNET1;
+#endif
 					if(!strstr(param, "psv=1")) webman_config->combo2|=BLOCKSVRS;
 
 					if(strstr(param, "wmdn")) webman_config->wmdn=1;
@@ -5972,10 +5974,10 @@ just_leave:
 #ifdef COBRA_ONLY
 						add_check_box("pdc", "1", STR_DISCOBRA,	" : <b>L3+L2+&#8710;</b><br>"       , !(webman_config->combo & DISACOBRA), buffer);
 #endif
-
+#ifndef LOCAL_PS3
 						add_check_box("pn0", "1", "NET0",        " : <b>SELECT+R2+&#11787;</b><br>" , !(webman_config->combo2 & MOUNTNET0), buffer);
 						add_check_box("pn1", "1", "NET1",        " : <b>SELECT+L2+&#11787;</b><br>" , !(webman_config->combo2 & MOUNTNET1), buffer);
-
+#endif
 #ifdef REX_ONLY
 						add_check_box("pr0", "1", STR_RBGMODE, 	" : <b>L3+L2+&#11787;</b><br>"      , !(webman_config->combo2 & REBUGMODE), buffer);
 						add_check_box("pr1", "1", STR_RBGNORM, 	" : <b>L3+L2+O</b><br>"             , !(webman_config->combo2 & NORMAMODE), buffer);
@@ -7926,6 +7928,7 @@ DEBUG Menu Switcher : L3+L2+X
 						if( !(webman_config->combo2 & (EXTGAMDAT | MOUNTNET0 | MOUNTNET1))         // Toggle External Game Data
                             && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_SQUARE)) // SELECT+SQUARE
 						{
+#ifndef LOCAL_PS3
 							if(!(webman_config->combo2 & MOUNTNET0) &&
 								(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2))
 							{if(webman_config->netp0 && webman_config->neth0[0]) mount_with_mm((char*)"/net0/.", 1);}
@@ -7934,6 +7937,7 @@ DEBUG Menu Switcher : L3+L2+X
 								(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2))
 							{if(webman_config->netp1 && webman_config->neth1[0]) mount_with_mm((char*)"/net1/.", 1);}
 							else
+#endif
 								set_gamedata_status(extgd^1, true);
 
 							sys_timer_sleep(2); break;
