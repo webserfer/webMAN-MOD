@@ -67,7 +67,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
 #define PS2_CLASSIC_ISO_ICON     "/dev_hdd0/game/PS2U10000/ICON0.PNG"
 
-#define WM_VERSION			"1.33.05 MOD"						// webMAN version
+#define WM_VERSION			"1.33.06 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -389,9 +389,11 @@ static char wm_icons[12][60]={"/dev_hdd0/tmp/wm_icons/icon_wm_album_ps3.png", //
 static bool covers_exist[7];
 
 uint64_t convertH(char *val);
-uint64_t find_syscall();
-uint64_t search64(uint64_t val);
-uint64_t find_syscall_table();
+
+//uint64_t find_syscall();
+//uint64_t search64(uint64_t val);
+//uint64_t find_syscall_table();
+
 void detect_firmware();
 void remove_cfw_syscalls();
 void delete_history(bool delete_folders);
@@ -734,6 +736,7 @@ void eject_insert(u8 eject, u8 insert);
 bool copy_in_progress = false;
 bool copy_aborted = false;
 bool is_busy = false;
+bool is_mounting = false;
 
 void show_msg(char* msg);
 
@@ -2386,6 +2389,7 @@ uint64_t convertH(char *val)
 	return ret;
 }
 
+/*
 uint64_t find_syscall()
 {
 	uint64_t i = 0x8000000000600000ULL;
@@ -2415,6 +2419,7 @@ uint64_t find_syscall_table()
 	opd_sc = search64(sc);
 	return search64(opd_sc);
 }
+*/
 
 void get_idps_psid()
 {
@@ -2557,6 +2562,8 @@ int set_gamedata_status(u8 status, bool do_mount)
 
 void detect_firmware()
 {
+	if(c_firmware>3.40f) return;
+
 	u64 CEX=0x4345580000000000ULL;
 	u64 DEX=0x4445580000000000ULL;
 
@@ -2644,6 +2651,9 @@ void remove_cfw_syscalls()
 	if(c_firmware==4.50f && !dex_mode) syscall_table = SYSCALL_TABLE_450;	else
 	if(c_firmware==4.46f && !dex_mode) syscall_table = SYSCALL_TABLE_446;	else
 #ifndef COBRA_ONLY
+	if(c_firmware==3.41f && !dex_mode) syscall_table = SYSCALL_TABLE_341;	else
+	if(c_firmware==3.55f && !dex_mode) syscall_table = SYSCALL_TABLE_355;	else
+	if(c_firmware==3.55f &&  dex_mode) syscall_table = SYSCALL_TABLE_355D;	else
 	if(c_firmware==4.21f && !dex_mode) syscall_table = SYSCALL_TABLE_421;	else
 	if(c_firmware==4.21f &&  dex_mode) syscall_table = SYSCALL_TABLE_421D;	else
 	if(c_firmware==4.30f && !dex_mode) syscall_table = SYSCALL_TABLE_430;	else
@@ -2656,18 +2666,19 @@ void remove_cfw_syscalls()
 	if(c_firmware==4.50f &&  dex_mode) syscall_table = SYSCALL_TABLE_450D;	else
 	if(c_firmware==4.55f &&  dex_mode) syscall_table = SYSCALL_TABLE_455D;	else
 #endif
-	syscall_table = find_syscall_table();
+	return; //syscall_table = find_syscall_table();
+
 	syscall_not_impl = peekq(syscall_table);
 
 	get_idps_psid();
 
-	pokeq(syscall_table + (8*6),  syscall_not_impl);
-	pokeq(syscall_table + (8*7),  syscall_not_impl);
 	pokeq(syscall_table + (8*8),  syscall_not_impl);
 	pokeq(syscall_table + (8*9),  syscall_not_impl);
 	pokeq(syscall_table + (8*10), syscall_not_impl);
 	pokeq(syscall_table + (8*35), syscall_not_impl);
 	pokeq(syscall_table + (8*36), syscall_not_impl);
+	pokeq(syscall_table + (8*6),  syscall_not_impl);
+	pokeq(syscall_table + (8*7),  syscall_not_impl);
 
 	u64 sc_not_impl_pt = peekq(syscall_not_impl);
 	u64 sc6 = peekq(syscall_table + (8*6));
@@ -2678,13 +2689,13 @@ void remove_cfw_syscalls()
 	//u64 sc35 = peekq(syscall_table + (8*35));
 	u64 sc36 = peekq(syscall_table + (8*36));
 
-	if(sc6!=syscall_not_impl) pokeq(sc6, sc_not_impl_pt);
-	if(sc7!=syscall_not_impl) pokeq(sc7, sc_not_impl_pt);
 	//if(sc8!=syscall_not_impl) pokeq(sc8, sc_not_impl_pt);
 	if(sc9!=syscall_not_impl) pokeq(sc9, sc_not_impl_pt);
 	if(sc10!=syscall_not_impl) pokeq(sc10, sc_not_impl_pt);
 	//if(sc35!=syscall_not_impl) pokeq(sc35, sc_not_impl_pt);
 	if(sc36!=syscall_not_impl) pokeq(sc36, sc_not_impl_pt);
+	if(sc6!=syscall_not_impl) pokeq(sc6, sc_not_impl_pt);
+	if(sc7!=syscall_not_impl) pokeq(sc7, sc_not_impl_pt);
 }
 
 void delete_history(bool delete_folders)
@@ -3320,8 +3331,9 @@ static void disable_classic_ps2_mode()
 {
 	CellFsStat st;
 	cellFsUnlink((char*)PS2_CLASSIC_TOGGLER);
+/*
 	if(cellFsStat((char*)PS2_CLASSIC_TOGGLER, &st) != CELL_FS_SUCCEEDED)
-	{   // create dummy ISO.BIN.ENC
+	{   // create dummy ISO.BIN.ENC (not longer necessary)
 		char iso_bin_enc[0x4000];
 		char iso_header[0x87] = {0x50, 0x53, 0x32, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x01, 0x32, 0x50, 0x30, 0x30, 0x30, 0x31, 0x2D, 0x50, 0x53, 0x32, 0x55, 0x31, 0x30, 0x30, 0x30, 0x30, 0x5F, 0x30, 0x30, 0x2D, 0x30, 0x30, 0x30, 0x30, 0x31, 0x31, 0x31, 0x31, 0x32, 0x32, 0x32, 0x32, 0x33, 0x33, 0x33, 0x33, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x16, 0xA8, 0xF7, 0xAE, 0xD9, 0xA9, 0x85, 0x74, 0x94, 0xA9, 0xB5, 0xE3, 0xAE, 0xF8, 0x7D, 0x61, 0xA6, 0x2F, 0x90, 0xB9, 0x0A, 0x8E, 0xDD, 0x2E, 0x2D, 0x74, 0x29, 0xF2, 0x99, 0x05, 0x9A, 0x84, 0x49, 0xB7, 0x63, 0x05, 0xD8, 0xFC, 0xA7, 0x53, 0x79, 0xD8, 0x96, 0x99, 0xB4, 0x70, 0x49, 0x3C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40};
 		memset(iso_bin_enc, 0, 0x4000);
@@ -3337,6 +3349,7 @@ static void disable_classic_ps2_mode()
 			cellFsChmod((char*)PS2_CLASSIC_ISO_PATH, 0666);
 		}
 	}
+*/
 }
 #endif
 
@@ -4853,7 +4866,6 @@ again3:
 					if(!strstr(param, "pf2=1")) webman_config->combo|=MINDYNFAN;
 					if(!strstr(param, "pdf=1")) webman_config->combo|=DISABLEFC;
 					if(!strstr(param, "psc=1")) webman_config->combo|=DISABLESH;
-					if(!strstr(param, "pxr=1")) webman_config->combo|=XMLREFRSH;
 #ifdef COBRA_ONLY
 					if(!strstr(param, "pdc=1")) webman_config->combo|=DISACOBRA;
 #endif
@@ -4871,6 +4883,7 @@ again3:
 					if(!strstr(param, "pn1=1")) webman_config->combo2|=MOUNTNET1;
 #endif
 					if(!strstr(param, "psv=1")) webman_config->combo2|=BLOCKSVRS;
+					if(!strstr(param, "pxr=1")) webman_config->combo2|=XMLREFRSH;
 
 					if(strstr(param, "wmdn")) webman_config->wmdn=1;
 					if(strstr(param, "tid=1")) webman_config->tid=1;
@@ -5143,15 +5156,15 @@ again3:
 				strcpy(buffer, "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"><html xmlns=\"http://www.w3.org/1999/xhtml\"><meta http-equiv=\"Content-type\" content=\"text/html;charset=UTF-8\"><META HTTP-EQUIV=\"CACHE-CONTROL\" CONTENT=\"NO-CACHE\">");
 				if(strstr(param, "cpursx.ps3")) strcat(buffer, "<meta http-equiv=\"refresh\" content=\"3\">");
 				strcat(buffer,	"<head><title>PS3 webMAN</title>"
-								"<style type=\"text/css\">"
-								"<!--\r\na:visited {color: #A0A0A0; text-decoration: none;}"
+								"<style type=\"text/css\"><!--\r\n"
+								"a:visited {color: #909090; text-decoration: none;} a:link:hover {color: #FFFFFF;}"
 								"a:hover {color: #C0C0C0; text-decoration: none;}"
 								"a:active {color: #F0F0F0; text-decoration: none;}"
-								"a:link {color: #909090;	text-decoration: none;}"
+								"a:link {color: #909090; text-decoration: none;} a:link:hover {color: #FFFFFF;}"
 								"a.f:visited {color: #E0E0E0; text-decoration: none;}"
 								"a.f:hover {color: #F0F0F0; text-decoration: none;}"
 								"a.f:active {color: #F8F8F8; text-decoration: none;}"
-								"a.f:link {color: #D0D0D0;	text-decoration: none;}"
+								"a.f:link {color: #D0D0D0; text-decoration: none;} a.f:link:hover {color: #FFFFFF;}"
 								"body,td,th {color: #f0f0f0;}.list {display:inline;}"
 								".propfont {font-family: \"Courier New\", Courier, monospace;}"
 								".gc{float: left;overflow: hidden;position: relative;text-align: center;width: 280px;height: 260px;margin: 3px;border: 1px dashed grey;}"
@@ -5366,7 +5379,7 @@ again3:
 									{
 										strcpy(templn, param); if(templn[strlen(templn)-1]=='/') templn[strlen(templn)-1]=0;
 										if(strrchr(templn, '/')) templn[strrchr(templn, '/')-templn]=0; if(strlen(templn)<6 && strlen(param)<8) {templn[0]='/'; templn[1]=0;}
-										sprintf(tempstr, "!00000<tr><td><a class=\"f\" href=\"%s\">..</a></td><td align=right>&nbsp; &lt;dir&gt; &nbsp;</td><td>11-Nov-2006 11:11</td></tr>", templn);
+										sprintf(tempstr, "!00000<tr><td><a class=\"f\" href=\"%s\">..</a></td><td align=right>&nbsp; <a href=\"%s\">&lt;dir&gt;</a> &nbsp;</td><td>11-Nov-2006 11:11</td></tr>", templn, templn);
 										strncpy(line_entry[idx].path, tempstr, 512);
 										idx++;
 										tlen+=strlen(tempstr);
@@ -5519,7 +5532,7 @@ again3:
 									if((buf.st_mode & S_IFDIR) != 0)
 									{
 										if(entry.d_name[0]=='.')
-											sprintf(fsize, "&lt;dir&gt;");
+											sprintf(fsize, "<a href=\"%s\">&lt;dir&gt;</a>", templn);
 										else
 											sprintf(fsize, "<a href=\"/mount.ps3%s\">&lt;dir&gt;</a>", templn);
 									}
@@ -5954,8 +5967,8 @@ just_leave:
 						add_check_box("pdf", "1", STR_FANCTRL4,   " : <b>L3+R2+START</b><br>"       , !(webman_config->combo & DISABLEFC), buffer);
 
 
-						add_check_box("psv", "1", "OFFLINE",      " : <b>R2+&#11787;</b><br>"       , !(webman_config->combo2 & BLOCKSVRS), buffer);
-						add_check_box("pgd", "1", "gameDATA",     " : <b>SELECT+&#11787;</b><br>"   , !(webman_config->combo2 & EXTGAMDAT), buffer);
+						add_check_box("psv", "1", "OFFLINE",      " : <b>R2+口</b><br>"              , !(webman_config->combo2 & BLOCKSVRS), buffer);
+						add_check_box("pgd", "1", "gameDATA",     " : <b>SELECT+口</b><br>"          , !(webman_config->combo2 & EXTGAMDAT), buffer);
 						add_check_box("pxr", "1", "REFRESH XML",  " : <b>SELECT+L3</b><br>"         , !(webman_config->combo2 & XMLREFRSH), buffer);
 
 #ifdef REX_ONLY
@@ -5975,18 +5988,18 @@ just_leave:
 						add_check_box("pdc", "1", STR_DISCOBRA,	" : <b>L3+L2+&#8710;</b><br>"       , !(webman_config->combo & DISACOBRA), buffer);
 #endif
 #ifndef LOCAL_PS3
-						add_check_box("pn0", "1", "NET0",        " : <b>SELECT+R2+&#11787;</b><br>" , !(webman_config->combo2 & MOUNTNET0), buffer);
-						add_check_box("pn1", "1", "NET1",        " : <b>SELECT+L2+&#11787;</b><br>" , !(webman_config->combo2 & MOUNTNET1), buffer);
+						add_check_box("pn0", "1", "NET0",        " : <b>SELECT+R2+口</b><br>"        , !(webman_config->combo2 & MOUNTNET0), buffer);
+						add_check_box("pn1", "1", "NET1",        " : <b>SELECT+L2+口</b><br>"        , !(webman_config->combo2 & MOUNTNET1), buffer);
 #endif
 #ifdef REX_ONLY
-						add_check_box("pr0", "1", STR_RBGMODE, 	" : <b>L3+L2+&#11787;</b><br>"      , !(webman_config->combo2 & REBUGMODE), buffer);
+						add_check_box("pr0", "1", STR_RBGMODE, 	" : <b>L3+L2+口</b><br>"             , !(webman_config->combo2 & REBUGMODE), buffer);
 						add_check_box("pr1", "1", STR_RBGNORM, 	" : <b>L3+L2+O</b><br>"             , !(webman_config->combo2 & NORMAMODE), buffer);
 						add_check_box("pr2", "1", STR_RBGMENU, 	" : <b>L3+L2+X</b><br>"             , !(webman_config->combo2 & DEBUGMENU), buffer);
 
 						if(is_rebug && (c_firmware==4.65f || c_firmware==4.66f))
 						add_check_box("p2c", "1", "PS2 CLASSIC",  " : <b>SELECT+L2+&#8710;</b><br>" , !(webman_config->combo2 & PS2TOGGLE), buffer);
 #endif
-						add_check_box("p2s", "1", "PS2 SWITCH",   " : <b>SELECT+L2+&#8710;</b>"     , !(webman_config->combo2 & PS2SWITCH), buffer);
+						add_check_box("p2s", "1", "PS2 SWITCH",   " : <b>SELECT+L2+R2</b>"          , !(webman_config->combo2 & PS2SWITCH), buffer);
 
 						sprintf(templn, "</td></tr></table><hr color=\"#FF0000\"/><input type=\"submit\" value=\" %s \"/></form>", STR_SAVE); strcat(buffer, templn);
 						strcat(buffer, "<hr color=\"#FF0000\"/><a href=\"http://www.deanbg.com/prepNTFS.pkg\">prepNTFS - Prepare NTFS drives for webMAN access</a><br>"
@@ -7892,22 +7905,35 @@ static void poll_thread(uint64_t poll)
 /*
 FAIL SAFE    : SELECT+L3+L2+R2
 RESET SAFE   : SELECT+R3+L2+R2
-SHOW TEMP    : SELECT+R3
+
+REFRESH XML  : SELECT+L3
+UNLOAD WM    : L3+R2+R3
+
 PREV GAME    : SELECT+L1
 NEXT GAME    : SELECT+R1
 SHUTDOWN     : L3+R2+X
 RESTART      : L3+R2+O
+
 FAN CNTRL    : L3+R2+START
-UNLOAD WM    : L3+R2+R3
+SHOW TEMP    : SELECT+R3 / SELECT+START
+DYNAMIC TEMP : SELECT+LEFT/RIGHT
+MANUAL TEMP  : SELECT+UP/DOWN
+
 SYSCALLS     : R2+/\
 SHOW IDPS    : R2+O
-COBRA TOGGLE : L3+L2+/\
+OFFLINE MODE : R2+口
 
-TOGGLE PS2CLASSIC   : SELECT+L2+/\
-SWITCH PS2EMU       : SELECT+L2+R2
-REBUG  Mode Switcher: L3+L2+/\
-Normal Mode Switcher: L3+L2+O
-DEBUG Menu Switcher : L3+L2+X
+EXT GAME DATA: SELECT+口
+MOUNT net0/  : SELECT+R2+口
+MOUNT net1/  : SELECT+L2+口
+
+TOGGLE PS2CLASSIC    : SELECT+L2+/\
+SWITCH PS2EMU        : SELECT+L2+R2
+
+COBRA TOGGLE         : L3+L2+/\
+REBUG  Mode Switcher : L3+L2+口
+Normal Mode Switcher : L3+L2+O
+DEBUG  Menu Switcher : L3+L2+X
 */
 		struct CellFsStat s;
 		bool reboot = false;
@@ -8096,7 +8122,7 @@ DEBUG Menu Switcher : L3+L2+X
 						}
 #endif
 						else
-						if(!(webman_config->combo & XMLREFRSH) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_L3) ) // SELECT+L3 refresh XML
+						if(!(webman_config->combo2 & XMLREFRSH) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_L3) ) // SELECT+L3 refresh XML
 						{
 							char msg[200];
 							sprintf(msg, "%s XML: %s", STR_REFRESH, STR_SCAN2);
@@ -8443,7 +8469,7 @@ DEBUG Menu Switcher : L3+L2+X
 #ifdef REX_ONLY
 						if(!(webman_config->combo2 & REBUGMODE)
 							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_SQUARE))
-						{ // L3+L2+[] REBUG Mode Switcher
+						{ // L3+L2+口 REBUG Mode Switcher
 							enable_dev_blind((char*)"REBUG Mode Switcher activated!");
 
 							if(cellFsStat((char*) VSH_MODULE_PATH "vsh.self.swp", &s)==CELL_FS_SUCCEEDED)
@@ -9202,6 +9228,9 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 	//pokeq(0x8000000000003560ULL, 0x386000014E800020ULL); // li r3, 0 / blr
 	//pokeq(0x8000000000003560ULL, 0x392000027C0802A6ULL); // li r9, 2 / ...
 	//pokeq(0x8000000000003D90ULL, 0x386000014E800020ULL); // li r3, 0 / blr
+	if(is_mounting) return;
+
+	is_mounting=true;
 
 	u64 sc_600 = 0;
 	u64 sc_604 = 0;
@@ -9628,11 +9657,76 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 	if(!strcmp(_path0, "/net0")) strcpy((char*)_path0, "/net0/."); else
 	if(!strcmp(_path0, "/net1")) strcpy((char*)_path0, "/net1/."); else
 #endif
-    if(!strcmp(_path0, "/dev_bdvd")) {do_umount(false); max_mapped=0; return;}
+    if(!strcmp(_path0, "/dev_bdvd")) {do_umount(false); max_mapped=0; is_mounting=false; return;}
 	strcpy(_path, _path0);
 
+#ifndef COBRA_ONLY
+	if(do_eject==MOUNT_EXT_GDATA) goto patch;
+#endif
+	if(do_eject)
+	{
+		//if(!strstr(_path0, "/PSPISO/") && !strstr(_path0, "/ISO/"))
+		{
+			int fd=0;
+			memset(&lastgames, 0, sizeof(_lastgames));
+			lastgames.last=250;
+			if(cellFsOpen((char*)WMTMP "/last_games.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+			{
+				cellFsRead(fd, (void *)&lastgames, sizeof(_lastgames), NULL);
+				cellFsClose(fd);
+			}
+
+			if(strstr(_path0, "_prev") || strstr(_path0, "_next"))
+			{
+				if(lastgames.last>(MAX_LAST_GAMES-1)) {is_mounting=false; return;}
+				if(strstr(_path0, "_prev"))
+				{
+					if(lastgames.last==0) lastgames.last=(MAX_LAST_GAMES-1); else lastgames.last--;
+				}
+
+				if(strstr(_path0, "_next"))
+				{
+					if(lastgames.last==(MAX_LAST_GAMES-1)) lastgames.last=0; else lastgames.last++;
+				}
+				if(lastgames.game[lastgames.last][0]!='/') lastgames.last=0;
+				if(lastgames.game[lastgames.last][0]!='/' || strlen(lastgames.game[lastgames.last])<7) {is_mounting=false; return;}
+				strcpy(_path, lastgames.game[lastgames.last]);
+			}
+			else
+			{
+				if(lastgames.last==250)
+				{
+					lastgames.last=0;
+					strcpy(lastgames.game[lastgames.last], _path);
+				}
+				else
+				{
+					bool found=false;
+					for(u8 n=0;n<MAX_LAST_GAMES;n++)
+					{
+						if(!strcmp(lastgames.game[n], _path)) {found=true; break;}
+					}
+					if(!found)
+					{
+						lastgames.last++;
+						if(lastgames.last>(MAX_LAST_GAMES-1)) lastgames.last=0;
+						strcpy(lastgames.game[lastgames.last], _path);
+					}
+				}
+			}
+
+			if(cellFsOpen((char*)WMTMP "/last_games.bin", CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+			{
+				u64 written = 0;
+				cellFsWrite(fd, (void *)&lastgames, sizeof(_lastgames), &written);
+				cellFsClose(fd);
+				cellFsChmod((char*)WMTMP "/last_games.bin", 0666);
+			}
+		}
+	}
+
 	// last mounted game
-	if(_path[0]=='_' || strrchr(_path, '/')==NULL || do_eject==MOUNT_EXT_GDATA) ;
+	if(_path[0]=='_' || strrchr(_path, '/')==NULL) {is_mounting=false; return;}
 	else
 	{
 		char path2[512]; int fd;
@@ -9697,93 +9791,39 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 		goto patch;
 	}
 
-#ifdef COBRA_ONLY
-	// auto-enable external GD
-	if(do_eject!=1) ;
-	else if(strstr(_path, "/GAME"))
-	{
-		int fdd=0; char extgdfile[540];
-		sprintf(extgdfile, "%s/PS3_GAME/PS3GAME.INI", _path);
-		if(cellFsOpen(extgdfile, CELL_FS_O_RDONLY, &fdd, NULL, 0) == CELL_FS_SUCCEEDED)
-		{
-			u64 read_e = 0;
-			if(cellFsRead(fdd, (void *)&extgdfile, 12, &read_e) == CELL_FS_SUCCEEDED) extgdfile[read_e]=0;
-			cellFsClose(fdd);
-			if((extgd==0) &&  (extgdfile[10] & (1<<1))) set_gamedata_status(1, false); else
-			if((extgd==1) && !(extgdfile[10] & (1<<1))) set_gamedata_status(0, false);
+#ifdef REX_ONLY
+		if(is_rebug && (c_firmware==4.65f || c_firmware==4.66f) && strstr(_path, "/PS2ISO/")!=NULL)
+		{   // Auto remove "classic_ps2" flag for PS2 ISOs on rebug 4.65.2
+			disable_classic_ps2_mode();
 		}
-		else if(extgd) set_gamedata_status(0, false);
-	}
-	else if((extgd==0) && (strstr(_path, "/PS3ISO")!=NULL) && (strstr(_path, "[gd]")!=NULL))
-		set_gamedata_status(1, false);
-	else if(extgd) set_gamedata_status(0, false);
+#endif
 
+#ifdef COBRA_ONLY
 	//if(cobra_mode)
 	{
-		if(do_eject)
 		{
-			int fd=0;
-
-			if(!strstr(_path0, "/PSPISO/") && !strstr(_path0, "/ISO/"))
+			// auto-enable external GD
+			if(do_eject!=1) ;
+			else if(strstr(_path, "/GAME"))
 			{
-				memset(&lastgames, 0, sizeof(_lastgames));
-				lastgames.last=250;
-				if(cellFsOpen((char*)WMTMP "/last_games.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+				int fdd=0; char extgdfile[540];
+				sprintf(extgdfile, "%s/PS3_GAME/PS3GAME.INI", _path);
+				if(cellFsOpen(extgdfile, CELL_FS_O_RDONLY, &fdd, NULL, 0) == CELL_FS_SUCCEEDED)
 				{
-					cellFsRead(fd, (void *)&lastgames, sizeof(_lastgames), NULL);
-					cellFsClose(fd);
+					u64 read_e = 0;
+					if(cellFsRead(fdd, (void *)&extgdfile, 12, &read_e) == CELL_FS_SUCCEEDED) extgdfile[read_e]=0;
+					cellFsClose(fdd);
+					if((extgd==0) &&  (extgdfile[10] & (1<<1))) set_gamedata_status(1, false); else
+					if((extgd==1) && !(extgdfile[10] & (1<<1))) set_gamedata_status(0, false);
 				}
-
-				if(strstr(_path0, "_prev") || strstr(_path0, "_next"))
-				{
-					if(lastgames.last>(MAX_LAST_GAMES-1)) return;
-					if(strstr(_path0, "_prev"))
-					{
-						if(lastgames.last==0) lastgames.last=(MAX_LAST_GAMES-1); else lastgames.last--;
-					}
-
-					if(strstr(_path0, "_next"))
-					{
-						if(lastgames.last==(MAX_LAST_GAMES-1)) lastgames.last=0; else lastgames.last++;
-					}
-					if(lastgames.game[lastgames.last][0]!='/') lastgames.last=0;
-					if(lastgames.game[lastgames.last][0]!='/' || strlen(lastgames.game[lastgames.last])<7) return;
-					strcpy(_path, lastgames.game[lastgames.last]);
-				}
-				else
-				{
-					if(lastgames.last==250)
-					{
-						lastgames.last=0;
-						strcpy(lastgames.game[lastgames.last], _path);
-					}
-					else
-					{
-						u8 found=0;
-						for(u8 n=0;n<MAX_LAST_GAMES;n++)
-						{
-							if(!strcmp(lastgames.game[n], _path)) {found=1; break;}
-						}
-						if(!found)
-						{
-							lastgames.last++;
-							if(lastgames.last>(MAX_LAST_GAMES-1)) lastgames.last=0;
-							strcpy(lastgames.game[lastgames.last], _path);
-						}
-					}
-				}
-
-				if(cellFsOpen((char*)WMTMP "/last_games.bin", CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-				{
-					u64 written = 0;
-					cellFsWrite(fd, (void *)&lastgames, sizeof(_lastgames), &written);
-					cellFsClose(fd);
-					cellFsChmod((char*)WMTMP "/last_games.bin", 0666);
-				}
+				else if(extgd) set_gamedata_status(0, false);
 			}
+			else if((extgd==0) && (strstr(_path, "/PS3ISO")!=NULL) && (strstr(_path, "[gd]")!=NULL))
+				set_gamedata_status(1, false);
+			else if(extgd) set_gamedata_status(0, false);
+		}
 
-			if(_path[0]=='_' || strrchr(_path, '/')==NULL) return;
-
+		{
 			// show loaded path
 			char path2[512];
 			char temp[512];
@@ -9794,13 +9834,6 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 			sprintf(temp, "\" %s", STR_LOADED2); strcat(path2, temp);
 			show_msg(path2);
 		}
-
-#ifdef REX_ONLY
-		if(is_rebug && (c_firmware==4.65f || c_firmware==4.66f) && strstr(_path, "/PS2ISO/")!=NULL)
-		{   // Auto remove "classic_ps2" flag for PS2 ISOs on rebug 4.65.2
-			disable_classic_ps2_mode();
-		}
-#endif
 
 		{
 			//rawseciso_loaded=0;
@@ -9938,7 +9971,7 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 					else
 					{
 						sys_memory_free(addr);
-						return;
+						goto patch;
 					}
 
 					strcpy(mynet_iso->path, _path+5);
@@ -10034,6 +10067,7 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 					cellFsUnlink((char*)"/dev_hdd0/game/PSPC66820/PIC1.PNG");
 					cobra_unset_psp_umd();
 					int result=cobra_set_psp_umd2(_path, NULL, (char*)"/dev_hdd0/tmp/psp_icon.png", 2);
+					is_mounting=false;
 					if(result==ENOTSUP || result==EABORT)
 						return;
 					else if(!result)
@@ -10198,7 +10232,7 @@ static void mount_with_mm(const char *_path0, u8 do_eject)
 patch:
 #ifndef COBRA_ONLY
 
-	if(c_firmware==0.0f) return;
+	if(c_firmware==0.0f) {is_mounting=false; return;}
 
 	//if(!cobra_mode)
 	{
@@ -10383,7 +10417,7 @@ patch:
 	pokeq(0x8000000000000000ULL+MAP_ADDR, 0x0000000000000000ULL);
 	pokeq(0x8000000000000008ULL+MAP_ADDR, 0x0000000000000000ULL);
 
-	if(cobra_mode) return;
+	if(cobra_mode) {is_mounting=false; return;}
 
 	u64 base_addr=0;
 	u64 open_hook=0;
@@ -10401,7 +10435,7 @@ patch:
 		if(c_firmware==4.55f) {SYSCALL_TABLE = SYSCALL_TABLE_455; base_addr=0x2D7660; open_hook=0x29F748;}  else
 		if(c_firmware==4.60f) {SYSCALL_TABLE = SYSCALL_TABLE_460; base_addr=0x2D88D0; open_hook=0x2A02BC;}  else
 		if(c_firmware==4.65f) {SYSCALL_TABLE = SYSCALL_TABLE_465; base_addr=0x2D88E0; open_hook=0x2A02C8;}  else
-		if(c_firmware==4.66f) {SYSCALL_TABLE = SYSCALL_TABLE_465; base_addr=0x2D88E0; open_hook=0x2A02C8;}  else return;
+		if(c_firmware==4.66f) {SYSCALL_TABLE = SYSCALL_TABLE_465; base_addr=0x2D88E0; open_hook=0x2A02C8;}
 	}
 	else
 	{   // DEX
@@ -10413,8 +10447,10 @@ patch:
 		if(c_firmware==4.53f) {SYSCALL_TABLE = SYSCALL_TABLE_453D; base_addr=0x2F5F88; open_hook=0x2B83C0;} else
 		if(c_firmware==4.55f) {SYSCALL_TABLE = SYSCALL_TABLE_455D; base_addr=0x2F8730; open_hook=0x2B9C14;} else
 		if(c_firmware==4.65f) {SYSCALL_TABLE = SYSCALL_TABLE_465D; base_addr=0x2FA230; open_hook=0x2BB010;} else
-		if(c_firmware==4.66f) {SYSCALL_TABLE = SYSCALL_TABLE_465D; base_addr=0x2FA230; open_hook=0x2BB010;} else return;
+		if(c_firmware==4.66f) {SYSCALL_TABLE = SYSCALL_TABLE_465D; base_addr=0x2FA230; open_hook=0x2BB010;}
 	}
+
+	if(base_addr==0) {is_mounting=false; return;}
 
 	// restore syscall table
 	u64 sc_null = peekq(SYSCALL_PTR( 0));
@@ -10528,10 +10564,20 @@ patch:
 		sprintf(path, "%s", _path);
 
 	if(!isDir(path)) _path[0]=path[0]=0;
+	else if(do_eject)
+	{   // show loaded path
+		char path2[512];
+		char temp[512];
+		sprintf(path2, "\"%s", (strrchr(_path, '/')+1));
+		if(path2[1]==NULL) sprintf(path2, "\"%s", _path);
 
-    //----------------------------------
+		sprintf(temp, "\" %s", STR_LOADED2); strcat(path2, temp);
+		show_msg(path2);
+	}
+
+	//----------------------------------
 	// map game to /dev_bdvd & /app_home
-    //----------------------------------
+	//----------------------------------
 
 	if(path[0])
 	{
@@ -10673,18 +10719,7 @@ patch:
 		pokeq(map_data + (n*32) + 0x18, 0);
 	}
 
-	if(!max_mapped) return;
-
-	if(do_eject)
-	{   // show loaded path
-		char path2[512];
-		char temp[512];
-		sprintf(path2, "\"%s", (strrchr(_path, '/')+1));
-		if(path2[1]==NULL) sprintf(path2, "\"%s", _path);
-
-		sprintf(temp, "\" %s", STR_LOADED2); strcat(path2, temp);
-		show_msg(path2);
-	}
+	if(!max_mapped) {is_mounting=false; return;}
 
 	for(u8 n=0; n<max_mapped; n++)
 	{
@@ -10707,4 +10742,5 @@ patch:
 	//if(do_eject) eject_insert(0, 1);
 #endif
 	max_mapped=0;
+    is_mounting=false;
 }
