@@ -3694,7 +3694,7 @@ static void handleclient(u64 conn_s_p)
 			if(!(webman_config->cmask & PS3)) strcpy(myxml_ps3, "<View id=\"seg_mygames_ps3_items\"><Attributes>");
 			if(!(webman_config->cmask & PS2)) {
 				strcpy(myxml_ps2, "<View id=\"seg_mygames_ps2_items\"><Attributes>");
-				if(webman_config->ps2l && cobra_mode && cellFsStat((char*)"/dev_hdd0/game/PS2U10000", &buf)==CELL_FS_SUCCEEDED) {
+				if(webman_config->ps2l && cellFsStat((char*)"/dev_hdd0/game/PS2U10000", &buf)==CELL_FS_SUCCEEDED) {
 					sprintf(templn, "<Table key=\"ps2_classic_launcher\">"
 									"<Pair key=\"icon\"><String>/dev_hdd0/game/PS2U10000/ICON0.PNG</String></Pair>"
 									"<Pair key=\"icon_notation\"><String>WNT_XmbItemBrowser</String></Pair>"
@@ -3708,7 +3708,7 @@ static void handleclient(u64 conn_s_p)
 			if(!(webman_config->cmask & PS1)) strcpy(myxml_psx, "<View id=\"seg_mygames_psx_items\"><Attributes>");
 			if(!(webman_config->cmask & PSP)) {
 				strcpy(myxml_psp, "<View id=\"seg_mygames_psp_items\"><Attributes>");
-				if(webman_config->pspl && cobra_mode && cellFsStat((char*)"/dev_hdd0/game/PSPC66820", &buf)==CELL_FS_SUCCEEDED) {
+				if(webman_config->pspl && cellFsStat((char*)"/dev_hdd0/game/PSPC66820", &buf)==CELL_FS_SUCCEEDED) {
 					sprintf(templn, "<Table key=\"cobra_psp_launcher\">"
 									"<Pair key=\"icon\"><String>/dev_hdd0/game/PSPC66820/ICON0.PNG</String></Pair>"
 									"<Pair key=\"icon_notation\"><String>WNT_XmbItemBrowser</String></Pair>"
@@ -4205,11 +4205,11 @@ read_folder_xml:
 
 								if(strlen(templn)<5) strcat(templn, "     ");
 								sprintf(skey[key], "3%c%c%c%c%04i", templn[0], templn[1], templn[2], templn[3], key);
-#ifdef COBRA_ONLY
-								if( !(webman_config->nogrp) && cobra_mode)
+								if( !(webman_config->nogrp) )
 								{
 									if(strstr(param, "/PS2ISO") && strlen(myxml_ps2)<(BUFFER_SIZE_PS2-1024))
 									{strcat(myxml_ps2, tempstr); skey[key][0]='2';}
+#ifdef COBRA_ONLY
 									else
 									if(strstr(param, "/PSPISO") && strlen(myxml_psp)<(BUFFER_SIZE_PSP-1024))
 									{strcat(myxml_psp, tempstr); skey[key][0]='4';}
@@ -4222,12 +4222,12 @@ read_folder_xml:
 									else
 									if((strstr(param, "/BDISO") || strstr(param, "/DVDISO") || strstr(entry.d_name, "ntfs[DVDISO]") || strstr(entry.d_name, "ntfs[BDISO]")) && strlen(myxml_dvd)<(BUFFER_SIZE_DVD-1024))
 									{strcat(myxml_dvd, tempstr); skey[key][0]='0';}
+#endif
 									else
 									if(strlen(myxml_ps3)<(BUFFER_SIZE-5000))
 										strcat(myxml_ps3, tempstr);
 								}
 								else
-#endif
 								{
 									if(strlen(myxml_ps3)<(BUFFER_SIZE-5000))
 										strcat(myxml_ps3, tempstr);
@@ -4260,7 +4260,7 @@ continue_reading_folder_xml:
 			if(!(webman_config->cmask & PS2)) {strcat(myxml_ps2, "</Attributes><Items>"); if(webman_config->ps2l && cellFsStat((char*)PS2_CLASSIC_PLACEHOLDER, &buf)==CELL_FS_SUCCEEDED) strcat(myxml_ps2, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"ps2_classic_launcher\" attr=\"ps2_classic_launcher\" src=\"xcb://localhost/query?limit=1&cond=Ae+Game:Game.titleId PS2U10000\"/>");}
 #ifdef COBRA_ONLY
 			if(!(webman_config->cmask & PS1)) {strcat(myxml_psx, "</Attributes><Items>");}
-			if(!(webman_config->cmask & PSP)) {strcat(myxml_psp, "</Attributes><Items>"); if(webman_config->pspl && cobra_mode && cellFsStat((char*)"/dev_hdd0/game/PSPC66820", &buf)==CELL_FS_SUCCEEDED) strcat(myxml_psp, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"cobra_psp_launcher\" attr=\"cobra_psp_launcher\" src=\"xcb://localhost/query?limit=1&cond=Ae+Game:Game.titleId PSPC66820\"/>");}
+			if(!(webman_config->cmask & PSP)) {strcat(myxml_psp, "</Attributes><Items>"); if(webman_config->pspl && cellFsStat((char*)"/dev_hdd0/game/PSPC66820", &buf)==CELL_FS_SUCCEEDED) strcat(myxml_psp, "<Query class=\"type:x-xmb/folder-pixmap\" key=\"cobra_psp_launcher\" attr=\"cobra_psp_launcher\" src=\"xcb://localhost/query?limit=1&cond=Ae+Game:Game.titleId PSPC66820\"/>");}
 			if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU)) strcat(myxml_dvd, "</Attributes><Items>");
 #endif
 		}
@@ -4316,27 +4316,22 @@ continue_reading_folder_xml:
 			if( !(webman_config->nogrp))
 			{
 #ifdef COBRA_ONLY
-				//if(cobra_mode)
-				{
-					if(skey[(a)][0]=='2' && strlen(myxml_ps2)<(BUFFER_SIZE_PS2-128))
-						strcat(myxml_ps2, tempstr);
-					else
-					if(skey[(a)][0]=='4' && strlen(myxml_psp)<(BUFFER_SIZE_PSP-128))
-						strcat(myxml_psp, tempstr);
-					else
-					if(skey[(a)][0]=='1' && strlen(myxml_psx)<(BUFFER_SIZE_PSX-128))
-						strcat(myxml_psx, tempstr);
-					else
-					if(skey[(a)][0]=='0' && strlen(myxml_dvd)<(BUFFER_SIZE_DVD-128))
-						strcat(myxml_dvd, tempstr);
-					else
-					if(strlen(myxml_ps3)<(BUFFER_SIZE-5000))
-						strcat(myxml_ps3, tempstr);
-				}
-#else
+				if(skey[(a)][0]=='4' && strlen(myxml_psp)<(BUFFER_SIZE_PSP-128))
+					strcat(myxml_psp, tempstr);
+				else
+				if(skey[(a)][0]=='1' && strlen(myxml_psx)<(BUFFER_SIZE_PSX-128))
+					strcat(myxml_psx, tempstr);
+				else
+				if(skey[(a)][0]=='0' && strlen(myxml_dvd)<(BUFFER_SIZE_DVD-128))
+					strcat(myxml_dvd, tempstr);
+				else
+#endif
+				if(skey[(a)][0]=='2' && strlen(myxml_ps2)<(BUFFER_SIZE_PS2-128))
+					strcat(myxml_ps2, tempstr);
+				else
 				if(strlen(myxml_ps3)<(BUFFER_SIZE-5000))
 					strcat(myxml_ps3, tempstr);
-#endif
+
 			}
 			else
 				if(strlen(myxml_dvd)<(BUFFER_SIZE-1000))
@@ -4835,7 +4830,7 @@ again3:
 						{system_call_3(838, (u64)(char*)"/dev_blind", 0, 1);}
 
 					if(strstr(param, "noset=")) webman_config->noset=1;
-					if(strstr(param, "nogrp=") || !cobra_mode) webman_config->nogrp=1;
+					if(strstr(param, "nogrp=")) webman_config->nogrp=1;
 
 
 #ifdef COBRA_ONLY
