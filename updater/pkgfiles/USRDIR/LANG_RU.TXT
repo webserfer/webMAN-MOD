@@ -111,7 +111,7 @@ STR_EJECTED			[Диск извлечён.]
 STR_LOADED			[Диск вставлен.]
 
 STR_GAMETOM			[Игра для монтирования]
-STR_GAMELOADED		[Игра успешно загружена. Начните игру с помощью иконки диска<br>или <b>/app_home</b>через XMB.<hr/>Нажмите <a href=/mount.ps3/unmount>здесь</a> для размонтирования игры.]
+STR_GAMELOADED		[Игра успешно загружена. <hr/>Нажмите <a href=/mount.ps3/unmount>здесь</a> для размонтирования игры.]
 STR_PSPLOADED		[Игра успешно загружена. Начните игру с помощью <b>PSP Launcher</b>.<hr/>]
 STR_PS2LOADED		[Игра успешно загружена. Начните игру с помощью <b>PS2 Classic Launcher</b>.<hr/>]
 STR_LOADED2			[загружено]
